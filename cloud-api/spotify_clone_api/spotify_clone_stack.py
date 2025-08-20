@@ -30,7 +30,24 @@ class SpotifyCloneStack(Stack):
             },
         )
 
-        api = apigw.RestApi(self, "SpotifyCloneApi")
-        auth = api.root.add_resource("registration")
+        confirmation = aws_lambda.Function(
+            self,
+            "ConfirmationFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="confirm.handler",
+            code=aws_lambda.Code.from_asset("lambda/auth"),
+            layers=[shared_layer],
+            environment={
+                "LOG_LEVEL": "DEBUG",
+                "COGNITO_REGION": "eu-central-1",
+                "COGNITO_CLIENT_ID": "40q842ul1ip3m7n0eb2tg61g2t"
+            }
+        )
 
-        auth.add_method("POST", apigw.LambdaIntegration(registration))
+
+        api = apigw.RestApi(self, "SpotifyCloneApi")
+        register = api.root.add_resource("registration")
+        confirm = api.root.add_resource("confirmation")
+
+        register.add_method("POST", apigw.LambdaIntegration(registration))
+        confirm.add_method("POST", apigw.LambdaIntegration(confirmation))

@@ -33,7 +33,7 @@ def handler(event, _context):
         ]
     )
 
-    logger.info(f"Successfully registered user: {email}")
+    logger.info(f"Successfully registered user {username} with email {email}")
     return http_response(201, {
         "message": "User registered successfully",
         "data": response.get("UserSub")
