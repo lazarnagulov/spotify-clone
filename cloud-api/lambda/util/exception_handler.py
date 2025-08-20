@@ -1,8 +1,8 @@
 from botocore.exceptions import ClientError
 from pydantic import ValidationError
 
-from layers.shared.python.util.http_response import http_response
-from layers.shared.python.util.logger import logger
+from util.http_response import http_response
+from util.logger import logger
 
 
 def handle_lambda_exceptions(func):
