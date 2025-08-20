@@ -29,7 +29,7 @@ class SpotifyCloneStack(Stack):
             "RegisterFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
             handler="register.handler",
-            code=aws_lambda.Code.from_asset("lambda/auth"),
+            code=aws_lambda.Code.from_asset("lambda/auth/register"),
             layers=[shared_layer],
             environment=cognito_env,
         )
@@ -39,7 +39,7 @@ class SpotifyCloneStack(Stack):
             "ConfirmationFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
             handler="confirm.handler",
-            code=aws_lambda.Code.from_asset("lambda/auth"),
+            code=aws_lambda.Code.from_asset("lambda/auth/confirm"),
             layers=[shared_layer],
             environment=cognito_env,
         )
@@ -49,7 +49,7 @@ class SpotifyCloneStack(Stack):
             "LoginFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
             handler="login.handler",
-            code=aws_lambda.Code.from_asset("lambda/auth"),
+            code=aws_lambda.Code.from_asset("lambda/auth/login"),
             layers=[shared_layer],
             environment=cognito_env,
         )
