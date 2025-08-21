@@ -4,6 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import {AuthModule} from './auth/auth.module';
+import {provideNativeDateAdapter} from '@angular/material/core';
 
 @NgModule({
   declarations: [
@@ -11,10 +12,12 @@ import {AuthModule} from './auth/auth.module';
   ],
   imports: [
     BrowserModule,
-    AuthModule,
-    AppRoutingModule
+    AppRoutingModule,
+    AuthModule
   ],
-  providers: [],
+  providers: [
+    provideNativeDateAdapter()
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
