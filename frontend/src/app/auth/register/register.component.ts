@@ -1,5 +1,8 @@
 import {Component} from '@angular/core';
 import {AbstractControl, FormControl, FormGroup, ValidationErrors, Validators} from '@angular/forms';
+import {AuthService} from '../auth.service';
+import {RegisterResponse} from '../model/register-response.model';
+import {ConfirmResponse} from '../model/confirm-response.model';
 
 @Component({
   selector: 'app-register',
@@ -25,7 +28,7 @@ export class RegisterComponent {
     code: new FormControl('', [Validators.required, Validators.minLength(6), Validators.maxLength(6)])
   })
 
-  constructor() {}
+  constructor(private authService: AuthService) {}
 
   passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
     const password = control.get('password')?.value;
@@ -36,22 +39,34 @@ export class RegisterComponent {
 
   onRegister(): void {
     if (this.registerForm.invalid) return;
-
     this.loading = true;
-    setTimeout(() => {
-      this.loading = false;
-      this.codeSent = true;
-    }, 1500);
+
+    this.authService.register({...this.registerForm.value}).subscribe({
+      next: (result: RegisterResponse) => {
+        this.loading = false;
+        this.codeSent = true;
+        console.log(result);
+      },
+      error: error => {
+        this.loading = false;
+        console.error(error)
+      }
+    });
   }
 
   onConfirmCode() {
     if (this.codeForm.invalid) return;
 
     this.loading = true;
-    setTimeout(() => {
-      this.loading = false;
-      alert('Registration complete!');
-    }, 1200);
+    const request = {code: this.codeForm.value.code, username: this.registerForm.value.username}
+    this.authService.confirm(request).subscribe({
+      next: (result: ConfirmResponse) => {
+        console.log(result);
+      },
+      error: error => {
+        console.error(error)
+      }
+    })
   }
 
 }

@@ -5,6 +5,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import {AuthModule} from './auth/auth.module';
 import {provideNativeDateAdapter} from '@angular/material/core';
+import {provideHttpClient} from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import {provideNativeDateAdapter} from '@angular/material/core';
     AuthModule
   ],
   providers: [
-    provideNativeDateAdapter()
+    provideNativeDateAdapter(),
+    provideHttpClient()
   ],
   bootstrap: [AppComponent]
 })
