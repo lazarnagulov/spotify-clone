@@ -1,8 +1,12 @@
-import {Component} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {AbstractControl, FormControl, FormGroup, ValidationErrors, Validators} from '@angular/forms';
 import {AuthService} from '../auth.service';
 import {RegisterResponse} from '../model/register-response.model';
 import {ConfirmResponse} from '../model/confirm-response.model';
+import {formatDate} from "@angular/common";
+import {RegisterRequest} from "../model/register-request.model";
+import {MatStepper} from "@angular/material/stepper";
+import {ErrorResponse, ValidationDetail} from "../../shared/model/error-response.model";
 
 @Component({
   selector: 'app-register',
@@ -11,12 +15,14 @@ import {ConfirmResponse} from '../model/confirm-response.model';
   styleUrl: './register.component.css'
 })
 export class RegisterComponent {
+  @ViewChild('stepper') stepper!: MatStepper;
   loading: boolean = false;
   codeSent: boolean = false;
+  serverError: string | null = null;
 
   registerForm: FormGroup = new FormGroup({
     name: new FormControl('', Validators.required),
-    surname: new FormControl('', Validators.required),
+    family_name: new FormControl('', Validators.required),
     birthdate: new FormControl('', Validators.required),
     username: new FormControl('', [Validators.required, Validators.minLength(4)]),
     email: new FormControl('', [Validators.required, Validators.email]),
@@ -40,16 +46,22 @@ export class RegisterComponent {
   onRegister(): void {
     if (this.registerForm.invalid) return;
     this.loading = true;
+    const rawBirthdate: Date = this.registerForm.value.birthdate;
+    const formattedBirthdate = formatDate(rawBirthdate, 'yyyy-MM-dd', 'en-US');
+    const request: RegisterRequest = {
+      ...this.registerForm.value,
+      birthdate: formattedBirthdate
+    };
 
-    this.authService.register({...this.registerForm.value}).subscribe({
-      next: (result: RegisterResponse) => {
+    this.authService.register(request).subscribe({
+      next: _ => {
         this.loading = false;
         this.codeSent = true;
-        console.log(result);
+        this.stepper.next();
       },
-      error: error => {
+      error: (error: ErrorResponse) => {
         this.loading = false;
-        console.error(error)
+        this.setError(error.error)
       }
     });
   }
@@ -60,13 +72,28 @@ export class RegisterComponent {
     this.loading = true;
     const request = {code: this.codeForm.value.code, username: this.registerForm.value.username}
     this.authService.confirm(request).subscribe({
-      next: (result: ConfirmResponse) => {
-        console.log(result);
+      next: _ => {
+        this.loading = false;
+        // TODO: Navigate
       },
-      error: error => {
-        console.error(error)
+      error: (error: ErrorResponse) => {
+        this.loading = false;
+        this.setError(error.error)
       }
-    })
+    });
   }
 
+  private setError(error: string | ValidationDetail[]) {
+    if (typeof error === 'string') {
+      this.serverError = error;
+    } else {
+      this.serverError = null;
+      error.forEach(err => {
+        const field = err.loc[0];
+        if (this.registerForm.get(field)) {
+          this.registerForm.get(field)?.setErrors({ serverError: err.msg });
+        }
+      });
+    }
+  }
 }

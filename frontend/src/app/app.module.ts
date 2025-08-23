@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import {AuthModule} from './auth/auth.module';
 import {provideNativeDateAdapter} from '@angular/material/core';
 import {provideHttpClient} from '@angular/common/http';
+import {SharedModule} from "./shared/shared.module";
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import {provideHttpClient} from '@angular/common/http';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    AuthModule
+    SharedModule,
+    AuthModule,
   ],
   providers: [
     provideNativeDateAdapter(),
