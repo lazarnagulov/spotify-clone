@@ -7,6 +7,7 @@ import {AuthModule} from './auth/auth.module';
 import {provideNativeDateAdapter} from '@angular/material/core';
 import {provideHttpClient} from '@angular/common/http';
 import {SharedModule} from "./shared/shared.module";
+import {LayoutModule} from "./layout/layout.module";
 
 @NgModule({
   declarations: [
@@ -16,6 +17,7 @@ import {SharedModule} from "./shared/shared.module";
     BrowserModule,
     AppRoutingModule,
     SharedModule,
+    LayoutModule,
     AuthModule,
   ],
   providers: [
