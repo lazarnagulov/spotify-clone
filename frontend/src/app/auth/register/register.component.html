@@ -69,6 +69,9 @@
           <mat-error *ngIf="registerForm.get('password')?.hasError('serverError')">
             {{ registerForm.get('password')?.getError('serverError') }}
           </mat-error>
+          <mat-error *ngIf="registerForm.get('password')?.hasError('cognitoPassword')">
+            {{ registerForm.get('password')?.getError('cognitoPassword')?.requirements }}
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">

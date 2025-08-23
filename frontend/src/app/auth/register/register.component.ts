@@ -7,6 +7,7 @@ import {formatDate} from "@angular/common";
 import {RegisterRequest} from "../model/register-request.model";
 import {MatStepper} from "@angular/material/stepper";
 import {ErrorResponse, ValidationDetail} from "../../shared/model/error-response.model";
+import {passwordMatchValidator, passwordValidator} from "../validator/password.validator";
 
 @Component({
   selector: 'app-register',
@@ -26,22 +27,15 @@ export class RegisterComponent {
     birthdate: new FormControl('', Validators.required),
     username: new FormControl('', [Validators.required, Validators.minLength(4)]),
     email: new FormControl('', [Validators.required, Validators.email]),
-    password: new FormControl('', [Validators.required, Validators.minLength(6)]),
+    password: new FormControl('', [Validators.required, passwordValidator]),
     confirmPassword: new FormControl('', Validators.required)
-  }, { validators: this.passwordMatchValidator });
+  }, { validators: passwordMatchValidator });
 
   codeForm: FormGroup = new FormGroup({
     code: new FormControl('', [Validators.required, Validators.minLength(6), Validators.maxLength(6)])
   })
 
   constructor(private authService: AuthService) {}
-
-  passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
-    const password = control.get('password')?.value;
-    const confirmPassword = control.get('confirmPassword')?.value;
-
-    return password === confirmPassword ? null : { mismatch: true };
-  }
 
   onRegister(): void {
     if (this.registerForm.invalid) return;
