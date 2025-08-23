@@ -1,0 +1,47 @@
+.login-card {
+  max-width: 450px;
+  margin: 3rem auto;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+  color: #222;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.error-message {
+  grid-column: 1 / -1;
+  color: #fc6a59;
+  background-color: #f8d7da;
+  border: 1px solid #fc6a59;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: left;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
+}
+
+.error-message ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.error-message li {
+  margin-bottom: 0.3rem;
+}

@@ -1,8 +1,6 @@
 import {Component, ViewChild} from '@angular/core';
-import {AbstractControl, FormControl, FormGroup, ValidationErrors, Validators} from '@angular/forms';
+import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {AuthService} from '../auth.service';
-import {RegisterResponse} from '../model/register-response.model';
-import {ConfirmResponse} from '../model/confirm-response.model';
 import {formatDate} from "@angular/common";
 import {RegisterRequest} from "../model/register-request.model";
 import {MatStepper} from "@angular/material/stepper";

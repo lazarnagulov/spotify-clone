@@ -30,4 +30,10 @@ export class AuthService {
     );
   }
 
+  login(request: any): Observable<any> {
+    return this.httpClient.post<any>(`${environment.apiHost}/login`, request).pipe(
+        catchError(err => throwError(() => this.errorHandler.handleError(err)))
+    );
+  }
+
 }
