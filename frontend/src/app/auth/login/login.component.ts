@@ -23,6 +23,7 @@ export class LoginComponent {
   constructor(private authService: AuthService) {}
 
   onLogin(): void {
+    if(this.loginForm.invalid) return;
     this.loading = true;
     this.authService.login(this.loginForm.value).subscribe({
       next: (response: LoginResponse) => {
