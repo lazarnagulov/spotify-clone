@@ -7,6 +7,8 @@ import {RegisterResponse} from './model/register-response.model';
 import {ConfirmRequest} from './model/confirm-request.model';
 import {ConfirmResponse} from './model/confirm-response.model';
 import {ErrorHandlerService} from "../shared/error-handler.service";
+import {LoginRequest} from './model/login-request.model';
+import {LoginResponse} from './model/login-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -30,8 +32,8 @@ export class AuthService {
     );
   }
 
-  login(request: any): Observable<any> {
-    return this.httpClient.post<any>(`${environment.apiHost}/login`, request).pipe(
+  login(request: LoginRequest): Observable<LoginResponse> {
+    return this.httpClient.post<LoginResponse>(`${environment.apiHost}/login`, request).pipe(
         catchError(err => throwError(() => this.errorHandler.handleError(err)))
     );
   }
