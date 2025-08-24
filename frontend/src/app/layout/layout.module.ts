@@ -5,12 +5,15 @@ import {RouterLink} from '@angular/router';
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatToolbar} from '@angular/material/toolbar';
 import {MaterialModule} from '../infrastructure/material/material.module';
+import { HomeComponent } from './home/home.component';
+import {SharedModule} from '../shared/shared.module';
 
 
 
 @NgModule({
   declarations: [
-    NavBarComponent
+    NavBarComponent,
+    HomeComponent
   ],
   exports: [
     NavBarComponent
@@ -18,6 +21,7 @@ import {MaterialModule} from '../infrastructure/material/material.module';
   imports: [
     CommonModule,
     RouterLink,
+    SharedModule,
     MaterialModule,
     MatToolbar
   ]

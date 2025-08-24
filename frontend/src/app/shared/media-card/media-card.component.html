@@ -1,0 +1,18 @@
+<mat-card class="media-card">
+  <mat-card-header>
+    <mat-card-title>{{ title }}</mat-card-title>
+    <mat-card-subtitle>{{ subtitle }}</mat-card-subtitle>
+  </mat-card-header>
+
+  <img mat-card-image [src]="imageUrl" alt="{{ title }}" />
+
+  <mat-card-content>
+    <p *ngIf="description">{{ description }}</p>
+  </mat-card-content>
+
+  <mat-card-actions align="end">
+    <button mat-icon-button color="primary">
+      <mat-icon>play_arrow</mat-icon>
+    </button>
+  </mat-card-actions>
+</mat-card>
