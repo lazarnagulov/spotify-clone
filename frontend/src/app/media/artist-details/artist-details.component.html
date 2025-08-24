@@ -1,0 +1,39 @@
+<div class="artist-detail">
+  <mat-card class="artist-header">
+    <img mat-card-image [src]="artist.imageUrl" alt="{{ artist.name }}" />
+    <mat-card-content>
+      <h1>{{ artist.name }}</h1>
+      <p>{{ artist.bio }}</p>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="primary">Play</button>
+      <button mat-stroked-button color="accent">Follow</button>
+    </mat-card-actions>
+  </mat-card>
+
+  <section class="albums-section">
+    <h2>Albums</h2>
+    <div class="media-grid">
+      <app-media-card
+        *ngFor="let album of artist.albums"
+        [id]="album.id"
+        [title]="album.title"
+        [subtitle]="'Album'"
+        [imageUrl]="album.imageUrl"
+      ></app-media-card>
+    </div>
+  </section>
+
+  <section class="songs-section">
+    <h2>Songs</h2>
+    <div class="media-grid">
+      <app-media-card
+        *ngFor="let song of artist.songs"
+        [id]="song.id"
+        [title]="song.title"
+        [subtitle]="'Song'"
+        [imageUrl]="song.imageUrl"
+      ></app-media-card>
+    </div>
+  </section>
+</div>

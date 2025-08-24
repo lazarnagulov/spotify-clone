@@ -1,0 +1,28 @@
+<div class="song-detail">
+  <mat-card class="song-header">
+    <img mat-card-image [src]="song.imageUrl" alt="{{ song.title }}" />
+    <mat-card-content>
+      <h1>{{ song.title }}</h1>
+      <p>{{ song.artistName }} • {{ song.albumName }}</p>
+      <p>{{ song.duration }}</p>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="primary">Play</button>
+      <button mat-stroked-button>Add to Playlist</button>
+      <button mat-icon-button><mat-icon>favorite</mat-icon></button>
+    </mat-card-actions>
+  </mat-card>
+
+  <section class="related-section">
+    <h2>Other Songs by {{ song.artistName }}</h2>
+    <div class="media-grid">
+      <app-media-card
+        *ngFor="let other of song.relatedSongs"
+        [id]="other.id"
+        [title]="other.title"
+        [subtitle]="'Song'"
+        [imageUrl]="other.imageUrl"
+      ></app-media-card>
+    </div>
+  </section>
+</div>

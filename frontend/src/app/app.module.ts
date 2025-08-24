@@ -8,6 +8,7 @@ import {provideNativeDateAdapter} from '@angular/material/core';
 import {provideHttpClient} from '@angular/common/http';
 import {SharedModule} from "./shared/shared.module";
 import {LayoutModule} from "./layout/layout.module";
+import {MediaModule} from './media/media.module';
 
 @NgModule({
   declarations: [
@@ -19,6 +20,7 @@ import {LayoutModule} from "./layout/layout.module";
     SharedModule,
     LayoutModule,
     AuthModule,
+    MediaModule,
   ],
   providers: [
     provideNativeDateAdapter(),

@@ -1,0 +1,24 @@
+<div class="album-detail">
+  <mat-card class="album-header">
+    <img mat-card-image [src]="album.imageUrl" alt="{{ album.title }}" />
+    <mat-card-content>
+      <h1>{{ album.title }}</h1>
+      <p>by {{ album.artistName }} • {{ album.year }}</p>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="primary">Play Album</button>
+    </mat-card-actions>
+  </mat-card>
+
+  <section class="songs-section">
+    <h2>Songs</h2>
+    <div class="media-grid">
+      <app-media-card
+        *ngFor="let song of album.songs"
+        [title]="song.title"
+        subtitle="Song"
+        [imageUrl]="'https://placehold.co/300x300?text=Song+' + song.id">
+      </app-media-card>
+    </div>
+  </section>
+</div>

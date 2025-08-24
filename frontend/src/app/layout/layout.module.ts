@@ -7,6 +7,7 @@ import {MatToolbar} from '@angular/material/toolbar';
 import {MaterialModule} from '../infrastructure/material/material.module';
 import { HomeComponent } from './home/home.component';
 import {SharedModule} from '../shared/shared.module';
+import {MediaModule} from '../media/media.module';
 
 
 
@@ -23,7 +24,7 @@ import {SharedModule} from '../shared/shared.module';
     RouterLink,
     SharedModule,
     MaterialModule,
-    MatToolbar
+    MediaModule,
   ]
 })
 export class LayoutModule { }
