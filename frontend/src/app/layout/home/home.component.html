@@ -2,6 +2,7 @@
   <div class="media-grid">
     <app-media-card
       *ngFor="let item of mediaItems"
+      [cardType]="item.cardType"
       [title]="item.title"
       [subtitle]="item.subtitle"
       [description]="item.description"

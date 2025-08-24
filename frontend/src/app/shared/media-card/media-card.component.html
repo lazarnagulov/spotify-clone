@@ -4,15 +4,20 @@
     <mat-card-subtitle>{{ subtitle }}</mat-card-subtitle>
   </mat-card-header>
 
-  <img mat-card-image [src]="imageUrl" alt="{{ title }}" />
+  <div class="image-container">
+    <img mat-card-image [src]="imageUrl" alt="{{ title }}" />
+    <button
+      [hidden]="cardType !== 'song'"
+      mat-icon-button
+      class="play-button"
+      color="primary"
+      (click)="$event.stopPropagation()"
+    >
+      <mat-icon>play_arrow</mat-icon>
+    </button>
+  </div>
 
   <mat-card-content>
     <p *ngIf="description">{{ description }}</p>
   </mat-card-content>
-
-  <mat-card-actions align="end">
-    <button mat-icon-button color="primary">
-      <mat-icon>play_arrow</mat-icon>
-    </button>
-  </mat-card-actions>
 </mat-card>

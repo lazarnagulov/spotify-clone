@@ -7,6 +7,7 @@ import {Component, Input} from '@angular/core';
   styleUrl: './media-card.component.css'
 })
 export class MediaCardComponent {
+  @Input() cardType: string = 'album'
   @Input() title!: string;
   @Input() subtitle!: string;
   @Input() description?: string;
