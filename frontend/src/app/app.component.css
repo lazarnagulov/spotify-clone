@@ -1,0 +1,18 @@
+.app-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+  min-height: calc(100vh - 128px);
+  background-color: #fafafa;
+}
+
+.app-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #e0e0e0;
+  color: rgba(0,0,0,0.87);
+  font-size: 0.9rem;
+}
