@@ -1,0 +1,43 @@
+<mat-card class="login-card">
+  <h2>Login</h2>
+
+  <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Username</mat-label>
+      <input matInput formControlName="username" />
+      <mat-error *ngIf="loginForm.get('username')?.hasError('required')">Username is required</mat-error>
+        <mat-error *ngIf="loginForm.get('username')?.hasError('serverError')">
+            {{ loginForm.get('username')?.getError('serverError') }}
+        </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Password</mat-label>
+      <input matInput type="password" formControlName="password" />
+      <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('serverError')">
+            {{ loginForm.get('password')?.getError('serverError') }}
+        </mat-error>
+    </mat-form-field>
+
+    <div *ngIf="serverError" class="error-message">
+      {{ serverError }}
+    </div>
+
+    <div *ngIf="validationErrors?.length" class="error-message">
+      <ul>
+        <li *ngFor="let e of validationErrors">
+          <strong>{{ e.loc.join(' > ') }}:</strong> {{ e.msg }}
+        </li>
+      </ul>
+    </div>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" [disabled]="loading">
+        <mat-progress-spinner *ngIf="loading" diameter="20" mode="indeterminate"></mat-progress-spinner>
+        <span *ngIf="!loading">Login</span>
+      </button>
+    </div>
+  </form>
+</mat-card>
