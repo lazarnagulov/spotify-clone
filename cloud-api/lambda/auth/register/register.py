@@ -2,6 +2,7 @@ import os
 import json
 import boto3
 
+from model.register_request import RegisterRequest
 from util.http_response import http_response
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
@@ -14,26 +15,21 @@ client = boto3.client('cognito-idp', region_name=COGNITO_REGION)
 @handle_lambda_exceptions
 def handler(event, _context):
     body = json.loads(event.get('body', '{}'))
-    username = body['username']
-    email = body['email']
-    password = body['password']
-    name = body['name']
-    family_name = body['family_name']
-    birthdate = body['birthdate']
+    request = RegisterRequest.model_validate(body)
 
     response = client.sign_up(
         ClientId=COGNITO_CLIENT_ID,
-        Username=username,
-        Password=password,
+        Username=request.username,
+        Password=request.password,
         UserAttributes=[
-            {"Name": "email", "Value": email},
-            {"Name": "name", "Value": name},
-            {"Name": "family_name", "Value": family_name},
-            {"Name": "birthdate", "Value": birthdate},
+            {"Name": "email", "Value": request.email},
+            {"Name": "name", "Value": request.name},
+            {"Name": "family_name", "Value": request.family_name},
+            {"Name": "birthdate", "Value": request.birthdate},
         ]
     )
 
-    logger.info(f"Successfully registered user {username} with email {email}")
+    logger.info(f"Successfully registered user {request.username} with email {request.email}")
     return http_response(201, {
         "message": "User registered successfully",
         "data": response.get("UserSub")

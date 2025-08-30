@@ -1,3 +1,4 @@
+import json
 from botocore.exceptions import ClientError
 from pydantic import ValidationError
 
@@ -32,7 +33,7 @@ def handle_lambda_exceptions(func):
 
         except ValidationError as ve:
             logger.warning("Validation error", extra={"errors": ve.errors()})
-            return http_response(400, {"error": ve.errors()})
+            return http_response(400, {"error": json.loads(ve.json())})
         except ClientError as ce:
             error_code = ce.response['Error']['Code']
             status, message = COGNITO_ERROR_MAP.get(
