@@ -12,7 +12,8 @@ class SpotifyCloneStack(Stack):
         cognito_env = {
             "LOG_LEVEL": "DEBUG",
             "COGNITO_REGION": "eu-central-1",
-            "COGNITO_CLIENT_ID": "40q842ul1ip3m7n0eb2tg61g2t"
+            "COGNITO_CLIENT_ID": "40q842ul1ip3m7n0eb2tg61g2t",
+            "COGNITO_USER_POOL_ID": "eu-central-1_jtrzQHN3l"
         }
 
         # TODO: Add cognito user pool creation?

@@ -12,12 +12,9 @@ COGNITO_REGION = os.environ.get("COGNITO_REGION")
 
 client = boto3.client('cognito-idp', region_name=COGNITO_REGION)
 
-@handle_lambda_exceptions
-def handler(event, _context):
-    body = json.loads(event.get('body', "{}"))
-    request = LoginRequest.model_validate(body)
 
-    response = client.initiate_auth(
+def authenticate(request: LoginRequest):
+    return client.initiate_auth(
         ClientId=COGNITO_CLIENT_ID,
         AuthFlow='USER_PASSWORD_AUTH',
         AuthParameters={
@@ -25,5 +22,12 @@ def handler(event, _context):
             'PASSWORD': request.password
         }
     )
+
+@handle_lambda_exceptions
+def handler(event, _context):
+    body = json.loads(event.get('body', "{}"))
+    request = LoginRequest.model_validate(body)
+
+    response = authenticate(request)
     logger.info(f"{request.username} has been logged successfully.")
     return http_response(200, response['AuthenticationResult'])
