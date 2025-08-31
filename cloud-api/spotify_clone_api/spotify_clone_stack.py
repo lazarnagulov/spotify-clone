@@ -1,6 +1,10 @@
 from aws_cdk import (
     Stack, aws_lambda,
     aws_apigateway as apigw,
+    aws_dynamodb as dynamodb,
+    aws_iam as iam,
+    RemovalPolicy,
+    Stack
 )
 from constructs import Construct
 
@@ -62,3 +66,20 @@ class SpotifyCloneStack(Stack):
         register.add_method("POST", apigw.LambdaIntegration(registration))
         confirm.add_method("POST", apigw.LambdaIntegration(confirmation))
         login_ep.add_method("POST", apigw.LambdaIntegration(login))
+
+
+        music_catalog_table = dynamodb.Table(
+            self, "MusicCatalogTable",
+            table_name="MusicCatalog",
+            partition_key=dynamodb.Attribute(
+                name="PK",
+                type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="SK",
+                type=dynamodb.AttributeType.STRING
+            ),
+            read_capacity=1,
+            write_capacity=1,
+            removal_policy=RemovalPolicy.DESTROY
+        )
