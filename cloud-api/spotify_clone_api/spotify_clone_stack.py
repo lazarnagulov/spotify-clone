@@ -4,6 +4,35 @@ from aws_cdk import (
 )
 from constructs import Construct
 
+
+def add_options(resource: apigw.Resource):
+    resource.add_method(
+        "OPTIONS",
+        apigw.MockIntegration(
+            integration_responses=[{
+                "statusCode": "200",
+                "responseParameters": {
+                    "method.response.header.Access-Control-Allow-Origin": "'http://localhost:4200'",
+                    "method.response.header.Access-Control-Allow-Credentials": "'true'",
+                    "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                    "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,POST'",
+                },
+            }],
+            passthrough_behavior=apigw.PassthroughBehavior.WHEN_NO_MATCH,
+            request_templates={"application/json": '{"statusCode": 200}'},
+        ),
+        method_responses=[{
+            "statusCode": "200",
+            "responseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": True,
+                "method.response.header.Access-Control-Allow-Credentials": True,
+                "method.response.header.Access-Control-Allow-Headers": True,
+                "method.response.header.Access-Control-Allow-Methods": True,
+            },
+        }],
+    )
+
+
 class SpotifyCloneStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -55,11 +84,27 @@ class SpotifyCloneStack(Stack):
             environment=cognito_env,
         )
 
+        refresh = aws_lambda.Function(
+            self,
+            "RefreshFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="refresh.handler",
+            code=aws_lambda.Code.from_asset("lambda/auth/refresh"),
+            layers=[shared_layer],
+            environment=cognito_env,
+        )
+
         api = apigw.RestApi(self, "SpotifyCloneApi")
         register = api.root.add_resource("registration")
         confirm = api.root.add_resource("confirmation")
         login_ep = api.root.add_resource("login")
+        refresh_ep = api.root.add_resource("refresh")
 
         register.add_method("POST", apigw.LambdaIntegration(registration))
         confirm.add_method("POST", apigw.LambdaIntegration(confirmation))
         login_ep.add_method("POST", apigw.LambdaIntegration(login))
+        refresh_ep.add_method("POST", apigw.LambdaIntegration(refresh))
+
+        for resource in [register, confirm, login_ep, refresh_ep]:
+            add_options(resource)
+
