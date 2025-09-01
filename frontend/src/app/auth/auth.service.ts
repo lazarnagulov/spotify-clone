@@ -22,7 +22,13 @@ export class AuthService {
   constructor(
       private httpClient: HttpClient,
       private errorHandler: ErrorHandlerService
-  ) { }
+  ) {
+    this.accessToken = localStorage.getItem("accessToken");
+    this.idToken = localStorage.getItem("idToken");
+    if (this.idToken) {
+      this.roles = getUserRoles(this.idToken);
+    }
+  }
 
   getAccessToken(): string | null {
     return this.accessToken;
@@ -44,10 +50,20 @@ export class AuthService {
     return this.accessToken !== null;
   }
 
+  clearTokens(): void {
+    this.accessToken = null;
+    this.idToken = null;
+    this.roles = [];
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("idToken");
+  }
+
   setTokens(tokens: LoginResponse): void {
     this.accessToken = tokens.AccessToken;
     this.idToken = tokens.IdToken;
     this.roles = getUserRoles(tokens.IdToken);
+    localStorage.setItem("accessToken", this.accessToken);
+    localStorage.setItem("idToken", this.idToken);
   }
 
   register(request: RegisterRequest): Observable<RegisterResponse> {
@@ -68,4 +84,7 @@ export class AuthService {
     );
   }
 
+  refresh(): Observable<LoginResponse> {
+    return this.httpClient.post<LoginResponse>(`${environment.apiHost}/refresh`, {}, { withCredentials: true });
+  }
 }
