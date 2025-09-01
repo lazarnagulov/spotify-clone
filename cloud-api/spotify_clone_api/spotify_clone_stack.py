@@ -1,6 +1,7 @@
 from aws_cdk import (
-    Stack, aws_lambda,
+    Stack, aws_lambda, RemovalPolicy,
     aws_apigateway as apigw,
+    aws_s3 as s3
 )
 from constructs import Construct
 
@@ -52,6 +53,15 @@ class SpotifyCloneStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/auth/login"),
             layers=[shared_layer],
             environment=cognito_env,
+        )
+
+        s3_bucket = s3.Bucket(
+            self, "MusicAssetsBucket",
+            versioned = True,
+            removal_policy = RemovalPolicy.DESTROY,
+            auto_delete_objects = True,
+            public_read_access = False,
+            block_public_access = s3.BlockPublicAccess.BLOCK_ALL
         )
 
         api = apigw.RestApi(self, "SpotifyCloneApi")
