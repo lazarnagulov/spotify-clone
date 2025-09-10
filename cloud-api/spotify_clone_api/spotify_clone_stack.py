@@ -185,3 +185,10 @@ class SpotifyCloneStack(Stack):
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*"]
         ))
+
+        registration.role.add_to_policy(iam.PolicyStatement(
+            actions=["cognito-idp:AdminAddUserToGroup"],
+            resources=[
+                f"arn:aws:cognito-idp:{self.region}:{self.account}:userpool/{cognito_env['COGNITO_USER_POOL_ID']}"
+            ]
+        ))
