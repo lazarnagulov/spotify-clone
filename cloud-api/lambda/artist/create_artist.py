@@ -6,6 +6,7 @@ from util.exception_handler import handle_lambda_exceptions
 
 dynamodb = boto3.resource('dynamodb', region_name='eu-central-1')
 artists_table = dynamodb.Table('Artists')
+music_catalog_table = dynamodb.Table('MusicCatalog')
 
 @handle_lambda_exceptions
 def handler(event, context):
@@ -16,12 +17,22 @@ def handler(event, context):
 
     artists_table.put_item(
         Item={
-            "PK": str(uuid.uuid4()),
+            "PK": artist_id,
             "SK": request.name,
             "bio": request.bio,
             "genres": request.genres
         }
     )
+
+    with music_catalog_table.batch_writer() as batch:
+        for genre in request.genres:
+            batch.put_item(
+                Item={
+                    "PK": f"GENRE#{genre}",
+                    "SK": f"ARTIST#{artist_id}",
+                    "name": request.name
+                }
+            )
 
     return {
         'statusCode': 201,

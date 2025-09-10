@@ -82,6 +82,22 @@ class SpotifyCloneStack(Stack):
             write_capacity=1,
             removal_policy=RemovalPolicy.DESTROY
         )
+
+        music_catalog_table = dynamodb.Table(
+            self, "MusicCatalogTable",
+            table_name="MusicCatalog",
+            partition_key=dynamodb.Attribute(
+                name="PK",
+                type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="SK",
+                type=dynamodb.AttributeType.STRING
+            ),
+            read_capacity=1,
+            write_capacity=1,
+            removal_policy=RemovalPolicy.DESTROY
+        )
         
         artists_table = dynamodb.Table(
             self, "ArtistsTable",
@@ -121,5 +137,6 @@ class SpotifyCloneStack(Stack):
                 "dynamodb:UpdateItem",
                 "dynamodb:GetItem"
             ],
-            resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists"]
+            resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*"]
         ))
