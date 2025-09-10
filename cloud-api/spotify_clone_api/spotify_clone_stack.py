@@ -67,14 +67,13 @@ class SpotifyCloneStack(Stack):
         confirm.add_method("POST", apigw.LambdaIntegration(confirmation))
         login_ep.add_method("POST", apigw.LambdaIntegration(login))
 
-
-        music_catalog_table = dynamodb.Table(
-            self, "MusicCatalogTable",
-            table_name="MusicCatalog",
+        genres_table = dynamodb.Table(
+            self, "GenresTable",
+            table_name="Genres",
             partition_key=dynamodb.Attribute(
                 name="PK",
                 type=dynamodb.AttributeType.STRING
-            ),
+            ),     
             sort_key=dynamodb.Attribute(
                 name="SK",
                 type=dynamodb.AttributeType.STRING
@@ -83,28 +82,4 @@ class SpotifyCloneStack(Stack):
             write_capacity=1,
             removal_policy=RemovalPolicy.DESTROY
         )
-
-        create_artist_lambda = aws_lambda.Function(
-            self,
-            "CreateArtistFunction",
-            runtime=aws_lambda.Runtime.PYTHON_3_11,
-            handler="create_artist.handler",
-            code=aws_lambda.Code.from_asset("lambda/artist"),
-            layers=[shared_layer],
-            environment={
-                'TABLE_NAME': music_catalog_table.table_name
-            }
-        )
-
-        artist_creation = api.root.add_resource("artist_creation")
-        artist_creation.add_method("POST", apigw.LambdaIntegration(create_artist_lambda))
-
-        create_artist_lambda.role.add_to_policy(iam.PolicyStatement(
-            actions=[
-                "dynamodb:BatchWriteItem",
-                "dynamodb:PutItem",
-                "dynamodb:UpdateItem",
-                "dynamodb:GetItem"
-            ],
-            resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog"]
-        ))
+        
