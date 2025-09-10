@@ -127,7 +127,7 @@ class SpotifyCloneStack(Stack):
             }
         )
 
-        artist_creation = api.root.add_resource("artist_creation")
+        artist_creation = api.root.add_resource("artist")
         artist_creation.add_method("POST", apigw.LambdaIntegration(create_artist_lambda))
 
         create_artist_lambda.role.add_to_policy(iam.PolicyStatement(

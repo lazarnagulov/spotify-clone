@@ -3,6 +3,7 @@ import json
 import uuid
 from model.create_artist_request import CreateArtistRequest
 from util.exception_handler import handle_lambda_exceptions
+from util.http_response import http_response
 
 dynamodb = boto3.resource('dynamodb', region_name='eu-central-1')
 artists_table = dynamodb.Table('Artists')
@@ -34,7 +35,4 @@ def handler(event, context):
                 }
             )
 
-    return {
-        'statusCode': 201,
-        'body': json.dumps({'message': 'Artist created successfully'})
-    }
+    return http_response(201, {'message': 'Artist created successfully'})
