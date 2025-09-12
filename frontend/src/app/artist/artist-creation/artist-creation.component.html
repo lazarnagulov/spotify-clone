@@ -1,0 +1,54 @@
+<div class="page-container">
+  <div class="left-side">
+    <h1>
+      Register<br>
+      New<br>
+      Artist<br>
+      To<br>
+      Spotify Clone
+    </h1>
+    <p class="tagline">Your music, your stage, your audience.</p>
+  </div>
+
+  <div class="right-side">
+    <form [formGroup]="artistForm" (ngSubmit)="onSubmit()" class="artist-form">
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Artist Name</mat-label>
+        <input matInput formControlName="name" placeholder="Enter artist name">
+        <mat-error *ngIf="artistForm.get('name')?.hasError('required')">
+          Artist name is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Bio</mat-label>
+        <textarea matInput formControlName="bio" placeholder="Enter bio" rows="4"></textarea>
+        <mat-hint align="end">{{artistForm.get('bio')?.value?.length || 0}} / 500</mat-hint>
+        <mat-error *ngIf="artistForm.get('bio')?.hasError('required')">
+          Bio is required
+        </mat-error>
+        <mat-error *ngIf="artistForm.get('bio')?.hasError('minlength')">
+          Bio must be at least 10 characters
+        </mat-error>
+        <mat-error *ngIf="artistForm.get('bio')?.hasError('maxlength')">
+          Bio cannot exceed 500 characters
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Genres</mat-label>
+        <mat-select formControlName="genres" multiple>
+          <mat-option *ngFor="let genre of allGenres" [value]="genre">
+            {{ genre }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="artistForm.get('genres')?.hasError('required')">
+          At least one genre must be selected
+        </mat-error>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit">Create Artist</button>
+    </form>
+  </div>
+</div>

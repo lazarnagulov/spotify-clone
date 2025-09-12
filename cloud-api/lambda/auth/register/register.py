@@ -9,15 +9,19 @@ from util.exception_handler import handle_lambda_exceptions
 
 COGNITO_CLIENT_ID = os.environ.get("COGNITO_CLIENT_ID")
 COGNITO_REGION = os.environ.get("COGNITO_REGION")
+COGNITO_USER_POOL_ID = os.environ.get("COGNITO_USER_POOL_ID")
 
 client = boto3.client('cognito-idp', region_name=COGNITO_REGION)
 
-@handle_lambda_exceptions
-def handler(event, _context):
-    body = json.loads(event.get('body', '{}'))
-    request = RegisterRequest.model_validate(body)
+def add_user_to_group(username: str, group: str):
+    client.admin_add_user_to_group(
+        UserPoolId=COGNITO_USER_POOL_ID,
+        Username=username,
+        GroupName=group
+    )
 
-    response = client.sign_up(
+def sign_up_user(request: RegisterRequest):
+    return client.sign_up(
         ClientId=COGNITO_CLIENT_ID,
         Username=request.username,
         Password=request.password,
@@ -28,6 +32,14 @@ def handler(event, _context):
             {"Name": "birthdate", "Value": request.birthdate},
         ]
     )
+
+@handle_lambda_exceptions
+def handler(event, _context):
+    body = json.loads(event.get('body', '{}'))
+    request = RegisterRequest.model_validate(body)
+
+    response = sign_up_user(request)
+    add_user_to_group(request.username, "user")
 
     logger.info(f"Successfully registered user {request.username} with email {request.email}")
     return http_response(201, {

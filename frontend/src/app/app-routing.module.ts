@@ -6,10 +6,12 @@ import {HomeComponent} from './layout/home/home.component';
 import {ArtistDetailsComponent} from './media/artist-details/artist-details.component';
 import {SongDetailsComponent} from './media/song-details/song-details.component';
 import {AlbumDetailsComponent} from './media/album-details/album-details.component';
+import { ArtistCreationComponent } from './artist/artist-creation/artist-creation.component';
 
 const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'artist-creation', component: ArtistCreationComponent },
   { path: 'home', component: HomeComponent },
   { path: 'artist/:id', component: ArtistDetailsComponent },
   { path: 'song/:id', component: SongDetailsComponent },

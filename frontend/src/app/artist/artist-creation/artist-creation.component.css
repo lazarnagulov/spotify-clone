@@ -1,0 +1,49 @@
+.page-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.left-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to right, #00bcd4, #ffffff); 
+  color: #ffab40;
+  padding: 2rem;
+  text-align: center;
+}
+
+
+.left-side h1 {
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.left-side .tagline {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.right-side {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background: #f9f9f9;
+}
+
+.artist-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.full-width {
+  width: 100%;
+}

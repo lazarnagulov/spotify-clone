@@ -12,6 +12,10 @@ import { MatCardModule } from '@angular/material/card';
 import {MatList, MatListItem} from '@angular/material/list';
 import {MatLine} from '@angular/material/core';
 import {MatToolbar} from '@angular/material/toolbar';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 @NgModule({
   imports: [
@@ -28,6 +32,10 @@ import {MatToolbar} from '@angular/material/toolbar';
     MatList,
     MatLine,
     MatToolbar,
+    MatOptionModule,
+    MatSelectModule,
+    MatChipsModule,
+    MatAutocompleteModule
   ],
   exports: [
     MatFormFieldModule,
@@ -42,6 +50,10 @@ import {MatToolbar} from '@angular/material/toolbar';
     MatList,
     MatLine,
     MatToolbar,
+    MatOptionModule,
+    MatSelectModule,
+    MatChipsModule,
+    MatAutocompleteModule
   ]
 })
 export class MaterialModule { }
