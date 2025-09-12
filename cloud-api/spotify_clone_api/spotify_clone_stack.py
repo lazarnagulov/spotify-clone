@@ -101,13 +101,13 @@ class SpotifyCloneStack(Stack):
         api = apigw.RestApi(self, "SpotifyCloneApi")
         register = api.root.add_resource("registration")
         confirm = api.root.add_resource("confirmation")
-        login_ep = api.root.add_resource("login")
-        refresh_ep = api.root.add_resource("refresh")
+        login_resource = api.root.add_resource("login")
+        refresh_resource = api.root.add_resource("refresh")
 
         register.add_method("POST", apigw.LambdaIntegration(registration))
         confirm.add_method("POST", apigw.LambdaIntegration(confirmation))
-        login_ep.add_method("POST", apigw.LambdaIntegration(login))
-        refresh_ep.add_method("POST", apigw.LambdaIntegration(refresh))
+        login_resource.add_method("POST", apigw.LambdaIntegration(login))
+        refresh_resource.add_method("POST", apigw.LambdaIntegration(refresh))
 
         genres_table = dynamodb.Table(
             self, "GenresTable",
@@ -162,17 +162,38 @@ class SpotifyCloneStack(Stack):
             "CreateArtistFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
             handler="create_artist.handler",
-            code=aws_lambda.Code.from_asset("lambda/artist"),
+            code=aws_lambda.Code.from_asset("lambda/artist/create"),
             layers=[shared_layer],
             environment={
                 'TABLE_NAME': artists_table.table_name
             }
         )
 
-        artist_creation = api.root.add_resource("artists")
-        artist_creation.add_method("POST", apigw.LambdaIntegration(create_artist_lambda))
+        get_artist_details_lambda = aws_lambda.Function(
+            self,
+            "GetArtistDetailsFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_artist.handler",
+            code=aws_lambda.Code.from_asset("lambda/artist/get"),
+            layers=[shared_layer],
+            environment={
+                'TABLE_NAME': artists_table.table_name
+            }
+        )
+        artists_table.grant_read_data(get_artist_details_lambda)
 
-        for resource in [register, confirm, login_ep, refresh_ep, artist_creation]:
+        artist_resource = api.root.add_resource("artists")
+        artist_resource.add_method("POST", apigw.LambdaIntegration(create_artist_lambda))
+
+        artist_id_resource = artist_resource.add_resource("{id}", default_cors_preflight_options=apigw.CorsOptions(
+            allow_origins=["http://localhost:4200"],
+            allow_methods=["OPTIONS", "GET"],
+            allow_headers=["Content-Type", "Authorization"],
+            allow_credentials=True
+        ))
+        artist_id_resource.add_method("GET", apigw.LambdaIntegration(get_artist_details_lambda))
+
+        for resource in [register, confirm, login_resource, refresh_resource, artist_resource]:
             add_options(resource)
 
         create_artist_lambda.role.add_to_policy(iam.PolicyStatement(
