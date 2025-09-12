@@ -28,8 +28,8 @@ export class LoginComponent {
     this.authService.login(this.loginForm.value).subscribe({
       next: (response: LoginResponse) => {
         this.loading = false;
-        console.log(response);
-        // TODO: navigate
+        this.authService.setTokens(response);
+        // TODO: Navigate to home
       },
       error: (error: ErrorResponse) => {
         this.loading = false;

@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
+import {AuthService} from './auth/auth.service';
+import {LoginResponse} from './auth/model/login-response.model';
 
 @Component({
   selector: 'app-root',
@@ -6,6 +8,19 @@ import { Component } from '@angular/core';
   standalone: false,
   styleUrl: './app.component.css'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+
+  constructor(private authService: AuthService) {
+  }
+
+  ngOnInit(): void {
+    // TODO: Uncomment if HTTPS is implemented
+    // this.authService.refresh().subscribe({
+    //   next: (response: LoginResponse) => {
+    //     this.authService.setTokens(response);
+    //   },
+    //   error: () => {}
+    // });
+  }
 
 }
