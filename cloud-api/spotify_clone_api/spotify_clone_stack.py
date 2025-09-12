@@ -109,9 +109,6 @@ class SpotifyCloneStack(Stack):
         login_ep.add_method("POST", apigw.LambdaIntegration(login))
         refresh_ep.add_method("POST", apigw.LambdaIntegration(refresh))
 
-        for resource in [register, confirm, login_ep, refresh_ep]:
-            add_options(resource)
-
         genres_table = dynamodb.Table(
             self, "GenresTable",
             table_name="Genres",
@@ -174,6 +171,9 @@ class SpotifyCloneStack(Stack):
 
         artist_creation = api.root.add_resource("artists")
         artist_creation.add_method("POST", apigw.LambdaIntegration(create_artist_lambda))
+
+        for resource in [register, confirm, login_ep, refresh_ep, artist_creation]:
+            add_options(resource)
 
         create_artist_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
