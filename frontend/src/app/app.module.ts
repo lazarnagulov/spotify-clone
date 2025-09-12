@@ -22,7 +22,7 @@ import {MediaModule} from './media/media.module';
     LayoutModule,
     AuthModule,
     MediaModule,
-    ArtistModule
+    ArtistModule,
   ],
   providers: [
     provideNativeDateAdapter(),

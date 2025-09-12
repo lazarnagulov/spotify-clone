@@ -1,5 +1,8 @@
 export interface Artist {
   name: string,
   bio: string,
-  genres: string[]
+  genres: string[],
+  // TODO: Change once songs and albums creation is implemented
+  songs: any[];
+  albums: any[];
 }

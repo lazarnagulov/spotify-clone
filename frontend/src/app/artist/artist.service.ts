@@ -16,4 +16,8 @@ export class ArtistService {
   createArtist(artist: Artist): Observable<Artist> {
     return this.httpClient.post<Artist>(environment.apiHost + "/artists", artist);
   }
+
+  getDetails(id: string): Observable<Artist> {
+    return this.httpClient.get<Artist>(`${environment.apiHost}/artists/${id}`);
+  }
 }

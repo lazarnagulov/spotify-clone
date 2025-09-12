@@ -11,12 +11,3 @@
 h2 {
   margin: 16px 0;
 }
-
-mat-card img {
-  width: 100%;
-  max-height: 500px;
-  object-fit: cover;
-  margin: 0 auto;
-  display: block;
-  border-radius: 8px;
-}

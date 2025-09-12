@@ -1,4 +1,8 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
+import {ArtistService} from '../artist.service';
+import {ActivatedRoute} from '@angular/router';
+import {EMPTY, switchMap} from 'rxjs';
+import {Artist} from '../model/create-artist.model';
 
 @Component({
   selector: 'app-artist-details',
@@ -6,19 +10,22 @@ import { Component } from '@angular/core';
   templateUrl: './artist-details.component.html',
   styleUrl: './artist-details.component.css'
 })
-export class ArtistDetailsComponent {
-  artist = {
-    id: 1,
-    name: 'The Rolling Codes',
-    bio: 'A legendary coding rock band known for their complex riffs and bug-free jams.',
-    imageUrl: 'https://placehold.co/600x400?text=Artist',
-    albums: [
-      { id: 11, title: 'Code Symphony', imageUrl: 'https://placehold.co/300x300?text=Album+1' },
-      { id: 12, title: 'Debugging Blues', imageUrl: 'https://placehold.co/300x300?text=Album+2' }
-    ],
-    songs: [
-      { id: 101, title: 'Hello World Anthem', imageUrl: 'https://placehold.co/300x300?text=Song+1' },
-      { id: 102, title: 'Null Pointer Serenade', imageUrl: 'https://placehold.co/300x300?text=Song+2' }
-    ]
-  };
+export class ArtistDetailsComponent implements OnInit {
+  id?: string;
+  artist?: Artist;
+
+  constructor(
+    private artistService: ArtistService,
+    private route: ActivatedRoute
+  ) {}
+
+  ngOnInit(): void {
+    this.route.paramMap.pipe(
+      switchMap(params => {
+        const id = params.get('id');
+        this.id = id ?? undefined;
+        return id ? this.artistService.getDetails(id) : EMPTY;
+      })
+    ).subscribe(artist => this.artist = artist);
+  }
 }
