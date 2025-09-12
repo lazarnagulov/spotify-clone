@@ -172,7 +172,7 @@ class SpotifyCloneStack(Stack):
             }
         )
 
-        artist_creation = api.root.add_resource("artist")
+        artist_creation = api.root.add_resource("artists")
         artist_creation.add_method("POST", apigw.LambdaIntegration(create_artist_lambda))
 
         create_artist_lambda.role.add_to_policy(iam.PolicyStatement(
@@ -185,6 +185,32 @@ class SpotifyCloneStack(Stack):
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*"]
         ))
+
+        get_genres_lambda = aws_lambda.Function(
+            self,
+            "GetGenresFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_genres.handler",
+            code=aws_lambda.Code.from_asset("lambda/genre"),
+            layers=[shared_layer],
+            environment={
+                'TABLE_NAME': genres_table.table_name
+            }
+        )
+
+        genres = api.root.add_resource("genres")
+        genres.add_method("GET", apigw.LambdaIntegration(get_genres_lambda))
+
+        get_genres_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "dynamodb:GetItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan"
+                ],
+                resources=[genres_table.table_arn]
+            )
+        )
 
         registration.role.add_to_policy(iam.PolicyStatement(
             actions=["cognito-idp:AdminAddUserToGroup"],
