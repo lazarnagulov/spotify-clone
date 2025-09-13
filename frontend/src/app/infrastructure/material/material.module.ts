@@ -9,6 +9,10 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatCardModule } from '@angular/material/card';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 @NgModule({
   imports: [
@@ -21,6 +25,10 @@ import { MatCardModule } from '@angular/material/card';
     MatProgressSpinnerModule,
     MatDatepickerModule,
     MatCardModule,
+    MatOptionModule,
+    MatSelectModule,
+    MatChipsModule,
+    MatAutocompleteModule
   ],
   exports: [
     MatFormFieldModule,
@@ -31,6 +39,10 @@ import { MatCardModule } from '@angular/material/card';
     MatProgressSpinnerModule,
     MatDatepickerModule,
     MatCardModule,
+    MatOptionModule,
+    MatSelectModule,
+    MatChipsModule,
+    MatAutocompleteModule
   ]
 })
 export class MaterialModule { }
