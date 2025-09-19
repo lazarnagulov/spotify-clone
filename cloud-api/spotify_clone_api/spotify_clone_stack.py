@@ -213,7 +213,7 @@ class SpotifyCloneStack(Stack):
         )
 
         registration.role.add_to_policy(iam.PolicyStatement(
-            actions=["cognito-idp:AdminAddUserToGroup"],
+            actions=["cognito-idp:AdminAddUserToGroup", "cognito-idp:ListUsers"],
             resources=[
                 f"arn:aws:cognito-idp:{self.region}:{self.account}:userpool/{cognito_env['COGNITO_USER_POOL_ID']}"
             ]
