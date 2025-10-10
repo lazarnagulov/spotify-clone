@@ -4,13 +4,15 @@ import uuid
 from model.create_artist_request import CreateArtistRequest
 from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
+from util.auth import require_role
 
 dynamodb = boto3.resource('dynamodb', region_name='eu-central-1')
 artists_table = dynamodb.Table('Artists')
 music_catalog_table = dynamodb.Table('MusicCatalog')
 
 @handle_lambda_exceptions
-def handler(event, context):
+@require_role('admin')
+def handler(event, _context):
     body = json.loads(event.get("body", "{}"))
     request = CreateArtistRequest.model_validate(body)
 
