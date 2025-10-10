@@ -13,13 +13,6 @@ COGNITO_USER_POOL_ID = os.environ.get("COGNITO_USER_POOL_ID")
 
 client = boto3.client('cognito-idp', region_name=COGNITO_REGION)
 
-def add_user_to_group(username: str, group: str):
-    client.admin_add_user_to_group(
-        UserPoolId=COGNITO_USER_POOL_ID,
-        Username=username,
-        GroupName=group
-    )
-
 def sign_up_user(request: RegisterRequest):
     return client.sign_up(
         ClientId=COGNITO_CLIENT_ID,
@@ -39,7 +32,6 @@ def handler(event, _context):
     request = RegisterRequest.model_validate(body)
 
     response = sign_up_user(request)
-    add_user_to_group(request.username, "user")
 
     logger.info(f"Successfully registered user {request.username} with email {request.email}")
     return http_response(201, {
