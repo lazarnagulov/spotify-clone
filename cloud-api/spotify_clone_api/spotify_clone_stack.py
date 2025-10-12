@@ -8,6 +8,7 @@ from aws_cdk import (
     Stack
 )
 from constructs import Construct
+import os
 
 
 def add_options(resource: apigw.Resource):
@@ -89,14 +90,39 @@ class SpotifyCloneStack(Stack):
             environment=cognito_env,
         )
 
-        s3_bucket = s3.Bucket(
-            self, "MusicAssetsBucket",
-            versioned = True,
-            removal_policy = RemovalPolicy.DESTROY,
-            auto_delete_objects = True,
-            public_read_access = False,
-            block_public_access = s3.BlockPublicAccess.BLOCK_ALL
+        images_bucket = s3.Bucket(
+            self, "ImagesBucket",
+            bucket_name=os.getenv("IMAGES_BUCKET"),
+            versioned=True,
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_delete_objects=True,
+            public_read_access=False,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL
         )
+
+        audio_bucket = s3.Bucket(
+            self, "AudioBucket",
+            bucket_name=os.getenv("AUDIO_BUCKET"),
+            versioned=True,
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_delete_objects=True,
+            public_read_access=False,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL
+        )
+
+        generate_presigned_url_lambda = aws_lambda.Function(
+            self, "GeneratePresignedUrlsFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_9,
+            handler="music-content.handler",
+            code=aws_lambda.Code.from_asset("lambda/music-content/song"), 
+            environment={
+                "AUDIO_BUCKET": audio_bucket.bucket_name,
+                "IMAGE_BUCKET": images_bucket.bucket_name
+            }
+        )
+
+        images_bucket.grant_put(generate_presigned_url_lambda)
+        audio_bucket.grant_put(generate_presigned_url_lambda)
         
         refresh = aws_lambda.Function(
             self,
