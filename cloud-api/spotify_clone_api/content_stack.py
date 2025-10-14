@@ -3,6 +3,7 @@ from aws_cdk import (
     Stack,
     RemovalPolicy,
     aws_lambda,
+    aws_apigateway as apigw,
     aws_s3 as s3,
     CfnOutput
 )
@@ -11,7 +12,7 @@ from constructs import Construct
 
 class ContentStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, shared_layer_arn, content_layer_arn, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, shared_layer_arn, content_layer_arn, api, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         shared_layer = aws_lambda.LayerVersion.from_layer_version_arn(self, "ImportedSharedLayer", shared_layer_arn)
         content_layer = aws_lambda.LayerVersion.from_layer_version_arn(self, "ImportedContentLayer", content_layer_arn)
@@ -63,6 +64,9 @@ class ContentStack(Stack):
         #     s3.EventType.OBJECT_CREATED,
         #     s3n.LambdaDestination(metadata_lambda)
         # )
+
+        upload_url = api.root.add_resource("upload-url")
+        upload_url.add_method("POST", apigw.LambdaIntegration(generate_presigned_url_lambda))
 
         CfnOutput(self, "AudioBucketName", value=audio_bucket.bucket_name)
         CfnOutput(self, "ImagesBucketName", value=images_bucket.bucket_name)

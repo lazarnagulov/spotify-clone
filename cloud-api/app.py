@@ -3,6 +3,8 @@ import os
 
 import aws_cdk as cdk
 
+from spotify_clone_api.api_gateway_stack import ApiGatewayStack
+from spotify_clone_api.auth_stack import AuthStack
 from spotify_clone_api.content_stack import ContentStack
 from spotify_clone_api.layer_stack import LayerStack
 from spotify_clone_api.spotify_clone_stack import SpotifyCloneStack
@@ -16,13 +18,27 @@ env = cdk.Environment(
 )
 
 layer_stack = LayerStack(app, "SpotifyCloneLayerStack", env=env)
+
+gw_stack = ApiGatewayStack(app, "SpotifyCloneApiGatewayStack", env=env)
+AuthStack(app, "SpotifyCloneAuthStack", api=gw_stack.api, shared_layer_arn=layer_stack.shared_layer_arn, env=env)
+
+
+SpotifyCloneStack(
+    app,
+    "CloudApiStack",
+    shared_layer_arn=layer_stack.shared_layer_arn,
+    api=gw_stack.api,
+    env=env
+)
+
 content_stack = ContentStack(
     app,
     "SpotifyCloneContentStack",
     shared_layer_arn=layer_stack.shared_layer_arn,
     content_layer_arn=layer_stack.content_layer_arn,
-    env=env)
+    api=gw_stack.api,
+    env=env
+)
 
-SpotifyCloneStack(app, "CloudApiStack", shared_layer_arn=layer_stack.shared_layer_arn, env=env)
 
 app.synth()
