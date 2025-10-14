@@ -1,5 +1,5 @@
 import os, json, uuid
-from helpers.helper import generate_presigned_url
+from util.s3 import generate_presigned_url
 
 
 audio_bucket = os.environ.get("AUDIO_BUCKET")

@@ -1,14 +1,12 @@
 from aws_cdk import (
-    Stack, aws_lambda, RemovalPolicy,
+    aws_lambda,
     aws_apigateway as apigw,
-    aws_s3 as s3,
     aws_dynamodb as dynamodb,
     aws_iam as iam,
     RemovalPolicy,
     Stack
 )
 from constructs import Construct
-import os
 
 
 def add_options(resource: apigw.Resource):
@@ -41,7 +39,7 @@ def add_options(resource: apigw.Resource):
 
 class SpotifyCloneStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, shared_layer_arn, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         cognito_env = {
@@ -50,15 +48,7 @@ class SpotifyCloneStack(Stack):
             "COGNITO_CLIENT_ID": "40q842ul1ip3m7n0eb2tg61g2t",
             "COGNITO_USER_POOL_ID": "eu-central-1_jtrzQHN3l"
         }
-
-        # TODO: Add cognito user pool creation?
-
-        shared_layer = aws_lambda.LayerVersion(
-            self, "SharedDependenciesLayer",
-            code=aws_lambda.Code.from_asset(".build/shared.zip"),
-            description="Shared dependencies (pydantic, logger)",
-            compatible_runtimes = [aws_lambda.Runtime.PYTHON_3_11]
-        )
+        shared_layer = aws_lambda.LayerVersion.from_layer_version_arn(self, "ImportedSharedLayer", shared_layer_arn)
 
         registration = aws_lambda.Function(
             self,
@@ -90,40 +80,6 @@ class SpotifyCloneStack(Stack):
             environment=cognito_env,
         )
 
-        images_bucket = s3.Bucket(
-            self, "ImagesBucket",
-            bucket_name=os.getenv("IMAGES_BUCKET"),
-            versioned=True,
-            removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=True,
-            public_read_access=False,
-            block_public_access=s3.BlockPublicAccess.BLOCK_ALL
-        )
-
-        audio_bucket = s3.Bucket(
-            self, "AudioBucket",
-            bucket_name=os.getenv("AUDIO_BUCKET"),
-            versioned=True,
-            removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=True,
-            public_read_access=False,
-            block_public_access=s3.BlockPublicAccess.BLOCK_ALL
-        )
-
-        generate_presigned_url_lambda = aws_lambda.Function(
-            self, "GeneratePresignedUrlsFunction",
-            runtime=aws_lambda.Runtime.PYTHON_3_9,
-            handler="music-content.handler",
-            code=aws_lambda.Code.from_asset("lambda/music-content/song"), 
-            environment={
-                "AUDIO_BUCKET": audio_bucket.bucket_name,
-                "IMAGE_BUCKET": images_bucket.bucket_name
-            }
-        )
-
-        images_bucket.grant_put(generate_presigned_url_lambda)
-        audio_bucket.grant_put(generate_presigned_url_lambda)
-        
         refresh = aws_lambda.Function(
             self,
             "RefreshFunction",

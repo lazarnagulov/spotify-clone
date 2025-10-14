@@ -3,26 +3,26 @@ import os
 
 import aws_cdk as cdk
 
+from spotify_clone_api.content_stack import ContentStack
+from spotify_clone_api.layer_stack import LayerStack
 from spotify_clone_api.spotify_clone_stack import SpotifyCloneStack
 
+REGION = 'eu-central-1'
 
 app = cdk.App()
-SpotifyCloneStack(app, "CloudApiStack",
-                  # If you don't specify 'env', this stack will be environment-agnostic.
-                  # Account/Region-dependent features and context lookups will not work,
-                  # but a single synthesized template can be deployed anywhere.
+env = cdk.Environment(
+    account=os.environ["CDK_DEFAULT_ACCOUNT"],
+    region=REGION,
+)
 
-                  # Uncomment the next line to specialize this stack for the AWS Account
-                  # and Region that are implied by the current CLI configuration.
+layer_stack = LayerStack(app, "SpotifyCloneLayerStack", env=env)
+content_stack = ContentStack(
+    app,
+    "SpotifyCloneContentStack",
+    shared_layer_arn=layer_stack.shared_layer_arn,
+    content_layer_arn=layer_stack.content_layer_arn,
+    env=env)
 
-                  #env=cdk.Environment(account=os.getenv('CDK_DEFAULT_ACCOUNT'), region=os.getenv('CDK_DEFAULT_REGION')),
-
-                  # Uncomment the next line if you know exactly what Account and Region you
-                  # want to deploy the stack to. */
-
-                  #env=cdk.Environment(account='123456789012', region='us-east-1'),
-
-                  # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
-                  )
+SpotifyCloneStack(app, "CloudApiStack", shared_layer_arn=layer_stack.shared_layer_arn, env=env)
 
 app.synth()
