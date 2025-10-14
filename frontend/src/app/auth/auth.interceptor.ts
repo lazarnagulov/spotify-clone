@@ -8,6 +8,9 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler) {
+    if (req.url.includes('amazonaws.com')) {
+      return next.handle(req);
+    }
     const token = this.authService.getAccessToken();
     if (token) {
       req = req.clone({

@@ -19,9 +19,8 @@ class ApiGatewayStack(Stack):
         self.api = apigw.RestApi(
             self, "SpotifyCloneApi",
             default_cors_preflight_options=apigw.CorsOptions(
-                allow_origins=["http://localhost:4200"],
-                allow_methods=["GET", "POST", "OPTIONS"],
+                allow_origins=["*"],
+                allow_methods=["GET", "POST", "OPTIONS", "PUT"],
                 allow_headers=["Content-Type", "Authorization"],
-                allow_credentials=True
             )
         )

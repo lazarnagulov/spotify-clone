@@ -3,18 +3,19 @@ from typing import Union, Dict, List, Optional
 
 
 def http_response(
-    status_code: int,
-    body: Union[Dict, str],
-    headers: Optional[Dict]=None,
-    cookies: Optional[List[str]]=None
+        status_code: int,
+        body: Union[Dict, str],
+        headers: Optional[Dict]=None,
+        cookies: Optional[List[str]]=None
 ):
     if not isinstance(body, str):
         body = json.dumps(body)
 
     response_headers = {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://localhost:4200",  # TODO: change once front is deployed
-        "Access-Control-Allow-Credentials": "true"
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Amz-Date, X-Api-Key, Accept"
     }
 
     if headers:

@@ -23,7 +23,7 @@ gw_stack = ApiGatewayStack(app, "SpotifyCloneApiGatewayStack", env=env)
 AuthStack(app, "SpotifyCloneAuthStack", api=gw_stack.api, shared_layer_arn=layer_stack.shared_layer_arn, env=env)
 
 
-SpotifyCloneStack(
+table_stack = SpotifyCloneStack(
     app,
     "CloudApiStack",
     shared_layer_arn=layer_stack.shared_layer_arn,
@@ -35,7 +35,6 @@ content_stack = ContentStack(
     app,
     "SpotifyCloneContentStack",
     shared_layer_arn=layer_stack.shared_layer_arn,
-    content_layer_arn=layer_stack.content_layer_arn,
     api=gw_stack.api,
     env=env
 )
