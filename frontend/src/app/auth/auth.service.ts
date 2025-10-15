@@ -72,6 +72,8 @@ export class AuthService {
     );
   }
 
+
+
   confirm(request: ConfirmRequest): Observable<ConfirmResponse> {
     return this.httpClient.post<ConfirmResponse>(`${environment.apiHost}/confirmation`, request).pipe(
         catchError(err => throwError(() => this.errorHandler.handleError(err)))
