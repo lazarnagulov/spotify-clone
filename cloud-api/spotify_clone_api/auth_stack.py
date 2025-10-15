@@ -8,9 +8,8 @@ from aws_cdk import (
 
 class AuthStack(Stack):
 
-    def __init__(self, scope, construct_id: str, api, shared_layer_arn, cognito_client_id, user_pool,  **kwargs) -> None:
+    def __init__(self, scope, construct_id: str, api, shared_layer, cognito_client_id, user_pool,  **kwargs) -> None:
         super().__init__(scope, construct_id,   **kwargs)
-        shared_layer = aws_lambda.LayerVersion.from_layer_version_arn(self, "ImportedSharedLayer", shared_layer_arn)
 
         cognito_env = {
             "LOG_LEVEL": "DEBUG",
@@ -70,7 +69,10 @@ class AuthStack(Stack):
         refresh_api.add_method("POST", apigw.LambdaIntegration(refresh))
 
         registration.role.add_to_policy(iam.PolicyStatement(
-            actions=["cognito-idp:AdminAddUserToGroup"],
+            actions=[
+                "cognito-idp:AdminAddUserToGroup",
+                "cognito-idp:ListUsers"
+            ],
             resources=[
                 f"arn:aws:cognito-idp:{self.region}:{self.account}:userpool/{cognito_env['COGNITO_USER_POOL_ID']}"
             ]

@@ -32,7 +32,7 @@ auth_stack = AuthStack(
     "SpotifyCloneAuthStack",
     api=gw_stack.api,
     cognito_client_id=cognito_stack.app_client.user_pool_client_id,
-    shared_layer_arn=layer_stack.shared_layer_arn,
+    shared_layer=layer_stack.shared_layer,
     user_pool=cognito_stack.user_pool,
     env=env
 )
@@ -40,7 +40,7 @@ auth_stack = AuthStack(
 table_stack = SpotifyCloneStack(
     app,
     "CloudApiStack",
-    shared_layer_arn=layer_stack.shared_layer_arn,
+    shared_layer=layer_stack.shared_layer,
     authorizer=gw_stack.authorizer,
     api=gw_stack.api,
     env=env
@@ -49,7 +49,7 @@ table_stack = SpotifyCloneStack(
 content_stack = ContentStack(
     app,
     "SpotifyCloneContentStack",
-    shared_layer_arn=layer_stack.shared_layer_arn,
+    shared_layer=layer_stack.shared_layer,
     authorizer=gw_stack.authorizer,
     api=gw_stack.api,
     env=env

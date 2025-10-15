@@ -29,7 +29,7 @@ class CognitoStack(Stack):
             self, "SpotifyCloneUserPool",
             self_sign_up_enabled=True,
             auto_verify=cognito.AutoVerifiedAttrs(email=True),
-            sign_in_aliases=cognito.SignInAliases(email=True),
+            sign_in_aliases=cognito.SignInAliases(email=True, username=True),
             lambda_triggers=cognito.UserPoolTriggers(
                 post_confirmation=post_confirm_lambda
             ),

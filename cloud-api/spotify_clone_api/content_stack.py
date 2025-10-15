@@ -12,9 +12,8 @@ from constructs import Construct
 
 class ContentStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, authorizer, shared_layer_arn, api, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, authorizer, shared_layer, api, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
-        shared_layer = aws_lambda.LayerVersion.from_layer_version_arn(self, "ImportedSharedLayer", shared_layer_arn)
 
         cors_rule = s3.CorsRule(
             allowed_methods=[s3.HttpMethods.GET, s3.HttpMethods.PUT, s3.HttpMethods.POST, s3.HttpMethods.HEAD],
