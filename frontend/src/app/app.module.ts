@@ -9,6 +9,7 @@ import {provideHttpClient} from '@angular/common/http';
 import {SharedModule} from "./shared/shared.module";
 import {LayoutModule} from "./layout/layout.module";
 import { ArtistModule } from './artist/artist.module';
+import {MusicContentModule} from './music-content/music-content.module';
 import {MediaModule} from './media/media.module';
 
 @NgModule({
@@ -23,6 +24,7 @@ import {MediaModule} from './media/media.module';
     AuthModule,
     MediaModule,
     ArtistModule,
+    MusicContentModule,
   ],
   providers: [
     provideNativeDateAdapter(),
