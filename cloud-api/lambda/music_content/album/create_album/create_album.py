@@ -7,6 +7,8 @@ from datetime import datetime
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
+
+from auth import require_role
 from model.create_album_request import CreateAlbumRequest
 
 dynamodb = boto3.client("dynamodb")
@@ -17,6 +19,7 @@ s3 = boto3.client("s3", region_name="eu-central-1")
 
 
 @handle_lambda_exceptions
+@require_role('admin')
 def handler(event, _context):
     body = json.loads(event.get("body", "{}"))
     request = CreateAlbumRequest.model_validate(body)

@@ -12,9 +12,8 @@ from constructs import Construct
 
 class ContentStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, shared_layer_arn, api, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, authorizer, shared_layer, api, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
-        shared_layer = aws_lambda.LayerVersion.from_layer_version_arn(self, "ImportedSharedLayer", shared_layer_arn)
 
         cors_rule = s3.CorsRule(
             allowed_methods=[s3.HttpMethods.GET, s3.HttpMethods.PUT, s3.HttpMethods.POST, s3.HttpMethods.HEAD],
@@ -98,10 +97,10 @@ class ContentStack(Stack):
         ))
 
         song_api = api.root.add_resource("songs")
-        song_api.add_method("POST", apigw.LambdaIntegration(create_song_lambda))
+        song_api.add_method("POST", apigw.LambdaIntegration(create_song_lambda), authorizer=authorizer)
 
         song_api = api.root.add_resource("albums")
-        song_api.add_method("POST", apigw.LambdaIntegration(create_album_lambda))
+        song_api.add_method("POST", apigw.LambdaIntegration(create_album_lambda), authorizer=authorizer)
 
         CfnOutput(self, "AudioBucketName", value=audio_bucket.bucket_name)
         CfnOutput(self, "ImagesBucketName", value=images_bucket.bucket_name)

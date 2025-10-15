@@ -3,7 +3,6 @@ import os
 import boto3
 
 from util.http_response import http_response
-from util.logger import logger
 
 COGNITO_CLIENT_ID = os.environ.get("COGNITO_CLIENT_ID")
 COGNITO_REGION = os.environ.get("COGNITO_REGION")

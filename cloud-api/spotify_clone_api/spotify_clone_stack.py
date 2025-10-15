@@ -10,10 +10,8 @@ from constructs import Construct
 
 class SpotifyCloneStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, shared_layer_arn, api, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, authorizer, shared_layer, api, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
-
-        shared_layer = aws_lambda.LayerVersion.from_layer_version_arn(self, "ImportedSharedLayer", shared_layer_arn)
 
         genres_table = dynamodb.Table(
             self, "GenresTable",
@@ -76,7 +74,7 @@ class SpotifyCloneStack(Stack):
         )
 
         artist_creation = api.root.add_resource("artists")
-        artist_creation.add_method("POST", apigw.LambdaIntegration(create_artist_lambda))
+        artist_creation.add_method("POST", apigw.LambdaIntegration(create_artist_lambda), authorizer=authorizer)
 
         create_artist_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[

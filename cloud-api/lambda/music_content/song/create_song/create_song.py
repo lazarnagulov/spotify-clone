@@ -4,6 +4,7 @@ import boto3
 import uuid
 from datetime import datetime
 
+from util.auth import require_role
 from util.http_response import http_response
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
@@ -18,6 +19,7 @@ s3 = boto3.client("s3", region_name="eu-central-1")
 
 
 @handle_lambda_exceptions
+@require_role('admin')
 def handler(event, _context):
     body = json.loads(event.get("body", "{}"))
     request = CreateSongRequest.model_validate(body)
