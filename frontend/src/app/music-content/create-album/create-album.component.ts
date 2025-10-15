@@ -43,7 +43,7 @@ export class CreateAlbumComponent implements OnInit {
       title: ['', Validators.required],
       artists: [[], Validators.required],
       genres: [[], Validators.required],
-      year: [new Date().getFullYear(), [Validators.required, Validators.min(1900), Validators.max(2100)]],
+      year: [new Date().getFullYear(), [Validators.required, Validators.min(1900), Validators.max(new Date().getFullYear())]],
       description: ['']
     });
   }
