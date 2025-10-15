@@ -33,10 +33,20 @@ def sign_up_user(request: RegisterRequest):
         ]
     )
 
+def user_exists(email: str) -> bool:
+    response = client.list_users(
+        UserPoolId=COGNITO_USER_POOL_ID,
+        Filter=f'email = "{email}"'
+    )
+    return len(response['Users']) > 0
+
 @handle_lambda_exceptions
 def handler(event, _context):
     body = json.loads(event.get('body', '{}'))
     request = RegisterRequest.model_validate(body)
+
+    if user_exists(request.email):
+        return http_response(400, {"error": "User with this email already exists"})
 
     response = sign_up_user(request)
     add_user_to_group(request.username, "user")
