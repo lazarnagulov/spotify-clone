@@ -21,12 +21,12 @@ s3 = boto3.client("s3", region_name="eu-central-1")
 def handler(event, _context):
     body = json.loads(event.get("body", "{}"))
     request = CreateSongRequest.model_validate(body)
-    song_id = str(uuid.uuid4())
-    path_to_cover = f"images/{song_id}"
+    song_id = f"SONG#{str(uuid.uuid4())}"
+    path_to_cover = f"covers/songs/{song_id}"
     path_to_audio = f"songs/{song_id}"
 
     item = {
-        "PK": "SONG#" + song_id,
+        "PK":  song_id,
         "SK": "METADATA",
         "title": request.title,
         "genres": request.genres,

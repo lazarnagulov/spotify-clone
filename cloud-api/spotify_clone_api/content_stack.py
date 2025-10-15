@@ -5,7 +5,7 @@ from aws_cdk import (
     aws_apigateway as apigw,
     aws_s3 as s3,
     aws_iam as iam,
-    CfnOutput
+    CfnOutput, Duration
 )
 from constructs import Construct
 
@@ -41,18 +41,6 @@ class ContentStack(Stack):
             cors=[cors_rule]
         )
 
-        generate_presigned_url_lambda = aws_lambda.Function(
-            self, "GeneratePresignedUrlsFunction",
-            runtime=aws_lambda.Runtime.PYTHON_3_11,
-            handler="generate_presign_url.handler",
-            code=aws_lambda.Code.from_asset("lambda/music_content/presigned_url"),
-            layers=[shared_layer],
-            environment={
-                "AUDIO_BUCKET": audio_bucket.bucket_name,
-                "IMAGE_BUCKET": images_bucket.bucket_name
-            }
-        )
-
         create_song_lambda = aws_lambda.Function(
             self, "CreateSongFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
@@ -66,14 +54,31 @@ class ContentStack(Stack):
             }
         )
 
-        audio_bucket.grant_put(generate_presigned_url_lambda)
-        images_bucket.grant_put(generate_presigned_url_lambda)
+        create_album_lambda = aws_lambda.Function(
+            self, "CreateAlbumFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="create_album.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/album/create_album"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(60),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "SONGS_TABLE": "MusicCatalog",
+            }
+        )
 
         audio_bucket.grant_put(create_song_lambda)
         images_bucket.grant_put(create_song_lambda)
 
         audio_bucket.grant_read(create_song_lambda)
         images_bucket.grant_read(create_song_lambda)
+
+        audio_bucket.grant_put(create_album_lambda)
+        images_bucket.grant_put(create_album_lambda)
+
+        audio_bucket.grant_read(create_album_lambda)
+        images_bucket.grant_read(create_album_lambda)
+
 
         create_song_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
@@ -84,11 +89,20 @@ class ContentStack(Stack):
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*"]
         ))
 
-        upload_url = api.root.add_resource("upload-url")
-        upload_url.add_method("POST", apigw.LambdaIntegration(generate_presigned_url_lambda))
+        create_album_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+            ],
+            resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*"]
+        ))
 
         song_api = api.root.add_resource("songs")
         song_api.add_method("POST", apigw.LambdaIntegration(create_song_lambda))
+
+        song_api = api.root.add_resource("albums")
+        song_api.add_method("POST", apigw.LambdaIntegration(create_album_lambda))
 
         CfnOutput(self, "AudioBucketName", value=audio_bucket.bucket_name)
         CfnOutput(self, "ImagesBucketName", value=images_bucket.bucket_name)
