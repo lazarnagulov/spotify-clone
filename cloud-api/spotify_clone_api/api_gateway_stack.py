@@ -7,11 +7,13 @@ from aws_cdk import (
 
 class ApiGatewayStack(Stack):
 
-    def __init__(self, scope, construct_id, **kwargs):
+    def __init__(self, scope, construct_id, user_pool, **kwargs):
         super().__init__(scope, construct_id, **kwargs)
-        # self.authorizer = apigw.CognitoUserPoolsAuthorizer(
-        #     self, "CognitoAuthorizer",
-        # )
+
+        self.authorizer = apigw.CognitoUserPoolsAuthorizer(
+            self, "CognitoAuthorizer",
+            cognito_user_pools=[user_pool]
+        )
 
         self.api = apigw.RestApi(
             self, "SpotifyCloneApi",

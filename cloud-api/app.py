@@ -20,14 +20,28 @@ env = cdk.Environment(
 
 layer_stack = LayerStack(app, "SpotifyCloneLayerStack", env=env)
 
-cognito_stack = CognitoStack(app, "CognitoStack", env=env)
-gw_stack = ApiGatewayStack(app, "SpotifyCloneApiGatewayStack", env=env)
-AuthStack(app, "SpotifyCloneAuthStack", api=gw_stack.api, shared_layer_arn=layer_stack.shared_layer_arn, env=env)
+cognito_stack = CognitoStack(
+    app,
+    "CognitoStack",
+    env=env
+
+)
+gw_stack = ApiGatewayStack(app, "SpotifyCloneApiGatewayStack", user_pool=cognito_stack.user_pool,  env=env)
+auth_stack = AuthStack(
+    app,
+    "SpotifyCloneAuthStack",
+    api=gw_stack.api,
+    cognito_client_id=cognito_stack.app_client.user_pool_client_id,
+    shared_layer_arn=layer_stack.shared_layer_arn,
+    user_pool=cognito_stack.user_pool,
+    env=env
+)
 
 table_stack = SpotifyCloneStack(
     app,
     "CloudApiStack",
     shared_layer_arn=layer_stack.shared_layer_arn,
+    authorizer=gw_stack.authorizer,
     api=gw_stack.api,
     env=env
 )
@@ -36,6 +50,7 @@ content_stack = ContentStack(
     app,
     "SpotifyCloneContentStack",
     shared_layer_arn=layer_stack.shared_layer_arn,
+    authorizer=gw_stack.authorizer,
     api=gw_stack.api,
     env=env
 )

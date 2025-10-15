@@ -10,20 +10,15 @@ class CognitoStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs):
         super().__init__(scope, construct_id, **kwargs)
 
-        cognito_env = {
-            "LOG_LEVEL": "DEBUG",
-            "COGNITO_REGION": "eu-central-1",
-            "COGNITO_CLIENT_ID": "40q842ul1ip3m7n0eb2tg61g2t",
-            "COGNITO_USER_POOL_ID": "eu-central-1_jtrzQHN3l"
-        }
-
         post_confirm_lambda = Function(
             self,
             "PostConfirmationLambda",
             runtime=Runtime.PYTHON_3_11,
             handler="post_confirm.handler",
             code=Code.from_asset("lambda/auth/post_confirm"),
-            environment=cognito_env
+            environment={
+                "COGNITO_REGION": "eu-central-1"
+            }
         )
 
         post_confirm_lambda.role.add_managed_policy(
