@@ -73,8 +73,8 @@ class SpotifyCloneStack(Stack):
             }
         )
 
-        artist_creation = api.root.add_resource("artists")
-        artist_creation.add_method("POST", apigw.LambdaIntegration(create_artist_lambda), authorizer=authorizer)
+        artist_api = api.root.add_resource("artists")
+        artist_api.add_method("POST", apigw.LambdaIntegration(create_artist_lambda), authorizer=authorizer)
 
         get_artist_details_lambda = aws_lambda.Function(
             self,
@@ -89,15 +89,7 @@ class SpotifyCloneStack(Stack):
         )
         artists_table.grant_read_data(get_artist_details_lambda)
 
-        artist_resource = api.root.add_resource("artists")
-        artist_resource.add_method("POST", apigw.LambdaIntegration(create_artist_lambda))
-
-        artist_id_resource = artist_resource.add_resource("{id}", default_cors_preflight_options=apigw.CorsOptions(
-            allow_origins=["http://localhost:4200"],
-            allow_methods=["OPTIONS", "GET"],
-            allow_headers=["Content-Type", "Authorization"],
-            allow_credentials=True
-        ))
+        artist_id_resource = artist_api.add_resource("{id}")
         artist_id_resource.add_method("GET", apigw.LambdaIntegration(get_artist_details_lambda))
 
         create_artist_lambda.role.add_to_policy(iam.PolicyStatement(

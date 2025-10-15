@@ -44,7 +44,7 @@ class ContentStack(Stack):
             self, "CreateSongFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
             handler="create_song.handler",
-            code=aws_lambda.Code.from_asset("lambda/music_content/song/create_song"),
+            code=aws_lambda.Code.from_asset("lambda/music_content/song/create"),
             layers=[shared_layer],
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
@@ -56,9 +56,22 @@ class ContentStack(Stack):
             self, "CreateAlbumFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
             handler="create_album.handler",
-            code=aws_lambda.Code.from_asset("lambda/music_content/album/create_album"),
+            code=aws_lambda.Code.from_asset("lambda/music_content/album/create"),
             layers=[shared_layer],
             timeout=Duration.seconds(60),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "SONGS_TABLE": "MusicCatalog",
+            }
+        )
+
+        get_song_lambda = aws_lambda.Function(
+            self, "GetSongFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_song.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/song/get"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
                 "SONGS_TABLE": "MusicCatalog",
@@ -99,8 +112,23 @@ class ContentStack(Stack):
         song_api = api.root.add_resource("songs")
         song_api.add_method("POST", apigw.LambdaIntegration(create_song_lambda), authorizer=authorizer)
 
+        song_id_resource = song_api.add_resource("{id}")
+        song_id_resource.add_method("GET", apigw.LambdaIntegration(get_song_lambda), authorizer=authorizer)
+
         song_api = api.root.add_resource("albums")
         song_api.add_method("POST", apigw.LambdaIntegration(create_album_lambda), authorizer=authorizer)
+
+        get_song_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:GetItem",
+                "s3:GetObject"
+            ],
+            resources=[
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+            ]
+        ))
 
         CfnOutput(self, "AudioBucketName", value=audio_bucket.bucket_name)
         CfnOutput(self, "ImagesBucketName", value=images_bucket.bucket_name)

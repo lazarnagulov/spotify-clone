@@ -1,10 +1,11 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SongDetailsComponent } from './song-details/song-details.component';
 import {MediaCardComponent} from './media-card/media-card.component';
 import {MaterialModule} from '../infrastructure/material/material.module';
 import {RouterLink} from '@angular/router';
 import {AlbumDetailsComponent} from './album-details/album-details.component';
+import {SongDetailsComponent} from './song-details/song-details.component';
+import {MatSlider, MatSliderThumb} from '@angular/material/slider';
 
 
 
@@ -21,6 +22,8 @@ import {AlbumDetailsComponent} from './album-details/album-details.component';
     CommonModule,
     MaterialModule,
     RouterLink,
+    MatSliderThumb,
+    MatSlider,
   ]
 })
 export class MediaModule { }
