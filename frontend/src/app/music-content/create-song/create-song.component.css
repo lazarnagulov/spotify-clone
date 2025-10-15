@@ -1,0 +1,107 @@
+.song-card {
+  width: 100%;
+  max-width: 80rem;
+  margin: 4rem auto;
+  padding: 3rem 4rem;
+  border-radius: 1.2rem;
+  background: #fff;
+  box-shadow: 0 0.5rem 2.5rem rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  color: #222;
+  font-size: 2.2rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem 3rem;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.full-span {
+  grid-column: 1 / -1;
+}
+
+/* Upload section */
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  grid-column: 1 / -1;
+}
+
+.upload-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.upload-label {
+  font-weight: 500;
+  color: #555;
+  font-size: 1rem;
+}
+
+.upload-label.required::after {
+  content: " *";
+  color: #d32f2f;
+}
+
+.upload-input {
+  display: block;
+  padding: 1rem;
+  border: 0.1rem solid #ccc;
+  border-radius: 0.6rem;
+  font-size: 1rem;
+  background-color: #fafafa;
+  transition: border-color 0.2s ease;
+}
+
+.upload-input:hover {
+  border-color: #999;
+}
+
+.preview-container {
+  margin-top: 0.5rem;
+}
+
+.preview-image {
+  max-width: 20rem;
+  border-radius: 0.6rem;
+  border: 0.1rem solid #ddd;
+  box-shadow: 0 0.2rem 0.6rem rgba(0, 0, 0, 0.1);
+}
+
+audio {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.error-message {
+  grid-column: 1 / -1;
+  color: #fc6a59;
+  background-color: #f8d7da;
+  border: 0.1rem solid #fc6a59;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: left;
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.actions {
+  grid-column: 1 / -1;
+  margin-top: 2.5rem;
+  display: flex;
+  justify-content: flex-start;
+}
