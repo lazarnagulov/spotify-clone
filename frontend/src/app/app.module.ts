@@ -5,11 +5,12 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import {AuthModule} from './auth/auth.module';
 import {provideNativeDateAdapter} from '@angular/material/core';
-import {provideHttpClient} from '@angular/common/http';
+import {HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi} from '@angular/common/http';
 import {SharedModule} from "./shared/shared.module";
 import {LayoutModule} from "./layout/layout.module";
 import { ArtistModule } from './artist/artist.module';
 import {MusicContentModule} from './music-content/music-content.module';
+import {AuthInterceptor} from './auth/auth.interceptor';
 import {MediaModule} from './media/media.module';
 
 @NgModule({
@@ -28,7 +29,12 @@ import {MediaModule} from './media/media.module';
   ],
   providers: [
     provideNativeDateAdapter(),
-    provideHttpClient()
+    provideHttpClient(withFetch(), withInterceptorsFromDi()),
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    }
   ],
   bootstrap: [AppComponent]
 })

@@ -34,6 +34,9 @@ def handle_lambda_exceptions(func):
         except ValidationError as ve:
             logger.warning("Validation error", extra={"errors": ve.errors()})
             return http_response(400, {"error": json.loads(ve.json())})
+        except PermissionError as pe:
+            logger.warning("Permission denied", extra={"error": str(pe)})
+            return http_response(403, {"error": "Forbidden"})
         except ClientError as ce:
             error_code = ce.response['Error']['Code']
             status, message = COGNITO_ERROR_MAP.get(
