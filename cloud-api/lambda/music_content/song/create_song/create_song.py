@@ -56,7 +56,7 @@ def handler(event, _context):
     presigned_audio_url = s3.generate_presigned_url(
         "put_object",
         Params={
-            "Bucket": AUDIO_BUCKET,
+            "Bucket": IMAGE_BUCKET,
             "Key": path_to_audio,
         },
         ExpiresIn=3600
