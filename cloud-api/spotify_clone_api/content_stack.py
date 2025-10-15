@@ -48,8 +48,7 @@ class ContentStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/music_content/song/create_song"),
             layers=[shared_layer],
             environment={
-                "AUDIO_BUCKET": audio_bucket.bucket_name,
-                "IMAGE_BUCKET": images_bucket.bucket_name,
+                "MEDIA_BUCKET": images_bucket.bucket_name,
                 "SONGS_TABLE": "MusicCatalog",
             }
         )

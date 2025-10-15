@@ -4,6 +4,7 @@ import boto3
 import uuid
 from datetime import datetime
 
+from util.http_response import http_response
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
 from model.create_song_request import CreateSongRequest
@@ -11,8 +12,7 @@ from model.create_song_request import CreateSongRequest
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ["SONGS_TABLE"])
 
-AUDIO_BUCKET = os.environ["AUDIO_BUCKET"]
-IMAGE_BUCKET = os.environ["IMAGE_BUCKET"]
+MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
 
 s3 = boto3.client("s3", region_name="eu-central-1")
 
@@ -30,7 +30,7 @@ def handler(event, _context):
         "SK": "METADATA",
         "title": request.title,
         "genres": request.genres,
-        "artists": request.artists if request.artists else ["Unknown"],
+        "artists": request.artists,
         "album_id": request.album_id or "",
         "pathToCover": path_to_cover,
         "pathToAudio": path_to_audio,
@@ -47,7 +47,7 @@ def handler(event, _context):
     presigned_cover_url = s3.generate_presigned_url(
         "put_object",
         Params={
-            "Bucket": IMAGE_BUCKET,
+            "Bucket": MEDIA_BUCKET,
             "Key": path_to_cover,
         },
         ExpiresIn=3600
@@ -56,20 +56,16 @@ def handler(event, _context):
     presigned_audio_url = s3.generate_presigned_url(
         "put_object",
         Params={
-            "Bucket": IMAGE_BUCKET,
+            "Bucket": MEDIA_BUCKET,
             "Key": path_to_audio,
         },
         ExpiresIn=3600
     )
 
-    return {
-        'statusCode': 201,
-        "headers": {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Credentials": "true",
-        },
-        'body': json.dumps({
+    return http_response(
+        status_code=201,
+        body={
             'coverUploadPresignedUrl': presigned_cover_url,
             'audioUploadPresignedUrl': presigned_audio_url
-        })
-    }
+        }
+    )

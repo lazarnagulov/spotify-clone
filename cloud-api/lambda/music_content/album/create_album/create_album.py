@@ -6,6 +6,7 @@ from datetime import datetime
 
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
+from util.http_response import http_response
 from model.create_album_request import CreateAlbumRequest
 
 dynamodb = boto3.client("dynamodb")
@@ -119,15 +120,11 @@ def handler(event, _context):
         "total_songs": len(request.songs)
     })
 
-    return {
-        'statusCode': 201,
-        "headers": {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Credentials": "true",
-        },
-        'body': json.dumps({
+    return http_response(
+        status_code=201,
+        body={
             'album_id': album_id,
             'album_cover_upload_url': album_cover_url,
             'songs': song_presigned_urls
-        })
-    }
+        }
+    )

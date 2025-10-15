@@ -20,27 +20,3 @@ class CreateAlbumRequest(BaseModel):
     cover_type: str = Field(default="image/jpeg", pattern="^image/")
     description: Optional[str] = Field(None, max_length=1000)
     songs: List[SongData] = Field(..., min_items=1, max_items=50)
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "title": "Greatest Hits",
-                "artists": ["ARTIST#123"],
-                "genres": ["Pop", "Rock"],
-                "year": 2024,
-                "cover_type": "image/jpeg",
-                "description": "Best songs collection",
-                "songs": [
-                    {
-                        "title": "Song One",
-                        "audio_type": "audio/mpeg",
-                        "duration": 180
-                    },
-                    {
-                        "title": "Song Two",
-                        "audio_type": "audio/mpeg",
-                        "duration": 210
-                    }
-                ]
-            }
-        }

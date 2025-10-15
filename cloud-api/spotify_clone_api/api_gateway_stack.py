@@ -5,7 +5,6 @@ from aws_cdk import (
 )
 
 
-
 class ApiGatewayStack(Stack):
 
     def __init__(self, scope, construct_id, **kwargs):
