@@ -91,6 +91,19 @@ class ContentStack(Stack):
             }
         )
 
+        get_home_page = aws_lambda.Function(
+            self, "GetHomePageFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_home_page.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/home_page"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "SONGS_TABLE": "MusicCatalog",
+            }
+        )
+
         audio_bucket.grant_put(create_song_lambda)
         images_bucket.grant_put(create_song_lambda)
 
@@ -122,6 +135,20 @@ class ContentStack(Stack):
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*"]
         ))
 
+        get_home_page.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:Scan",
+                "dynamodb:GetItem",
+                "s3:GetObject"
+            ],
+            resources=[
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+            ]
+        ))
+
         song_api = api.root.add_resource("songs")
         song_api.add_method("POST", apigw.LambdaIntegration(create_song_lambda), authorizer=authorizer)
         song_id_resource = song_api.add_resource("{id}")
@@ -132,6 +159,9 @@ class ContentStack(Stack):
 
         album_id_resource = album_api.add_resource("{id}")
         album_id_resource.add_method("GET", apigw.LambdaIntegration(get_album_lambda), authorizer=authorizer)
+
+        home_api = api.root.add_resource("home")
+        home_api.add_method("GET", apigw.LambdaIntegration(get_home_page))
 
         get_song_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[

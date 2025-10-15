@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import {AuthService} from '../../auth/auth.service';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-nav-bar',
@@ -8,4 +10,15 @@ import { Component } from '@angular/core';
 })
 export class NavBarComponent {
 
+  constructor(private authService: AuthService, private router: Router) {
+  }
+
+  get userRoles(): string[] {
+    return this.authService.getRoles();
+  }
+
+  logout(): void {
+    this.authService.clearTokens();
+    void this.router.navigate(['/login']);
+  }
 }

@@ -3,7 +3,6 @@
 
   <form [formGroup]="albumForm" class="form-grid">
 
-    <!-- Album Title -->
     <mat-form-field appearance="outline" class="full-span">
       <mat-label>Album Title</mat-label>
       <input matInput formControlName="title" placeholder="Enter album title" />
@@ -12,7 +11,6 @@
       </mat-error>
     </mat-form-field>
 
-    <!-- Year -->
     <mat-form-field appearance="outline" class="full-span">
       <mat-label>Year</mat-label>
       <input matInput type="number" formControlName="year" />
@@ -21,7 +19,6 @@
       </mat-error>
     </mat-form-field>
 
-    <!-- Genres -->
     <mat-form-field appearance="outline" class="full-span">
       <mat-label>Genres</mat-label>
       <mat-select formControlName="genres" multiple>
@@ -35,7 +32,6 @@
       </mat-error>
     </mat-form-field>
 
-    <!-- Artists -->
     <mat-form-field appearance="outline" class="full-span">
       <mat-label>Artists</mat-label>
       <mat-select formControlName="artists" multiple>
@@ -49,7 +45,6 @@
       </mat-error>
     </mat-form-field>
 
-    <!-- Description -->
     <mat-form-field appearance="outline" class="full-span">
       <mat-label>Description (optional)</mat-label>
       <textarea
@@ -60,7 +55,6 @@
       ></textarea>
     </mat-form-field>
 
-    <!-- Album Cover Upload -->
     <div class="upload-section full-span">
       <div class="upload-block">
         <mat-label class="upload-label required">Album Cover *</mat-label>
@@ -85,7 +79,6 @@
       </div>
     </div>
 
-    <!-- Song Upload -->
     <div class="upload-section full-span">
       <div class="upload-block">
         <mat-label class="upload-label required">Songs (Audio Files) *</mat-label>
@@ -104,7 +97,6 @@
       </div>
     </div>
 
-    <!-- Song List -->
     <div class="songs-list full-span" *ngIf="songFiles.length > 0">
       <h3>Songs ({{ songFiles.length }})</h3>
 
@@ -115,7 +107,6 @@
         <div class="song-info">
           <span class="track-number">{{ i + 1 }}.</span>
 
-          <!-- Song Title -->
           <mat-form-field appearance="outline" class="song-title-field">
             <input
               matInput
@@ -125,13 +116,11 @@
             />
           </mat-form-field>
 
-          <!-- Song Metadata -->
           <span class="song-meta">
             {{ (song.file.size / 1024 / 1024).toFixed(2) }} MB
             <span *ngIf="song.duration"> • {{ song.duration }}s</span>
           </span>
 
-          <!-- Delete Button -->
           <button
             mat-icon-button
             color="warn"
@@ -142,7 +131,6 @@
           </button>
         </div>
 
-        <!-- Song Description -->
         <mat-form-field appearance="outline" class="full-span song-description-field">
           <mat-label>Song Description (optional)</mat-label>
           <textarea
@@ -153,7 +141,6 @@
           ></textarea>
         </mat-form-field>
 
-        <!-- Song Cover Upload -->
         <div class="upload-section full-span">
           <div class="upload-block small">
             <mat-label class="upload-label">Song Cover (optional)</mat-label>
@@ -176,12 +163,10 @@
       </mat-list-item>
     </div>
 
-    <!-- Error Message -->
     <div *ngIf="serverError" class="error-message full-span">
       {{ serverError }}
     </div>
 
-    <!-- Submit Button -->
     <div class="actions full-span">
       <button
         mat-flat-button
