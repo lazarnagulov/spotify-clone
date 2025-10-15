@@ -1,4 +1,6 @@
 import os
+from decimal import Decimal
+
 import boto3
 from boto3.dynamodb.types import TypeDeserializer
 
@@ -18,6 +20,14 @@ deserializer = TypeDeserializer()
 def deserialize_dynamodb_item(item):
     return {k: deserializer.deserialize(v) for k, v in item.items()}
 
+def convert_decimals_to_float(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {key: convert_decimals_to_float(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_decimals_to_float(item) for item in obj]
+    return obj
 
 @handle_lambda_exceptions
 def handler(event, _context):
@@ -92,12 +102,6 @@ def handler(event, _context):
                 "cover_url": album_cover_url
             }
 
-    # related_songs = []
-    # if song_data.get("artists") and len(song_data["artists"]) > 0:
-    #     # Query za pesme istog umetnika (ovo zahteva GSI, zasad mock)
-    #     # TODO: Implementirati Query sa GSI za artist-song-index
-    #     pass
-
     song_response = {
         "id": song_id,
         "title": song_data["title"],
@@ -110,9 +114,8 @@ def handler(event, _context):
         "cover_url": cover_url or (album_info["cover_url"] if album_info else None),
         "album": album_info,
         "created_at": song_data.get("created_at"),
-        # "related_songs": related_songs
     }
 
     logger.info("Song fetched successfully", extra={"song_id": song_id})
 
-    return http_response(200, song_response)
+    return http_response(200, convert_decimals_to_float(song_response))

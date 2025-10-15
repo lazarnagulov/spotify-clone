@@ -1,23 +1,24 @@
-<mat-card class="media-card">
+<mat-card class="media-card" (click)="onCardClick()">
   <mat-card-header>
     <mat-card-title>{{ title }}</mat-card-title>
     <mat-card-subtitle>{{ subtitle }}</mat-card-subtitle>
   </mat-card-header>
 
   <div class="image-container">
-    <img mat-card-image [src]="imageUrl" alt="{{ title }}" />
+    <img mat-card-image [src]="imageUrl" [alt]="title" />
     <button
-      [hidden]="cardType !== 'song'"
+      *ngIf="cardType === 'song' && audioUrl"
       mat-icon-button
       class="play-button"
       color="primary"
-      (click)="$event.stopPropagation()"
+      (click)="onPlayClick($event)"
+      [attr.aria-label]="isPlaying ? 'Pause' : 'Play'"
     >
-      <mat-icon>play_arrow</mat-icon>
+      <mat-icon>{{ isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
     </button>
   </div>
 
-  <mat-card-content>
-    <p *ngIf="description">{{ description }}</p>
+  <mat-card-content *ngIf="description">
+    <p>{{ description }}</p>
   </mat-card-content>
 </mat-card>

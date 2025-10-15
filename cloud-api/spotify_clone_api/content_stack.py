@@ -78,6 +78,19 @@ class ContentStack(Stack):
             }
         )
 
+        get_album_lambda = aws_lambda.Function(
+            self, "GetAlbumFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_album.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/album/get"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "SONGS_TABLE": "MusicCatalog",
+            }
+        )
+
         audio_bucket.grant_put(create_song_lambda)
         images_bucket.grant_put(create_song_lambda)
 
@@ -111,16 +124,31 @@ class ContentStack(Stack):
 
         song_api = api.root.add_resource("songs")
         song_api.add_method("POST", apigw.LambdaIntegration(create_song_lambda), authorizer=authorizer)
-
         song_id_resource = song_api.add_resource("{id}")
         song_id_resource.add_method("GET", apigw.LambdaIntegration(get_song_lambda), authorizer=authorizer)
 
-        song_api = api.root.add_resource("albums")
-        song_api.add_method("POST", apigw.LambdaIntegration(create_album_lambda), authorizer=authorizer)
+        album_api = api.root.add_resource("albums")
+        album_api.add_method("POST", apigw.LambdaIntegration(create_album_lambda), authorizer=authorizer)
+
+        album_id_resource = album_api.add_resource("{id}")
+        album_id_resource.add_method("GET", apigw.LambdaIntegration(get_album_lambda), authorizer=authorizer)
 
         get_song_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
                 "dynamodb:GetItem",
+                "s3:GetObject"
+            ],
+            resources=[
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+            ]
+        ))
+
+        get_album_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:GetItem",
+                "dynamodb:Query",
                 "s3:GetObject"
             ],
             resources=[

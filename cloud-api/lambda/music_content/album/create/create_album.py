@@ -7,8 +7,8 @@ from datetime import datetime
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
+from util.auth import require_role
 
-from auth import require_role
 from model.create_album_request import CreateAlbumRequest
 
 dynamodb = boto3.client("dynamodb")

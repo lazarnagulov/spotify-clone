@@ -62,7 +62,6 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
         next: (song) => {
           this.song = song;
           this.loading = false;
-          console.log(song);
           this.initializeAudioPlayer();
         },
         error: (err) => {
