@@ -73,8 +73,21 @@ class SpotifyCloneStack(Stack):
             }
         )
 
+        get_all_artists_lambda = aws_lambda.Function(
+            self,
+            "GetAllArtistsFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_all_artists.handler",
+            code=aws_lambda.Code.from_asset("lambda/artist/get_all"),
+            layers=[shared_layer],
+            environment={
+                'TABLE_NAME': artists_table.table_name
+            }
+        )
+
         artist_api = api.root.add_resource("artists")
         artist_api.add_method("POST", apigw.LambdaIntegration(create_artist_lambda), authorizer=authorizer)
+        artist_api.add_method("GET", apigw.LambdaIntegration(get_all_artists_lambda), authorizer=authorizer)
 
         get_artist_details_lambda = aws_lambda.Function(
             self,
@@ -101,6 +114,13 @@ class SpotifyCloneStack(Stack):
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*"]
+        ))
+
+        get_all_artists_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:Scan"
+            ],
+            resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*"]
         ))
 
         get_genres_lambda = aws_lambda.Function(

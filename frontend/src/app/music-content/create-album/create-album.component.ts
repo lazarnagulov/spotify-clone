@@ -5,6 +5,7 @@ import {UploadService} from '../upload.service';
 import {HttpClient} from '@angular/common/http';
 import {catchError, EMPTY, finalize, switchMap, tap, forkJoin} from 'rxjs';
 import {environment} from '../../../env/environment';
+import {ArtistService} from '../../artist/artist.service';
 
 interface SongFile {
   file: File;
@@ -24,7 +25,7 @@ interface SongFile {
 export class CreateAlbumComponent implements OnInit {
   albumForm: FormGroup;
   genres: string[] = [];
-  artists = [{id: "1", name: 'Artist 1'}, {id: "2", name: 'Artist 2'}];
+  artists: {id: string, name:string}[] = [];
 
   coverFile?: File;
   coverPreviewUrl?: string;
@@ -37,6 +38,7 @@ export class CreateAlbumComponent implements OnInit {
     private fb: FormBuilder,
     private genreService: GenreService,
     private uploadService: UploadService,
+    private artistService: ArtistService,
     private http: HttpClient
   ) {
     this.albumForm = this.fb.group({
@@ -50,6 +52,7 @@ export class CreateAlbumComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchGenres();
+    this.fetchArtists();
   }
 
   onCoverSelected(event: Event): void {
@@ -240,6 +243,12 @@ export class CreateAlbumComponent implements OnInit {
   private fetchGenres(): void {
     this.genreService.getGenres().subscribe({
       next: (genres: string[]) => this.genres = genres
+    });
+  }
+
+  private fetchArtists(): void {
+    this.artistService.getArtists().subscribe({
+      next: (response) => this.artists = response.artists,
     });
   }
 }

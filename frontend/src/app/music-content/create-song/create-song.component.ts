@@ -5,6 +5,8 @@ import {UploadService} from '../upload.service';
 import {HttpClient} from '@angular/common/http';
 import {catchError, EMPTY, finalize, switchMap, tap, forkJoin} from 'rxjs';
 import {environment} from '../../../env/environment';
+import {ArtistService} from '../../artist/artist.service';
+import {Artist} from '../../artist/model/create-artist.model';
 
 @Component({
   selector: 'app-create-song',
@@ -15,7 +17,7 @@ import {environment} from '../../../env/environment';
 export class CreateSongComponent implements OnInit {
   songForm: FormGroup;
   genres: string[] = [];
-  artists = [{id: "1", name: 'Artist 1'}, {id: "2", name: 'Artist 2'}];
+  artists: Artist[] = [];
   albums = [{id: "1", title: 'First Album'}];
 
   previewUrl?: string;
@@ -30,6 +32,7 @@ export class CreateSongComponent implements OnInit {
     private fb: FormBuilder,
     private genreService: GenreService,
     private uploadService: UploadService,
+    private artistService: ArtistService,
     private http: HttpClient
   ) {
     this.songForm = this.fb.group({
@@ -44,6 +47,7 @@ export class CreateSongComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchGenres();
+    this.fetchArtists();
   }
 
   onImageSelected(event: Event): void {
@@ -171,6 +175,12 @@ export class CreateSongComponent implements OnInit {
   private fetchGenres(): void {
     this.genreService.getGenres().subscribe({
       next: (genres: string[]) => this.genres = genres
+    });
+  }
+
+  private fetchArtists(): void {
+    this.artistService.getArtists().subscribe({
+      next: (response) => this.artists = response.artists,
     });
   }
 }
