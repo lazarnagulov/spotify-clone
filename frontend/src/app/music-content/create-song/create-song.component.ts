@@ -7,6 +7,7 @@ import {catchError, EMPTY, finalize, switchMap, tap, forkJoin} from 'rxjs';
 import {environment} from '../../../env/environment';
 import {ArtistService} from '../../artist/artist.service';
 import {Artist} from '../../artist/model/create-artist.model';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-create-song',
@@ -33,6 +34,7 @@ export class CreateSongComponent implements OnInit {
     private genreService: GenreService,
     private uploadService: UploadService,
     private artistService: ArtistService,
+    private router: Router,
     private http: HttpClient
   ) {
     this.songForm = this.fb.group({
@@ -160,6 +162,7 @@ export class CreateSongComponent implements OnInit {
         this.coverFile = undefined;
         this.audioFile = undefined;
         this.metadata = undefined;
+        void this.router.navigate(["/home"]);
       }),
       catchError(err => {
         console.error('Upload failed', err);

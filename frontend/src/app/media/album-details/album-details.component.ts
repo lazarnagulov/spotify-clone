@@ -67,6 +67,7 @@ export class AlbumDetailsComponent implements OnInit {
   }
 
   getArtistsString(): string {
+    console.log(this.album);
     if (!this.album?.artists || this.album.artists.length === 0) {
       return 'Unknown Artist';
     }

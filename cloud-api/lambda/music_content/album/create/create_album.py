@@ -36,8 +36,8 @@ def handler(event, _context):
         "artists": {"L": [{"S": artist} for artist in request.artists]},
         "genres": {"L": [{"S": genre} for genre in request.genres]},
         "year": {"N": str(request.year)},
-        "coverPath": {"S": album_cover_path},
-        "coverType": {"S": request.cover_type},
+        "coverPath": {"S": album_cover_path or ""},
+        "coverType": {"S": request.cover_type or ""},
         "description": {"S": request.description or ""},
         "totalTracks": {"N": str(len(request.songs))},
         "createdAt": {"S": timestamp},
@@ -60,14 +60,14 @@ def handler(event, _context):
             "type": {"S": "album_song"},
             "title": {"S": song_data.title},
             "trackNumber": {"N": str(i + 1)},
-            "audioPath": {"S": song_audio_path},
-            "audioType": {"S": song_data.audio_type},
+            "audioPath": {"S": song_audio_path or ""},
+            "audioType": {"S": song_data.audio_type or ""},
             "duration": {"N": str(song_data.duration) if song_data.duration else "0"},
         }
 
         if song_data.cover_type:
-            album_song_item["coverPath"] = {"S": song_cover_path}
-            album_song_item["coverType"] = {"S": song_data.cover_type}
+            album_song_item["coverPath"] = {"S": song_cover_path or ""}
+            album_song_item["coverType"] = {"S": song_data.cover_type or ""}
 
         dynamodb.put_item(TableName=TABLE_NAME, Item=album_song_item)
 
@@ -81,10 +81,10 @@ def handler(event, _context):
             "album_id": {"S": album_id},
             "trackNumber": {"N": str(i + 1)},
             "description": {"S": song_data.description or ""},
-            "audioPath": {"S": song_audio_path},
-            "audioType": {"S": song_data.audio_type},
-            "coverPath": {"S": song_cover_path},
-            "coverType": {"S": song_data.cover_type},
+            "audioPath": {"S": song_audio_path or ""},
+            "audioType": {"S": song_data.audio_type or ""},
+            "coverPath": {"S": song_cover_path or ""},
+            "coverType": {"S": song_data.cover_type or ""},
             "duration": {"N": str(song_data.duration) if song_data.duration else "0"},
             "createdAt": {"S": timestamp},
             "updatedAt": {"S": timestamp},
@@ -102,15 +102,17 @@ def handler(event, _context):
             ExpiresIn=3600
         )
 
-        presigned_cover_url = s3.generate_presigned_url(
-            "put_object",
-            Params={
-                "Bucket": MEDIA_BUCKET,
-                "Key": song_cover_path,
-                "ContentType": song_data.cover_type,
-            },
-            ExpiresIn=3600
-        )
+        presigned_cover_url = None
+        if song_data.cover_type:
+            presigned_cover_url = s3.generate_presigned_url(
+                "put_object",
+                Params={
+                    "Bucket": MEDIA_BUCKET,
+                    "Key": song_cover_path,
+                    "ContentType": song_data.cover_type,
+                },
+                ExpiresIn=3600
+            )
 
         song_presigned_urls.append({
             "song_id": song_id,

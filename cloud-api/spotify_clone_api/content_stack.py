@@ -179,7 +179,8 @@ class ContentStack(Stack):
             actions=[
                 "dynamodb:GetItem",
                 "dynamodb:Query",
-                "s3:GetObject"
+                "s3:GetObject",
+                "s3:ListBucket"
             ],
             resources=[
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",

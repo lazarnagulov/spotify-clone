@@ -6,6 +6,7 @@ import {HttpClient} from '@angular/common/http';
 import {catchError, EMPTY, finalize, switchMap, tap, forkJoin} from 'rxjs';
 import {environment} from '../../../env/environment';
 import {ArtistService} from '../../artist/artist.service';
+import {Router} from '@angular/router';
 
 interface SongFile {
   file: File;
@@ -39,6 +40,7 @@ export class CreateAlbumComponent implements OnInit {
     private genreService: GenreService,
     private uploadService: UploadService,
     private artistService: ArtistService,
+    private router: Router,
     private http: HttpClient
   ) {
     this.albumForm = this.fb.group({
@@ -211,6 +213,7 @@ export class CreateAlbumComponent implements OnInit {
         this.coverFile = undefined;
         this.coverPreviewUrl = undefined;
         this.songFiles = [];
+        void this.router.navigate(["/home"]);
       }),
       catchError(err => {
         console.error('Album creation failed:', err);
