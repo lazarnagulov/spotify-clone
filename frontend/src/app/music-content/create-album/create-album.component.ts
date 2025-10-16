@@ -70,17 +70,20 @@ export class CreateAlbumComponent implements OnInit {
       Array.from(files).forEach((file, index) => {
         const title = this.extractSongTitle(file.name);
 
+        const songFile: SongFile = {
+          file: file,
+          title: title,
+          duration: undefined
+        };
+
+        this.songFiles.push(songFile);
+
         const audio = new Audio();
         audio.src = URL.createObjectURL(file);
 
         audio.addEventListener('loadedmetadata', () => {
           this.songFiles[index].duration = Math.round(audio.duration);
-        });
-
-        this.songFiles.push({
-          file: file,
-          title: title,
-          duration: undefined
+          URL.revokeObjectURL(audio.src);
         });
       });
     }
@@ -133,7 +136,8 @@ export class CreateAlbumComponent implements OnInit {
         title: sf.title,
         audio_type: sf.file.type ?? 'audio/mpeg',
         duration: sf.duration ?? 0,
-        description: sf.description ?? ''
+        description: sf.description ?? '',
+        cover_type: sf.coverFile?.type ?? null
       }))
     };
 
@@ -147,6 +151,7 @@ export class CreateAlbumComponent implements OnInit {
         title: string;
         track_number: number;
         upload_url: string;
+        cover_upload_url?: string;
       }>;
     }>(`${environment.apiHost}/albums`, albumData).pipe(
       switchMap(response => {
@@ -166,19 +171,32 @@ export class CreateAlbumComponent implements OnInit {
         );
 
         response.songs.forEach((songInfo, index) => {
-          const songFile = this.songFiles.find(sf => sf.title === songInfo.title)?.file;
+          const songFile = this.songFiles.find(sf => sf.title === songInfo.title);
 
           if (songFile) {
             console.log(`Uploading song ${songInfo.track_number}: ${songInfo.title}...`);
             uploads.push(
               this.uploadService.uploadFileToS3(
                 songInfo.upload_url,
-                songFile,
-                songFile.type || 'audio/mpeg'
+                songFile.file,
+                songFile.file.type || 'audio/mpeg'
               ).pipe(
                 tap(() => console.log(`Song ${songInfo.track_number} uploaded: ${songInfo.title}`))
               )
             );
+
+            if (songFile.coverFile && songInfo.cover_upload_url) {
+              console.log(`Uploading cover for song ${songInfo.track_number}: ${songInfo.title}...`);
+              uploads.push(
+                this.uploadService.uploadFileToS3(
+                  songInfo.cover_upload_url,
+                  songFile.coverFile,
+                  songFile.coverFile.type
+                ).pipe(
+                  tap(() => console.log(`Cover uploaded for song ${songInfo.track_number}: ${songInfo.title}`))
+                )
+              );
+            }
           }
         });
 

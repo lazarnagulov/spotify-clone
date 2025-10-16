@@ -33,6 +33,7 @@ def convert_decimals_to_float(obj):
         return [convert_decimals_to_float(item) for item in obj]
     return obj
 
+
 @handle_lambda_exceptions
 def handler(event, _context):
     album_id = event["pathParameters"]["id"]
@@ -74,18 +75,34 @@ def handler(event, _context):
             "get_object",
             Params={
                 "Bucket": MEDIA_BUCKET,
-                "Key": song_data["pathToAudio"],
+                "Key": song_data["audioPath"],
             },
             ExpiresIn=3600
         )
 
-        songs.append({
+        song_cover_url = None
+        if song_data.get("coverPath"):
+            song_cover_url = s3.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": MEDIA_BUCKET,
+                    "Key": song_data["coverPath"]
+                },
+                ExpiresIn=3600
+            )
+
+        song_item = {
             "id": song_data["SK"],
             "title": song_data["title"],
             "track_number": int(song_data.get("trackNumber", 0)),
             "duration": float(song_data.get("duration", 0)),
-            "audio_url": song_audio_url
-        })
+            "audio_url": song_audio_url,
+        }
+
+        if song_cover_url:
+            song_item["cover_url"] = song_cover_url
+
+        songs.append(song_item)
 
     songs.sort(key=lambda s: s["track_number"])
 
@@ -98,7 +115,7 @@ def handler(event, _context):
         "description": album_data.get("description", ""),
         "imageUrl": cover_url,
         "songs": songs,
-        "created_at": album_data.get("created_at"),
+        "created_at": album_data.get("createdAt"),
     }
 
     album_response_body = convert_decimals_to_float(album_response_body)
@@ -109,4 +126,3 @@ def handler(event, _context):
     })
 
     return http_response(200, album_response_body)
-

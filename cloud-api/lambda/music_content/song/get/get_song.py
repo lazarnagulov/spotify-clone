@@ -57,28 +57,28 @@ def handler(event, _context):
         "get_object",
         Params={
             "Bucket": MEDIA_BUCKET,
-            "Key": song_data["pathToAudio"],
+            "Key": song_data["audioPath"],
         },
         ExpiresIn=3600
     )
 
     cover_url = None
-    if song_data.get("pathToCover"):
+    if song_data.get("coverPath"):
         cover_url = s3.generate_presigned_url(
             "get_object",
             Params={
                 "Bucket": MEDIA_BUCKET,
-                "Key": song_data["pathToCover"],
+                "Key": song_data["coverPath"],
             },
             ExpiresIn=3600
         )
 
     album_info = None
-    if song_data.get("album_id"):
+    if song_data.get("albumId"):
         album_response = dynamodb.get_item(
             TableName=TABLE_NAME,
             Key={
-                "PK": {"S": song_data["album_id"]},
+                "PK": {"S": song_data["albumId"]},
                 "SK": {"S": "METADATA"}
             }
         )
@@ -96,7 +96,7 @@ def handler(event, _context):
             )
 
             album_info = {
-                "id": song_data["album_id"],
+                "id": song_data["albumId"],
                 "title": album_data["title"],
                 "year": album_data.get("year"),
                 "cover_url": album_cover_url
@@ -113,7 +113,7 @@ def handler(event, _context):
         "audio_url": audio_url,
         "cover_url": cover_url or (album_info["cover_url"] if album_info else None),
         "album": album_info,
-        "created_at": song_data.get("created_at"),
+        "created_at": song_data.get("createdAt"),
     }
 
     logger.info("Song fetched successfully", extra={"song_id": song_id})

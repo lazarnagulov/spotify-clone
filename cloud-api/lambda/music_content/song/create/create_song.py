@@ -33,14 +33,14 @@ def handler(event, _context):
         "title": request.title,
         "genres": request.genres,
         "artists": request.artists,
-        "album_id": request.album_id or "",
-        "pathToCover": path_to_cover,
-        "pathToAudio": path_to_audio,
+        "albumId": request.album_id or "",
+        "coverPath": path_to_cover,
+        "audioPath": path_to_audio,
         "coverType": request.cover_type,
-        "audio_type": request.audio_type,
+        "audioType": request.audio_type,
         "description": request.description,
-        "created_at": datetime.utcnow().isoformat() + "Z",
-        "updated_at": datetime.utcnow().isoformat() + "Z",
+        "createdAt": datetime.utcnow().isoformat() + "Z",
+        "updatedAt": datetime.utcnow().isoformat() + "Z",
     }
 
     table.put_item(Item=item)

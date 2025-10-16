@@ -54,7 +54,7 @@
           [id]="song.id"
           [title]="song.title"
           [subtitle]="song.track_number ? 'Track ' + song.track_number : 'Song'"
-          [imageUrl]="album.imageUrl || 'assets/default-cover.jpg'"
+          [imageUrl]="song.cover_url || 'assets/default-cover.jpg'"
           [audioUrl]="song.audio_url"
         ></app-media-card>
       </div>

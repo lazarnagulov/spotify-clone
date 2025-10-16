@@ -40,8 +40,8 @@ def handler(event, _context):
         "coverType": {"S": request.cover_type},
         "description": {"S": request.description or ""},
         "totalTracks": {"N": str(len(request.songs))},
-        "created_at": {"S": timestamp},
-        "updated_at": {"S": timestamp},
+        "createdAt": {"S": timestamp},
+        "updatedAt": {"S": timestamp},
     }
 
     dynamodb.put_item(TableName=TABLE_NAME, Item=album_item)
@@ -51,7 +51,8 @@ def handler(event, _context):
 
     for i, song_data in enumerate(request.songs):
         song_id = "SONG#" + str(uuid.uuid4())
-        audio_path = f"songs/{song_id}"
+        song_audio_path = f"songs/{song_id}"
+        song_cover_path = f"covers/songs/{song_id}"
 
         album_song_item = {
             "PK": {"S": album_id},
@@ -59,10 +60,14 @@ def handler(event, _context):
             "type": {"S": "album_song"},
             "title": {"S": song_data.title},
             "trackNumber": {"N": str(i + 1)},
-            "pathToAudio": {"S": audio_path},
+            "audioPath": {"S": song_audio_path},
             "audioType": {"S": song_data.audio_type},
             "duration": {"N": str(song_data.duration) if song_data.duration else "0"},
         }
+
+        if song_data.cover_type:
+            album_song_item["coverPath"] = {"S": song_cover_path}
+            album_song_item["coverType"] = {"S": song_data.cover_type}
 
         dynamodb.put_item(TableName=TABLE_NAME, Item=album_song_item)
 
@@ -76,11 +81,13 @@ def handler(event, _context):
             "album_id": {"S": album_id},
             "trackNumber": {"N": str(i + 1)},
             "description": {"S": song_data.description or ""},
-            "pathToAudio": {"S": audio_path},
+            "audioPath": {"S": song_audio_path},
             "audioType": {"S": song_data.audio_type},
+            "coverPath": {"S": song_cover_path},
+            "coverType": {"S": song_data.cover_type},
             "duration": {"N": str(song_data.duration) if song_data.duration else "0"},
-            "created_at": {"S": timestamp},
-            "updated_at": {"S": timestamp},
+            "createdAt": {"S": timestamp},
+            "updatedAt": {"S": timestamp},
         }
 
         dynamodb.put_item(TableName=TABLE_NAME, Item=song_metadata_item)
@@ -89,8 +96,18 @@ def handler(event, _context):
             "put_object",
             Params={
                 "Bucket": MEDIA_BUCKET,
-                "Key": audio_path,
+                "Key": song_audio_path,
                 "ContentType": song_data.audio_type,
+            },
+            ExpiresIn=3600
+        )
+
+        presigned_cover_url = s3.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": MEDIA_BUCKET,
+                "Key": song_cover_path,
+                "ContentType": song_data.cover_type,
             },
             ExpiresIn=3600
         )
@@ -99,7 +116,8 @@ def handler(event, _context):
             "song_id": song_id,
             "title": song_data.title,
             "track_number": i + 1,
-            "upload_url": presigned_audio_url
+            "upload_url": presigned_audio_url,
+            "cover_upload_url": presigned_cover_url
         })
 
         logger.info("Song created", extra={

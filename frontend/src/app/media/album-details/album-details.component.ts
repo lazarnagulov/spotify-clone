@@ -9,6 +9,7 @@ interface Song {
   duration?: number;
   audio_url?: string;
   track_number?: number;
+  cover_url?: string;
 }
 
 interface Album {
@@ -53,6 +54,7 @@ export class AlbumDetailsComponent implements OnInit {
   private loadAlbum(albumId: string): void {
     this.http.get<Album>(`${environment.apiHost}/albums/${albumId}`).subscribe({
       next: (album) => {
+        console.log(album);
         this.album = album;
         this.loading = false;
       },
@@ -82,4 +84,5 @@ export class AlbumDetailsComponent implements OnInit {
     const seconds = Math.floor(totalSeconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
+
 }

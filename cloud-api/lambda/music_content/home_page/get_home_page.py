@@ -86,25 +86,15 @@ def handler(event, _context):
         song_data = deserialize_item(item)
         cover_url = None
 
-        if song_data.get("album_id"):
-            album_response = dynamodb.get_item(
-                TableName=TABLE_NAME,
-                Key={
-                    "PK": {"S": song_data["album_id"]},
-                    "SK": {"S": "METADATA"}
-                }
-            )
-            if "Item" in album_response:
-                album_data = deserialize_item(album_response["Item"])
-                if album_data.get("coverPath"):
-                    cover_url = s3.generate_presigned_url(
-                        "get_object",
-                        Params={
-                            "Bucket": MEDIA_BUCKET,
-                            "Key": album_data["coverPath"]
-                        },
-                        ExpiresIn=3600
-                    )
+        if song_data.get("coverPath"):
+            cover_url = s3.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": MEDIA_BUCKET,
+                    "Key": song_data["coverPath"]
+                },
+                ExpiresIn=3600
+        )
 
         songs.append({
             "id": song_data["PK"],
