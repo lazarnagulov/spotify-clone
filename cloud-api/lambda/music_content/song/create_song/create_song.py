@@ -28,7 +28,7 @@ def handler(event, _context):
     path_to_audio = f"songs/{song_id}"
 
     item = {
-        "PK":  song_id,
+        "PK": song_id,
         "SK": "METADATA",
         "title": request.title,
         "genres": request.genres,
@@ -80,8 +80,8 @@ def update_genre_relations_table(request, song_id, path_to_cover):
     for genre in request.genres:
         genre_table.put_item(
             Item={
-                "Genre": genre,
-                "EntityId": song_id,
+                "PK": genre,
+                "SK": song_id,
                 "EntityType": "song",
                 "Title": request.title,
                 "CoverPath": path_to_cover,

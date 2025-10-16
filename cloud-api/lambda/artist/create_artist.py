@@ -29,8 +29,7 @@ def handler(event, _context):
         }
     )
 
-    update_genre_relations_table()
-    update_music_catalog_table()
+    update_genre_relations_table(request, artist_id)
 
     return http_response(201, {'message': 'Artist created successfully'})
 
@@ -41,20 +40,9 @@ def update_genre_relations_table(request, artist_id):
     for genre in request.genres:
         genre_table.put_item(
             Item={
-                "Genre": genre,
-                "EntityId": artist_id,
+                "PK": genre,
+                "SK": artist_id,
                 "EntityType": "artist",
                 "Name": request.name
             }
         )
-
-def update_music_catalog_table(request, artist_id):
-    with table.batch_writer() as batch:
-        for genre in request.genres:
-            batch.put_item(
-                Item={
-                    "PK": f"GENRE#{genre}",
-                    "SK": f"ARTIST#{artist_id}",
-                    "name": request.name
-                }
-            )

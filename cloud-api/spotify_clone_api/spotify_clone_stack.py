@@ -103,7 +103,7 @@ class SpotifyCloneStack(Stack):
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
-                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelationsTable*"]
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
         ))
 
         get_genres_lambda = aws_lambda.Function(

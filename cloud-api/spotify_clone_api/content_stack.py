@@ -49,7 +49,7 @@ class ContentStack(Stack):
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
-                "GENRE_RELATIONS_TABLE": "GenreRelationsTable"
+                "GENRE_RELATIONS_TABLE": "GenreRelations"
             }
         )
 
@@ -63,7 +63,7 @@ class ContentStack(Stack):
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
-                "GENRE_RELATIONS_TABLE": "GenreRelationsTable"
+                "GENRE_RELATIONS_TABLE": "GenreRelations"
             }
         )
 
@@ -87,7 +87,7 @@ class ContentStack(Stack):
                 "dynamodb:UpdateItem",
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*", 
-                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelationsTable*"]
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
         ))
 
         create_album_lambda.role.add_to_policy(iam.PolicyStatement(
@@ -97,7 +97,7 @@ class ContentStack(Stack):
                 "dynamodb:UpdateItem",
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
-                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelationsTable*"]
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
         ))
 
         song_api = api.root.add_resource("songs")
