@@ -12,7 +12,7 @@ from auth import require_role
 from model.create_album_request import CreateAlbumRequest
 
 dynamodb = boto3.client("dynamodb")
-TABLE_NAME = os.environ["SONGS_TABLE"]
+table = dynamodb.Table(os.environ["MUSIC_CATALOG"])
 MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
 
 s3 = boto3.client("s3", region_name="eu-central-1")
@@ -44,10 +44,11 @@ def handler(event, _context):
         "updated_at": {"S": timestamp},
     }
 
-    dynamodb.put_item(TableName=TABLE_NAME, Item=album_item)
+    table.put_item(Item=album_item)
     logger.info("Album metadata created", extra={"album_id": album_id})
 
     song_presigned_urls = []
+    songs = []
 
     for i, song_data in enumerate(request.songs):
         song_id = "SONG#" + str(uuid.uuid4())
@@ -64,7 +65,7 @@ def handler(event, _context):
             "duration": {"N": str(song_data.duration) if song_data.duration else "0"},
         }
 
-        dynamodb.put_item(TableName=TABLE_NAME, Item=album_song_item)
+        table.put_item(Item=album_song_item)
 
         song_metadata_item = {
             "PK": {"S": song_id},
@@ -83,7 +84,9 @@ def handler(event, _context):
             "updated_at": {"S": timestamp},
         }
 
-        dynamodb.put_item(TableName=TABLE_NAME, Item=song_metadata_item)
+        songs.append(song_metadata_item)
+
+        table.put_item(Item=song_metadata_item)
 
         presigned_audio_url = s3.generate_presigned_url(
             "put_object",
@@ -123,6 +126,8 @@ def handler(event, _context):
         "total_songs": len(request.songs)
     })
 
+    update_genre_relations_table(request, album_id, album_cover_path, songs)
+
     return http_response(
         status_code=201,
         body={
@@ -131,3 +136,29 @@ def handler(event, _context):
             'songs': song_presigned_urls
         }
     )
+
+def update_genre_relations_table(request, album_id, path_to_cover, songs):
+    genre_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
+
+    for genre in request.genres:
+        genre_table.put_item(
+            Item={
+                "Genre": genre,
+                "EntityId": album_id,
+                "EntityType": "album",
+                "Title": request.title,
+                "CoverPath": path_to_cover,
+                "ArtistNames": request.artists
+            }
+        )
+        for song in songs:
+            genre_table.put_item(
+                Item={
+                    "Genre": genre,
+                    "EntityId": song["PK"]["S"],
+                    "EntityType": "song",
+                    "Title": song["title"]["S"],
+                    "CoverPath": path_to_cover, # TODO: change to song cover path if exists
+                    "ArtistNames": request.artists
+                }
+            )

@@ -10,7 +10,6 @@ class LayerStack(Stack):
         self.shared_layer = aws_lambda.LayerVersion(
             self, "SharedDependenciesLayer",
             code=aws_lambda.Code.from_asset(".build/shared.zip"),
-            asset_hash="v1.0.0",
             description="Shared dependencies (pydantic, logger)",
             compatible_runtimes=[aws_lambda.Runtime.PYTHON_3_11]
         )

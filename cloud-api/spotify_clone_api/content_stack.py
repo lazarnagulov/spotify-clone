@@ -48,7 +48,8 @@ class ContentStack(Stack):
             layers=[shared_layer],
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
-                "SONGS_TABLE": "MusicCatalog",
+                "MUSIC_CATALOG": "MusicCatalog",
+                "GENRE_RELATIONS_TABLE": "GenreRelationsTable"
             }
         )
 
@@ -61,7 +62,8 @@ class ContentStack(Stack):
             timeout=Duration.seconds(60),
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
-                "SONGS_TABLE": "MusicCatalog",
+                "MUSIC_CATALOG": "MusicCatalog",
+                "GENRE_RELATIONS_TABLE": "GenreRelationsTable"
             }
         )
 
@@ -84,7 +86,8 @@ class ContentStack(Stack):
                 "dynamodb:PutItem",
                 "dynamodb:UpdateItem",
             ],
-            resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*"]
+            resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*", 
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelationsTable*"]
         ))
 
         create_album_lambda.role.add_to_policy(iam.PolicyStatement(
@@ -93,7 +96,8 @@ class ContentStack(Stack):
                 "dynamodb:PutItem",
                 "dynamodb:UpdateItem",
             ],
-            resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*"]
+            resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelationsTable*"]
         ))
 
         song_api = api.root.add_resource("songs")

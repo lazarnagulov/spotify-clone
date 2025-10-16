@@ -11,7 +11,7 @@ from util.exception_handler import handle_lambda_exceptions
 from model.create_song_request import CreateSongRequest
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ["SONGS_TABLE"])
+table = dynamodb.Table(os.environ["MUSIC_CATALOG"])
 
 MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
 
@@ -64,6 +64,8 @@ def handler(event, _context):
         ExpiresIn=3600
     )
 
+    update_genre_relations_table(request, song_id, path_to_cover)
+
     return http_response(
         status_code=201,
         body={
@@ -71,3 +73,18 @@ def handler(event, _context):
             'audioUploadPresignedUrl': presigned_audio_url
         }
     )
+
+def update_genre_relations_table(request, song_id, path_to_cover):
+    genre_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
+
+    for genre in request.genres:
+        genre_table.put_item(
+            Item={
+                "Genre": genre,
+                "EntityId": song_id,
+                "EntityType": "song",
+                "Title": request.title,
+                "CoverPath": path_to_cover,
+                "ArtistNames": request.artists
+            }
+        )
