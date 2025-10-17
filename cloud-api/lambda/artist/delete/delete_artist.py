@@ -3,7 +3,7 @@ from util.http_response import http_response
 
 dynamodb = boto3.resource('dynamodb', region_name='eu-central-1')
 artists_table = dynamodb.Table(os.environ["ARTISTS_TABLE"])
-genre_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
+genre_relations_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
 
 def handler(event, _context):
     pk = event["pathParameters"]["id"]
@@ -22,7 +22,7 @@ def handler(event, _context):
         Key={"PK": pk, "SK": "METADATA"}
     )
 
-    with genre_table.batch_writer() as batch:
+    with genre_relations_table.batch_writer() as batch:
         for genre in genres:
             genre_value = genre["S"] if isinstance(genre, dict) else genre
             batch.delete_item(
