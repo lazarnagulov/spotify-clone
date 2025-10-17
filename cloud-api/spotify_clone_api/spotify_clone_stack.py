@@ -29,6 +29,22 @@ class SpotifyCloneStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
+        genre_relations_table = dynamodb.Table(
+            self, "GenreRelationsTable",
+            table_name="GenreRelations",
+            partition_key=dynamodb.Attribute(
+                name="PK",
+                type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="SK",
+                type=dynamodb.AttributeType.STRING
+            ),
+            read_capacity=1,
+            write_capacity=1,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
         music_catalog_table = dynamodb.Table(
             self, "MusicCatalogTable",
             table_name="MusicCatalog",
@@ -69,7 +85,9 @@ class SpotifyCloneStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/artist"),
             layers=[shared_layer],
             environment={
-                'TABLE_NAME': artists_table.table_name
+                'ARTISTS_TABLE': artists_table.table_name,
+                'MUSIC_CATALOG': "MusicCatalog",
+                "GENRE_RELATIONS_TABLE": genre_relations_table.table_name
             }
         )
 
@@ -84,7 +102,8 @@ class SpotifyCloneStack(Stack):
                 "dynamodb:GetItem"
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
-                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*"]
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
         ))
 
         get_genres_lambda = aws_lambda.Function(
@@ -95,7 +114,7 @@ class SpotifyCloneStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/genre"),
             layers=[shared_layer],
             environment={
-                'TABLE_NAME': genres_table.table_name
+                'GENRES_TABLE': genres_table.table_name
             }
         )
 
