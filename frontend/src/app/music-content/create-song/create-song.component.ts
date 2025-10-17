@@ -5,6 +5,9 @@ import {UploadService} from '../upload.service';
 import {HttpClient} from '@angular/common/http';
 import {catchError, EMPTY, finalize, switchMap, tap, forkJoin} from 'rxjs';
 import {environment} from '../../../env/environment';
+import {ArtistService} from '../../artist/artist.service';
+import {Artist} from '../../artist/model/create-artist.model';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-create-song',
@@ -15,8 +18,7 @@ import {environment} from '../../../env/environment';
 export class CreateSongComponent implements OnInit {
   songForm: FormGroup;
   genres: string[] = [];
-  artists = [{id: "1", name: 'Artist 1'}, {id: "2", name: 'Artist 2'}];
-  albums = [{id: "1", title: 'First Album'}];
+  artists: Artist[] = [];
 
   previewUrl?: string;
   audioPreviewUrl?: string;
@@ -30,13 +32,14 @@ export class CreateSongComponent implements OnInit {
     private fb: FormBuilder,
     private genreService: GenreService,
     private uploadService: UploadService,
+    private artistService: ArtistService,
+    private router: Router,
     private http: HttpClient
   ) {
     this.songForm = this.fb.group({
       title: ['', Validators.required],
       genres: [[], Validators.required],
       artists: [[], Validators.required],
-      albumId: [''],
       description: [''],
       file: [null, Validators.required]
     });
@@ -44,6 +47,7 @@ export class CreateSongComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchGenres();
+    this.fetchArtists();
   }
 
   onImageSelected(event: Event): void {
@@ -94,7 +98,7 @@ export class CreateSongComponent implements OnInit {
       artists: formValue.artists,
       album_id: formValue.albumId || undefined,
       description: formValue.description || '',
-      cover_type: this.coverFile?.type || 'image/jpeg',
+      cover_type: this.coverFile?.type ?? 'image/jpeg',
       audio_type: audioContentType
     };
 
@@ -156,6 +160,7 @@ export class CreateSongComponent implements OnInit {
         this.coverFile = undefined;
         this.audioFile = undefined;
         this.metadata = undefined;
+        void this.router.navigate(["/home"]);
       }),
       catchError(err => {
         console.error('Upload failed', err);
@@ -171,6 +176,12 @@ export class CreateSongComponent implements OnInit {
   private fetchGenres(): void {
     this.genreService.getGenres().subscribe({
       next: (genres: string[]) => this.genres = genres
+    });
+  }
+
+  private fetchArtists(): void {
+    this.artistService.getArtists().subscribe({
+      next: (response) => this.artists = response.artists,
     });
   }
 }

@@ -1,0 +1,48 @@
+<div class="artist-detail">
+  <mat-card class="artist-header">
+    <mat-card-content>
+      <h1 class="artist-name">{{ artist?.name }}</h1>
+      <p class="artist-bio">{{ artist?.bio }}</p>
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button mat-raised-button color="primary">▶ Play</button>
+      <button mat-stroked-button color="accent">+ Follow</button>
+    </mat-card-actions>
+  </mat-card>
+
+  <section class="albums-section">
+    <h2>Albums</h2>
+    <ng-container *ngIf="(artist?.albums?.length ?? 0) > 0; else noAlbums">
+      <div class="media-grid">
+        <app-media-card
+          *ngFor="let album of artist?.albums"
+          [id]="album.id"
+          [title]="album.title"
+          [subtitle]="'Album'"
+          [imageUrl]="album.image"
+        ></app-media-card>
+      </div>
+    </ng-container>
+    <ng-template #noAlbums>
+      <p class="empty-state">No albums found.</p>
+    </ng-template>
+  </section>
+
+  <section class="songs-section">
+    <h2>Songs</h2>
+    <ng-container *ngIf="(artist?.songs?.length ?? 0) > 0; else noSongs">
+      <div class="media-grid">
+        <app-media-card
+          *ngFor="let song of artist?.songs"
+          [id]="song.id"
+          [title]="song.title"
+          [subtitle]="'Song'"
+          [imageUrl]="song.image"
+        ></app-media-card>
+      </div>
+    </ng-container>
+    <ng-template #noSongs>
+      <p class="empty-state">No songs found.</p>
+    </ng-template>
+  </section>
+</div>

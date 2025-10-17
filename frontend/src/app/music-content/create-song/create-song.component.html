@@ -32,16 +32,6 @@
       </mat-error>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="full-span">
-      <mat-label>Album (optional)</mat-label>
-      <mat-select formControlName="albumId">
-        <mat-option value="">None (Single)</mat-option>
-        <mat-option *ngFor="let album of albums" [value]="album.id">
-          {{ album.title }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-
     <div class="upload-section full-span">
 
       <div class="upload-block">

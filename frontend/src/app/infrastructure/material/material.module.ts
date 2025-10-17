@@ -9,11 +9,13 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatCardModule } from '@angular/material/card';
+import {MatList, MatListItem} from '@angular/material/list';
+import {MatLine} from '@angular/material/core';
+import {MatToolbar} from '@angular/material/toolbar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import {MatList, MatListItem} from '@angular/material/list';
 
 @NgModule({
   imports: [
@@ -26,6 +28,10 @@ import {MatList, MatListItem} from '@angular/material/list';
     MatProgressSpinnerModule,
     MatDatepickerModule,
     MatCardModule,
+    MatListItem,
+    MatList,
+    MatLine,
+    MatToolbar,
     MatOptionModule,
     MatSelectModule,
     MatChipsModule,
@@ -42,6 +48,10 @@ import {MatList, MatListItem} from '@angular/material/list';
     MatProgressSpinnerModule,
     MatDatepickerModule,
     MatCardModule,
+    MatListItem,
+    MatList,
+    MatLine,
+    MatToolbar,
     MatOptionModule,
     MatSelectModule,
     MatChipsModule,

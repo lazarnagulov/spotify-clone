@@ -10,6 +10,7 @@ class SongData(BaseModel):
     audio_type: str = Field(..., pattern="^audio/")
     duration: Optional[int] = Field(None, ge=0)
     description: Optional[str] = Field(None, min_length=1, max_length=200)
+    cover_type: Optional[str] = None
 
 
 class CreateAlbumRequest(BaseModel):

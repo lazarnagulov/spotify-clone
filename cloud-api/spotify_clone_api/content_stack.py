@@ -29,6 +29,23 @@ class ContentStack(Stack):
             auto_delete_objects=True,
             removal_policy=RemovalPolicy.DESTROY,
             cors=[cors_rule],
+            public_read_access=True,
+            object_ownership=s3.ObjectOwnership.OBJECT_WRITER,
+            block_public_access=s3.BlockPublicAccess(
+                block_public_acls=False,
+                block_public_policy=False,
+                ignore_public_acls=False,
+                restrict_public_buckets=False
+            )
+        )
+
+        images_bucket.add_to_resource_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                principals=[iam.AnyPrincipal()],
+                actions=["s3:GetObject"],
+                resources=[f"{images_bucket.bucket_arn}/*"]
+            )
         )
 
         audio_bucket = s3.Bucket(
@@ -44,7 +61,7 @@ class ContentStack(Stack):
             self, "CreateSongFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
             handler="create_song.handler",
-            code=aws_lambda.Code.from_asset("lambda/music_content/song/create_song"),
+            code=aws_lambda.Code.from_asset("lambda/music_content/song/create"),
             layers=[shared_layer],
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
@@ -57,13 +74,54 @@ class ContentStack(Stack):
             self, "CreateAlbumFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
             handler="create_album.handler",
-            code=aws_lambda.Code.from_asset("lambda/music_content/album/create_album"),
+            code=aws_lambda.Code.from_asset("lambda/music_content/album/create"),
             layers=[shared_layer],
             timeout=Duration.seconds(60),
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
                 "GENRE_RELATIONS_TABLE": "GenreRelations"
+            }
+        )
+
+        get_song_lambda = aws_lambda.Function(
+            self, "GetSongFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_song.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/song/get"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "SONGS_TABLE": "MusicCatalog",
+                'ARTISTS_TABLE': "Artists",
+            }
+        )
+
+        get_album_lambda = aws_lambda.Function(
+            self, "GetAlbumFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_album.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/album/get"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "SONGS_TABLE": "MusicCatalog",
+                'ARTISTS_TABLE': "Artists",
+            }
+        )
+
+        get_home_page = aws_lambda.Function(
+            self, "GetHomePageFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_home_page.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/home_page"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "SONGS_TABLE": "MusicCatalog",
             }
         )
 
@@ -100,11 +158,63 @@ class ContentStack(Stack):
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
         ))
 
+        get_home_page.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:Scan",
+                "dynamodb:GetItem",
+                "s3:GetObject"
+            ],
+            resources=[
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+            ]
+        ))
+
         song_api = api.root.add_resource("songs")
         song_api.add_method("POST", apigw.LambdaIntegration(create_song_lambda), authorizer=authorizer)
+        song_id_resource = song_api.add_resource("{id}")
+        song_id_resource.add_method("GET", apigw.LambdaIntegration(get_song_lambda), authorizer=authorizer)
 
-        song_api = api.root.add_resource("albums")
-        song_api.add_method("POST", apigw.LambdaIntegration(create_album_lambda), authorizer=authorizer)
+        album_api = api.root.add_resource("albums")
+        album_api.add_method("POST", apigw.LambdaIntegration(create_album_lambda), authorizer=authorizer)
+
+        album_id_resource = album_api.add_resource("{id}")
+        album_id_resource.add_method("GET", apigw.LambdaIntegration(get_album_lambda), authorizer=authorizer)
+
+        home_api = api.root.add_resource("home")
+        home_api.add_method("GET", apigw.LambdaIntegration(get_home_page))
+
+        get_song_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:GetItem",
+                "dynamodb:BatchGetItem",
+                "s3:GetObject"
+            ],
+            resources=[
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+            ]
+        ))
+
+        get_album_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:GetItem",
+                "dynamodb:Query",
+                "s3:GetObject",
+                "s3:ListBucket",
+                "dynamodb:BatchGetItem"
+            ],
+            resources=[
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+            ]
+        ))
 
         CfnOutput(self, "AudioBucketName", value=audio_bucket.bucket_name)
         CfnOutput(self, "ImagesBucketName", value=images_bucket.bucket_name)

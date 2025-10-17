@@ -5,6 +5,8 @@ import {UploadService} from '../upload.service';
 import {HttpClient} from '@angular/common/http';
 import {catchError, EMPTY, finalize, switchMap, tap, forkJoin} from 'rxjs';
 import {environment} from '../../../env/environment';
+import {ArtistService} from '../../artist/artist.service';
+import {Router} from '@angular/router';
 
 interface SongFile {
   file: File;
@@ -24,7 +26,7 @@ interface SongFile {
 export class CreateAlbumComponent implements OnInit {
   albumForm: FormGroup;
   genres: string[] = [];
-  artists = [{id: "1", name: 'Artist 1'}, {id: "2", name: 'Artist 2'}];
+  artists: {id: string, name:string}[] = [];
 
   coverFile?: File;
   coverPreviewUrl?: string;
@@ -37,6 +39,8 @@ export class CreateAlbumComponent implements OnInit {
     private fb: FormBuilder,
     private genreService: GenreService,
     private uploadService: UploadService,
+    private artistService: ArtistService,
+    private router: Router,
     private http: HttpClient
   ) {
     this.albumForm = this.fb.group({
@@ -50,6 +54,7 @@ export class CreateAlbumComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchGenres();
+    this.fetchArtists();
   }
 
   onCoverSelected(event: Event): void {
@@ -70,17 +75,20 @@ export class CreateAlbumComponent implements OnInit {
       Array.from(files).forEach((file, index) => {
         const title = this.extractSongTitle(file.name);
 
+        const songFile: SongFile = {
+          file: file,
+          title: title,
+          duration: undefined
+        };
+
+        this.songFiles.push(songFile);
+
         const audio = new Audio();
         audio.src = URL.createObjectURL(file);
 
         audio.addEventListener('loadedmetadata', () => {
           this.songFiles[index].duration = Math.round(audio.duration);
-        });
-
-        this.songFiles.push({
-          file: file,
-          title: title,
-          duration: undefined
+          URL.revokeObjectURL(audio.src);
         });
       });
     }
@@ -133,7 +141,8 @@ export class CreateAlbumComponent implements OnInit {
         title: sf.title,
         audio_type: sf.file.type ?? 'audio/mpeg',
         duration: sf.duration ?? 0,
-        description: sf.description ?? ''
+        description: sf.description ?? '',
+        cover_type: sf.coverFile?.type ?? null
       }))
     };
 
@@ -147,6 +156,7 @@ export class CreateAlbumComponent implements OnInit {
         title: string;
         track_number: number;
         upload_url: string;
+        cover_upload_url?: string;
       }>;
     }>(`${environment.apiHost}/albums`, albumData).pipe(
       switchMap(response => {
@@ -166,19 +176,32 @@ export class CreateAlbumComponent implements OnInit {
         );
 
         response.songs.forEach((songInfo, index) => {
-          const songFile = this.songFiles.find(sf => sf.title === songInfo.title)?.file;
+          const songFile = this.songFiles.find(sf => sf.title === songInfo.title);
 
           if (songFile) {
             console.log(`Uploading song ${songInfo.track_number}: ${songInfo.title}...`);
             uploads.push(
               this.uploadService.uploadFileToS3(
                 songInfo.upload_url,
-                songFile,
-                songFile.type || 'audio/mpeg'
+                songFile.file,
+                songFile.file.type || 'audio/mpeg'
               ).pipe(
                 tap(() => console.log(`Song ${songInfo.track_number} uploaded: ${songInfo.title}`))
               )
             );
+
+            if (songFile.coverFile && songInfo.cover_upload_url) {
+              console.log(`Uploading cover for song ${songInfo.track_number}: ${songInfo.title}...`);
+              uploads.push(
+                this.uploadService.uploadFileToS3(
+                  songInfo.cover_upload_url,
+                  songFile.coverFile,
+                  songFile.coverFile.type
+                ).pipe(
+                  tap(() => console.log(`Cover uploaded for song ${songInfo.track_number}: ${songInfo.title}`))
+                )
+              );
+            }
           }
         });
 
@@ -190,6 +213,7 @@ export class CreateAlbumComponent implements OnInit {
         this.coverFile = undefined;
         this.coverPreviewUrl = undefined;
         this.songFiles = [];
+        void this.router.navigate(["/home"]);
       }),
       catchError(err => {
         console.error('Album creation failed:', err);
@@ -222,6 +246,12 @@ export class CreateAlbumComponent implements OnInit {
   private fetchGenres(): void {
     this.genreService.getGenres().subscribe({
       next: (genres: string[]) => this.genres = genres
+    });
+  }
+
+  private fetchArtists(): void {
+    this.artistService.getArtists().subscribe({
+      next: (response) => this.artists = response.artists,
     });
   }
 }
