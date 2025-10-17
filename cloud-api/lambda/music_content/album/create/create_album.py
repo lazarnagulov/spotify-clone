@@ -24,12 +24,12 @@ def handler(event, _context):
     body = json.loads(event.get("body", "{}"))
     request = CreateAlbumRequest.model_validate(body)
 
-    album_id = "ALBUM#" + str(uuid.uuid4())
+    album_id = str(uuid.uuid4())
     album_cover_path = f"covers/albums/{album_id}"
     timestamp = datetime.utcnow().isoformat() + "Z"
 
     album_item = {
-        "PK": {"S": album_id},
+        "PK": {"S": "ALBUM#" + album_id},
         "SK": {"S": "METADATA"},
         "type": {"S": "album"},
         "title": {"S": request.title},
@@ -50,13 +50,13 @@ def handler(event, _context):
     song_presigned_urls = []
 
     for i, song_data in enumerate(request.songs):
-        song_id = "SONG#" + str(uuid.uuid4())
+        song_id = str(uuid.uuid4())
         song_audio_path = f"songs/{song_id}"
         song_cover_path = f"covers/songs/{song_id}"
 
         album_song_item = {
-            "PK": {"S": album_id},
-            "SK": {"S": song_id},
+            "PK": {"S": "ALBUM#" + album_id},
+            "SK": {"S": "SONG#" + song_id},
             "type": {"S": "album_song"},
             "title": {"S": song_data.title},
             "trackNumber": {"N": str(i + 1)},
@@ -72,7 +72,7 @@ def handler(event, _context):
         dynamodb.put_item(TableName=TABLE_NAME, Item=album_song_item)
 
         song_metadata_item = {
-            "PK": {"S": song_id},
+            "PK": {"S": "SONG#" + song_id},
             "SK": {"S": "METADATA"},
             "type": {"S": "song"},
             "title": {"S": song_data.title},

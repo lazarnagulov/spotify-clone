@@ -12,7 +12,13 @@ def handler(event, _context):
     artist_id = event['pathParameters']['id']
 
     response = artists_table.query(
-        KeyConditionExpression=Key('PK').eq(artist_id)
+        KeyConditionExpression=Key('PK').eq(artist_id),
+        ExpressionAttributeNames={
+            '#n': 'name',
+            '#b': 'bio',
+            '#g': 'genres'
+        },
+        ProjectionExpression='#n, #b, #g'
     )
 
     items = response.get("Items", [])
@@ -25,7 +31,7 @@ def handler(event, _context):
     logger.info(f"Artist with id {artist_id} found")
     return http_response(200, {
         "id": artist_id,
-        "name": artist['SK'],
+        "name": artist['name'],
         "bio": artist['bio'],
         "genres": artist['genres']
     })

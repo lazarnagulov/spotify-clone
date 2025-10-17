@@ -9,10 +9,10 @@ from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
 
 dynamodb = boto3.client("dynamodb")
-s3 = boto3.client("s3", region_name="eu-central-1")
 
 TABLE_NAME = os.environ["SONGS_TABLE"]
 MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
+AWS_REGION = "eu-central-1"
 
 deserializer = TypeDeserializer()
 
@@ -28,6 +28,9 @@ def convert_decimals_to_float(obj):
     elif isinstance(obj, list):
         return [convert_decimals_to_float(item) for item in obj]
     return obj
+
+def get_public_s3_url(key):
+    return f"https://{MEDIA_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{key}"
 
 @handle_lambda_exceptions
 def handler(event, _context):
@@ -53,32 +56,18 @@ def handler(event, _context):
 
     logger.info("Song data", extra={"song_data": song_data})
 
-    audio_url = s3.generate_presigned_url(
-        "get_object",
-        Params={
-            "Bucket": MEDIA_BUCKET,
-            "Key": song_data["audioPath"],
-        },
-        ExpiresIn=3600
-    )
+    audio_url = get_public_s3_url(song_data["audioPath"])
 
     cover_url = None
     if song_data.get("coverPath"):
-        cover_url = s3.generate_presigned_url(
-            "get_object",
-            Params={
-                "Bucket": MEDIA_BUCKET,
-                "Key": song_data["coverPath"],
-            },
-            ExpiresIn=3600
-        )
+        cover_url = get_public_s3_url(song_data["coverPath"])
 
     album_info = None
-    if song_data.get("albumId"):
+    if song_data.get("album_id"):
         album_response = dynamodb.get_item(
             TableName=TABLE_NAME,
             Key={
-                "PK": {"S": song_data["albumId"]},
+                "PK": {"S": song_data["album_id"]},
                 "SK": {"S": "METADATA"}
             }
         )
@@ -86,17 +75,10 @@ def handler(event, _context):
         if "Item" in album_response:
             album_data = deserialize_dynamodb_item(album_response["Item"])
 
-            album_cover_url = s3.generate_presigned_url(
-                "get_object",
-                Params={
-                    "Bucket": MEDIA_BUCKET,
-                    "Key": album_data["coverPath"],
-                },
-                ExpiresIn=3600
-            )
+            album_cover_url = get_public_s3_url(album_data["coverPath"])
 
             album_info = {
-                "id": song_data["albumId"],
+                "id": song_data["album_id"],
                 "title": album_data["title"],
                 "year": album_data.get("year"),
                 "cover_url": album_cover_url
@@ -113,7 +95,7 @@ def handler(event, _context):
         "audio_url": audio_url,
         "cover_url": cover_url or (album_info["cover_url"] if album_info else None),
         "album": album_info,
-        "created_at": song_data.get("createdAt"),
+        "created_at": song_data.get("created_at"),
     }
 
     logger.info("Song fetched successfully", extra={"song_id": song_id})

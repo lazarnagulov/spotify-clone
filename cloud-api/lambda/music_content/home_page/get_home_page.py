@@ -9,11 +9,11 @@ from util.http_response import http_response
 
 dynamodb = boto3.client("dynamodb")
 dynamodb_resource = boto3.resource("dynamodb", region_name="eu-central-1")
-s3 = boto3.client("s3", region_name="eu-central-1")
 
 TABLE_NAME = os.environ["SONGS_TABLE"]
 ARTISTS_TABLE = os.environ.get("ARTISTS_TABLE", "Artists")
 MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
+AWS_REGION = "eu-central-1"
 
 deserializer = TypeDeserializer()
 
@@ -31,7 +31,12 @@ def convert_decimals_to_float(obj):
         return [convert_decimals_to_float(item) for item in obj]
     return obj
 
-#TODO: Personalize feed, this is just a sloooooow, boring example here!!!
+
+def get_public_s3_url(key):
+    return f"https://{MEDIA_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{key}"
+
+
+# TODO: Personalize feed, this is just a sloooooow, boring example here!!!
 @handle_lambda_exceptions
 def handler(event, _context):
     logger.info("Fetching home page data")
@@ -47,18 +52,12 @@ def handler(event, _context):
         }
     )
 
-    for item in albums_response.get("Items", [])[:5]:  # Take first 5 results
+    for item in albums_response.get("Items", [])[:5]:
         album_data = deserialize_item(item)
+
         cover_url = None
         if album_data.get("coverPath"):
-            cover_url = s3.generate_presigned_url(
-                "get_object",
-                Params={
-                    "Bucket": MEDIA_BUCKET,
-                    "Key": album_data["coverPath"]
-                },
-                ExpiresIn=3600
-            )
+            cover_url = get_public_s3_url(album_data["coverPath"])
 
         albums.append({
             "id": album_data["PK"],
@@ -84,17 +83,10 @@ def handler(event, _context):
 
     for item in songs_response.get("Items", [])[:5]:
         song_data = deserialize_item(item)
-        cover_url = None
 
+        cover_url = None
         if song_data.get("coverPath"):
-            cover_url = s3.generate_presigned_url(
-                "get_object",
-                Params={
-                    "Bucket": MEDIA_BUCKET,
-                    "Key": song_data["coverPath"]
-                },
-                ExpiresIn=3600
-        )
+            cover_url = get_public_s3_url(song_data["coverPath"])
 
         songs.append({
             "id": song_data["PK"],

@@ -29,6 +29,23 @@ class ContentStack(Stack):
             auto_delete_objects=True,
             removal_policy=RemovalPolicy.DESTROY,
             cors=[cors_rule],
+            public_read_access=True,
+            object_ownership=s3.ObjectOwnership.OBJECT_WRITER,
+            block_public_access=s3.BlockPublicAccess(
+                block_public_acls=False,
+                block_public_policy=False,
+                ignore_public_acls=False,
+                restrict_public_buckets=False
+            )
+        )
+
+        images_bucket.add_to_resource_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                principals=[iam.AnyPrincipal()],
+                actions=["s3:GetObject"],
+                resources=[f"{images_bucket.bucket_arn}/*"]
+            )
         )
 
         audio_bucket = s3.Bucket(
