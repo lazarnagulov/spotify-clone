@@ -33,7 +33,6 @@ def handler(event, _context):
         "title": request.title,
         "genres": request.genres,
         "artists": request.artists,
-        "albumId": request.album_id or "",
         "coverPath": path_to_cover,
         "audioPath": path_to_audio,
         "coverType": request.cover_type,

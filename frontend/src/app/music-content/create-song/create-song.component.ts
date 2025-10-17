@@ -19,7 +19,6 @@ export class CreateSongComponent implements OnInit {
   songForm: FormGroup;
   genres: string[] = [];
   artists: Artist[] = [];
-  albums = [{id: "1", title: 'First Album'}];
 
   previewUrl?: string;
   audioPreviewUrl?: string;
@@ -100,7 +99,7 @@ export class CreateSongComponent implements OnInit {
       artists: formValue.artists,
       album_id: formValue.albumId || undefined,
       description: formValue.description || '',
-      cover_type: this.coverFile?.type || 'image/jpeg',
+      cover_type: this.coverFile?.type ?? 'image/jpeg',
       audio_type: audioContentType
     };
 
