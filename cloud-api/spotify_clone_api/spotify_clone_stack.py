@@ -91,6 +91,19 @@ class SpotifyCloneStack(Stack):
             }
         )
 
+        delete_artist_lambda = aws_lambda.Function(
+            self,
+            "DeleteArtistFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="delete_artist.handler",
+            code=aws_lambda.Code.from_asset("lambda/artist/delete"),
+            layers=[shared_layer],
+            environment={
+                'ARTISTS_TABLE': artists_table.table_name,
+                "GENRE_RELATIONS_TABLE": genre_relations_table.table_name
+            }
+        )
+
         get_all_artists_lambda = aws_lambda.Function(
             self,
             "GetAllArtistsFunction",
@@ -122,6 +135,7 @@ class SpotifyCloneStack(Stack):
 
         artist_id_resource = artist_api.add_resource("{id}")
         artist_id_resource.add_method("GET", apigw.LambdaIntegration(get_artist_details_lambda))
+        artist_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_artist_lambda))
 
         create_artist_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
@@ -167,3 +181,17 @@ class SpotifyCloneStack(Stack):
                 resources=[genres_table.table_arn]
             )
         )
+
+        delete_artist_lambda.add_to_role_policy(
+          iam.PolicyStatement(
+            actions=[
+              "dynamodb:GetItem",
+              "dynamodb:DeleteItem",
+              "dynamodb:BatchWriteItem"
+            ],
+          resources=[
+              artists_table.table_arn,
+              genre_relations_table.table_arn,
+          ],
+    )
+)
