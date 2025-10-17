@@ -9,6 +9,8 @@ from util.logger import logger
 
 COGNITO_CLIENT_ID = os.environ.get("COGNITO_CLIENT_ID")
 COGNITO_REGION = os.environ.get("COGNITO_REGION")
+COGNITO_USER_POOL_ID = os.environ.get("COGNITO_USER_POOL_ID")
+
 
 client = boto3.client('cognito-idp', region_name=COGNITO_REGION)
 
@@ -25,5 +27,6 @@ def handler(event, _context):
     request = UserConfirmationRequest.model_validate(body)
 
     response = confirm_sign_up(request)
+
     logger.info(f"Successfully confirmed registration for user {request.username}")
     return http_response(200, {"message": "User confirmed", "data": response})
