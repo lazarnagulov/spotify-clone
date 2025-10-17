@@ -40,7 +40,6 @@ export class CreateSongComponent implements OnInit {
       title: ['', Validators.required],
       genres: [[], Validators.required],
       artists: [[], Validators.required],
-      albumId: [''],
       description: [''],
       file: [null, Validators.required]
     });
