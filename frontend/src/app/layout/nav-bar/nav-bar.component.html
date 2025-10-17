@@ -1,7 +1,12 @@
 <mat-toolbar color="primary" class="app-toolbar">
   <span class="app-title">SpotifyClone</span>
   <div class="toolbar-actions">
-    <button mat-raised-button color="accent" routerLink="/register" class="toolbar-button">Signup</button>
-    <button mat-raised-button color="accent" routerLink="/login" class="toolbar-button">Login</button>
+    <button *ngIf="userRoles.length > 0" mat-raised-button color="accent" routerLink="/home" class="toolbar-button">Home</button>
+    <button mat-raised-button *ngIf="userRoles.length === 0" color="accent" routerLink="/register" class="toolbar-button">Signup</button>
+    <button mat-raised-button *ngIf="userRoles.length === 0" color="accent" routerLink="/login" class="toolbar-button">Login</button>
+    <button mat-raised-button *ngIf="userRoles.includes('admin')" color="accent" routerLink="/song-creation" class="toolbar-button">Create song</button>
+    <button mat-raised-button *ngIf="userRoles.includes('admin')" color="accent" routerLink="/album-creation" class="toolbar-button">Create album</button>
+    <button mat-raised-button *ngIf="userRoles.includes('admin')" color="accent" routerLink="/artist-creation" class="toolbar-button">Create artist</button>
+    <button *ngIf="userRoles.length > 0" mat-raised-button color="accent" (click)="logout()" class="toolbar-button">Logout</button>
   </div>
 </mat-toolbar>

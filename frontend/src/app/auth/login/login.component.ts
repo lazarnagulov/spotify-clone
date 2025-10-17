@@ -3,6 +3,7 @@ import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {ErrorResponse, ValidationDetail} from '../../shared/model/error-response.model';
 import {AuthService} from '../auth.service';
 import {LoginResponse} from '../model/login-response.model';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -20,7 +21,7 @@ export class LoginComponent {
     password: new FormControl('', [Validators.required])
   });
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   onLogin(): void {
     if(this.loginForm.invalid) return;
@@ -29,7 +30,7 @@ export class LoginComponent {
       next: (response: LoginResponse) => {
         this.loading = false;
         this.authService.setTokens(response);
-        // TODO: Navigate to home
+        void this.router.navigate(["/home"]);
       },
       error: (error: ErrorResponse) => {
         this.loading = false;

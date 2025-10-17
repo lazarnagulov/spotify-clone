@@ -1,0 +1,54 @@
+.artist-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem;
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+.artist-header {
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.artist-name {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 600;
+}
+
+.artist-bio {
+  margin: 1rem auto 0;
+  max-width: 60ch;
+  line-height: 1.6;
+  color: var(--mat-grey-700, #555);
+  font-size: 1rem;
+}
+
+mat-card-actions {
+  margin-top: 1rem;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+h2 {
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  margin-bottom: 0.75rem;
+  border-bottom: 0.125rem solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 0.25rem;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 1.25rem;
+}
+
+.empty-state {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--mat-grey-600, #666);
+  font-style: italic;
+  margin: 1rem 0;
+}

@@ -18,17 +18,17 @@ s3 = boto3.client("s3", region_name="eu-central-1")
 
 
 @handle_lambda_exceptions
-@require_role("admin")
+@require_role('admin')
 def handler(event, _context):
     body = json.loads(event.get("body", "{}"))
     request = CreateAlbumRequest.model_validate(body)
 
-    album_id = f"ALBUM#{uuid.uuid4()}"
+    album_id = str(uuid.uuid4())
     album_cover_path = f"covers/albums/{album_id}"
     timestamp = datetime.utcnow().isoformat() + "Z"
 
     album_item = {
-        "PK": album_id,
+        "PK": "ALBUM#" + album_id,
         "SK": "METADATA",
         "type": "album",
         "title": request.title,
@@ -39,8 +39,8 @@ def handler(event, _context):
         "coverType": request.cover_type,
         "description": request.description or "",
         "totalTracks": len(request.songs),
-        "created_at": timestamp,
-        "updated_at": timestamp,
+        "createdAt": timestamp,
+        "updatedAt": timestamp,
     }
 
     table.put_item(Item=album_item)
@@ -50,24 +50,29 @@ def handler(event, _context):
     songs = []
 
     for i, song_data in enumerate(request.songs):
-        song_id = f"SONG#{uuid.uuid4()}"
-        audio_path = f"songs/{song_id}"
+        song_id = str(uuid.uuid4())
+        song_audio_path = f"songs/{song_id}"
+        song_cover_path = f"covers/songs/{song_id}"
 
         album_song_item = {
-            "PK": album_id,
-            "SK": song_id,
+            "PK": "ALBUM#" +  album_id,
+            "SK": "SONG#" + song_id,
             "type": "album_song",
             "title": song_data.title,
             "trackNumber": i + 1,
-            "pathToAudio": audio_path,
+            "audioPath": song_audio_path,
             "audioType": song_data.audio_type,
             "duration": song_data.duration or 0,
         }
 
+        if song_data.cover_type:
+            album_song_item["coverPath"] = {"S": song_cover_path or ""}
+            album_song_item["coverType"] = {"S": song_data.cover_type or ""}
+
         table.put_item(Item=album_song_item)
 
         song_metadata_item = {
-            "PK": song_id,
+            "PK": "SONG#" + song_id,
             "SK": "METADATA",
             "type": "song",
             "title": song_data.title,
@@ -76,11 +81,11 @@ def handler(event, _context):
             "album_id": album_id,
             "trackNumber": i + 1,
             "description": song_data.description or "",
-            "pathToAudio": audio_path,
+            "audioPath": song_audio_path,
             "audioType": song_data.audio_type,
             "duration": song_data.duration or 0,
-            "created_at": timestamp,
-            "updated_at": timestamp,
+            "createdAt": timestamp,
+            "updatedAt": timestamp,
         }
 
         songs.append(song_metadata_item)
@@ -90,25 +95,37 @@ def handler(event, _context):
             "put_object",
             Params={
                 "Bucket": MEDIA_BUCKET,
-                "Key": audio_path,
+                "Key": song_audio_path,
                 "ContentType": song_data.audio_type,
             },
             ExpiresIn=3600,
         )
 
-        song_presigned_urls.append(
-            {
-                "song_id": song_id,
-                "title": song_data.title,
-                "track_number": i + 1,
-                "upload_url": presigned_audio_url,
-            }
-        )
+        presigned_cover_url = None
+        if song_data.cover_type:
+            presigned_cover_url = s3.generate_presigned_url(
+                "put_object",
+                Params={
+                    "Bucket": MEDIA_BUCKET,
+                    "Key": song_cover_path,
+                    "ContentType": song_data.cover_type,
+                },
+                ExpiresIn=3600
+            )
 
-        logger.info(
-            "Song created",
-            extra={"album_id": album_id, "song_id": song_id, "track_number": i + 1},
-        )
+        song_presigned_urls.append({
+            "song_id": song_id,
+            "title": song_data.title,
+            "track_number": i + 1,
+            "upload_url": presigned_audio_url,
+            "cover_upload_url": presigned_cover_url
+        })
+
+        logger.info("Song created", extra={
+            "album_id": album_id,
+            "song_id": song_id,
+            "track_number": i + 1
+        })
 
     album_cover_url = s3.generate_presigned_url(
         "put_object",
@@ -117,12 +134,7 @@ def handler(event, _context):
             "Key": album_cover_path,
             "ContentType": request.cover_type,
         },
-        ExpiresIn=3600,
-    )
-
-    logger.info(
-        "Album created successfully",
-        extra={"album_id": album_id, "total_songs": len(request.songs)},
+        ExpiresIn=3600
     )
 
     update_genre_relations_table(request, album_id, album_cover_path, songs)

@@ -11,6 +11,7 @@ import {LayoutModule} from "./layout/layout.module";
 import { ArtistModule } from './artist/artist.module';
 import {MusicContentModule} from './music-content/music-content.module';
 import {AuthInterceptor} from './auth/auth.interceptor';
+import {MediaModule} from './media/media.module';
 
 @NgModule({
   declarations: [
@@ -22,6 +23,7 @@ import {AuthInterceptor} from './auth/auth.interceptor';
     SharedModule,
     LayoutModule,
     AuthModule,
+    MediaModule,
     ArtistModule,
     MusicContentModule,
   ],

@@ -23,24 +23,24 @@ s3 = boto3.client("s3", region_name="eu-central-1")
 def handler(event, _context):
     body = json.loads(event.get("body", "{}"))
     request = CreateSongRequest.model_validate(body)
-    song_id = f"SONG#{str(uuid.uuid4())}"
+    song_id = str(uuid.uuid4())
     path_to_cover = f"covers/songs/{song_id}"
     path_to_audio = f"songs/{song_id}"
 
     item = {
-        "PK": song_id,
+        "PK": "SONG#" + song_id,
         "SK": "METADATA",
         "title": request.title,
         "genres": request.genres,
         "artists": request.artists,
-        "album_id": request.album_id or "",
-        "pathToCover": path_to_cover,
-        "pathToAudio": path_to_audio,
+        "coverPath": path_to_cover,
+        "audioPath": path_to_audio,
         "coverType": request.cover_type,
-        "audio_type": request.audio_type,
+        "audioType": request.audio_type,
         "description": request.description,
-        "created_at": datetime.utcnow().isoformat() + "Z",
-        "updated_at": datetime.utcnow().isoformat() + "Z",
+        "createdAt": datetime.utcnow().isoformat() + "Z",
+        "updatedAt": datetime.utcnow().isoformat() + "Z",
+        "type": "song",
     }
 
     table.put_item(Item=item)
