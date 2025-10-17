@@ -2,7 +2,7 @@ import json, os, boto3
 from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
 from util.auth import require_role
-from subscription.subscribe.model.subscription_request import SubscriptionRequest
+from model.subscription_request import SubscriptionRequest
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['SUBSCRIPTION_TABLE'])

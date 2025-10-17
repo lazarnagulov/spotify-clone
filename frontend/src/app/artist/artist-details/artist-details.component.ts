@@ -1,31 +1,113 @@
-import {Component, OnInit} from '@angular/core';
-import {ArtistService} from '../artist.service';
-import {ActivatedRoute} from '@angular/router';
-import {EMPTY, switchMap} from 'rxjs';
-import {Artist} from '../model/create-artist.model';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../../env/environment';
+import { Artist } from '../model/artist.model';
 
 @Component({
   selector: 'app-artist-details',
   standalone: false,
   templateUrl: './artist-details.component.html',
-  styleUrl: './artist-details.component.css'
+  styleUrls: ['./artist-details.component.css']
 })
 export class ArtistDetailsComponent implements OnInit {
-  id?: string;
   artist?: Artist;
+  loading = true;
+  error?: string;
+  isSubscribed = false;
+  checkingSubscription = true;
+  artistId = '';
 
   constructor(
-    private artistService: ArtistService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.pipe(
-      switchMap(params => {
-        const id = params.get('id');
-        this.id = id ?? undefined;
-        return id ? this.artistService.getDetails(id) : EMPTY;
-      })
-    ).subscribe(artist => this.artist = artist);
+    this.artistId = this.route.snapshot.paramMap.get('id') || '';
+    if (this.artistId) {
+      this.loadArtist(this.artistId);
+      this.checkSubscription(this.artistId);
+    }
   }
+
+  loadArtist(artistId: string): void {
+    this.loading = true;
+    this.error = undefined;
+
+    this.http.get<Artist>(`${environment.apiHost}/artists/${artistId}`)
+      .subscribe({
+        next: (artist) => {
+          this.artist = artist;
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading artist:', err);
+          this.error = 'Failed to load artist. Please try again.';
+          this.loading = false;
+        }
+      });
+  }
+
+  checkSubscription(artistId: string): void {
+    this.checkingSubscription = false;
+    this.isSubscribed = false;
+    //TODO
+
+    // this.checkingSubscription = true;
+    //
+    // this.http.get<any[]>(
+    //   `${environment.apiHost}/subscriptions`,
+    // ).subscribe({
+    //   next: (subscriptions) => {
+    //     this.isSubscribed = subscriptions.some(
+    //       sub => sub.SK === artistId && sub.type === 'artist'
+    //     );
+    //     this.checkingSubscription = false;
+    //   },
+    //   error: (err) => {
+    //     console.error('Error checking subscription:', err);
+    //     this.checkingSubscription = false;
+    //   }
+    // });
+  }
+
+  toggleSubscription(): void {
+    if (!this.artist || !this.artistId) return;
+
+
+    if (this.isSubscribed) {
+      this.http.request('DELETE', `${environment.apiHost}/subscription`, {
+        body: {
+          content_id: this.artistId,
+          content_type: 'artist'
+        }
+      }).subscribe({
+        next: () => {
+          this.isSubscribed = false;
+        },
+        error: (err) => {
+          console.error('Error unsubscribing:', err);
+          this.error = 'Failed to unsubscribe. Please try again.';
+        }
+      });
+    } else {
+      this.http.post(
+        `${environment.apiHost}/subscription`,
+        {
+          content_id: this.artistId,
+          content_type: 'artist'
+        },
+      ).subscribe({
+        next: () => {
+          this.isSubscribed = true;
+        },
+        error: (err) => {
+          console.error('Error subscribing:', err);
+          this.error = 'Failed to subscribe. Please try again.';
+        }
+      });
+    }
+  }
+
 }
