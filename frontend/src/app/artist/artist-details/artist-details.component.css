@@ -69,14 +69,21 @@
 .subscribe-button {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  position: relative;
+  min-width: 150px;
+  height: 40px;
 }
 
 .subscribe-button mat-icon {
   margin-right: 0.25rem;
 }
 
-
+.inline-spinner {
+  position: absolute;
+  right: 12px;
+}
 
 @media (max-width: 768px) {
   .artist-detail {
@@ -89,5 +96,9 @@
 
   .action-buttons {
     flex-wrap: wrap;
+  }
+
+  .subscribe-button {
+    width: 100%;
   }
 }

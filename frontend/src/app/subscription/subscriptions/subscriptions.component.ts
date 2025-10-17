@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../env/environment';
-
+import { SubscriptionDisplay } from '../model/subscription.model';
 
 @Component({
   selector: 'app-subscriptions',
@@ -24,20 +24,13 @@ export class SubscriptionsComponent implements OnInit {
     this.loading = true;
     this.error = undefined;
 
-    const headers = this.getAuthHeaders();
-
-    this.http.get<Subscription[]>(
+    this.http.get<SubscriptionDisplay[]>(
       `${environment.apiHost}/subscriptions`,
-      { headers }
+      { headers: this.getAuthHeaders() }
     ).subscribe({
       next: (subscriptions) => {
-        // Transform backend format to display format
-        this.subscriptions = subscriptions.map(sub => ({
-          contentId: sub.SK,
-          type: sub.type,
-          name: this.getDisplayName(sub),
-          email: sub.email
-        }));
+        console.log('Loaded subscriptions:', subscriptions);
+        this.subscriptions = subscriptions;
         this.loading = false;
       },
       error: (err) => {
@@ -49,14 +42,15 @@ export class SubscriptionsComponent implements OnInit {
   }
 
   unsubscribe(subscription: SubscriptionDisplay): void {
-    const headers = this.getAuthHeaders();
+    const request = {
+      content_id: subscription.contentId,
+      content_type: subscription.type
+    };
+    console.log('Unsubscribing:', request);
 
     this.http.request('DELETE', `${environment.apiHost}/subscription`, {
-      headers,
-      body: {
-        content_id: subscription.contentId,
-        content_type: subscription.type
-      }
+      headers: this.getAuthHeaders(),
+      body: request
     }).subscribe({
       next: () => {
         this.subscriptions = this.subscriptions.filter(
@@ -68,12 +62,6 @@ export class SubscriptionsComponent implements OnInit {
         this.error = 'Failed to unsubscribe. Please try again.';
       }
     });
-  }
-
-  private getDisplayName(sub: Subscription): string {
-    // You'll need to fetch actual names from artist/genre endpoints
-    // For now, return the ID as placeholder
-    return sub.SK;
   }
 
   private getAuthHeaders(): HttpHeaders {

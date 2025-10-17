@@ -16,7 +16,7 @@
         <mat-card-content class="artist-info">
           <h1 class="artist-name">{{ artist.name }}</h1>
 
-          <p class="genres" *ngIf="artist.genres && artist.genres.length > 0">
+          <p class="genres" *ngIf="artist.genres?.length">
             <mat-chip-set>
               <mat-chip *ngFor="let genre of artist.genres">{{ genre }}</mat-chip>
             </mat-chip-set>
@@ -35,11 +35,20 @@
           [disabled]="checkingSubscription"
           (click)="toggleSubscription()"
           class="subscribe-button">
+
           <mat-icon>{{ isSubscribed ? 'notifications_active' : 'notifications' }}</mat-icon>
+
           <span *ngIf="!checkingSubscription">
             {{ isSubscribed ? 'Unsubscribe' : 'Subscribe' }}
           </span>
-          <mat-spinner *ngIf="checkingSubscription" diameter="20"></mat-spinner>
+
+          <mat-progress-spinner
+            *ngIf="checkingSubscription"
+            diameter="20"
+            mode="indeterminate"
+            color="primary"
+            class="inline-spinner">
+          </mat-progress-spinner>
         </button>
       </mat-card-actions>
     </mat-card>
