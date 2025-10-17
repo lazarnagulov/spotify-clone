@@ -9,6 +9,7 @@ from spotify_clone_api.cognito_stack import CognitoStack
 from spotify_clone_api.content_stack import ContentStack
 from spotify_clone_api.layer_stack import LayerStack
 from spotify_clone_api.spotify_clone_stack import SpotifyCloneStack
+from spotify_clone_api.subscription_stack import SubscriptionStack
 
 REGION = 'eu-central-1'
 
@@ -49,6 +50,15 @@ table_stack = SpotifyCloneStack(
 content_stack = ContentStack(
     app,
     "SpotifyCloneContentStack",
+    shared_layer=layer_stack.shared_layer,
+    authorizer=gw_stack.authorizer,
+    api=gw_stack.api,
+    env=env
+)
+
+SubscriptionStack(
+    app,
+    "SpotifyCloneSubscriptionStack",
     shared_layer=layer_stack.shared_layer,
     authorizer=gw_stack.authorizer,
     api=gw_stack.api,
