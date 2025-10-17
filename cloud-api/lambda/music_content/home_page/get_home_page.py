@@ -99,7 +99,8 @@ def handler(event, _context):
     songs = []
     for item in songs_response.get("Items", [])[:5]:
         song_data = deserialize_item(item)
-        cover_url = get_public_s3_url(song_data["coverPath"]) if song_data.get("coverPath") else None
+
+        cover_url = get_public_s3_url(song_data["coverPath"]) if song_data.get("coverType") else None
 
         artist_ids = song_data.get("artists", [])
         artist_names = [artists_names.get(aid, aid) for aid in artist_ids]

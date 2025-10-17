@@ -26,7 +26,7 @@
           [id]="album.id"
           [title]="album.title"
           [subtitle]="getArtistString(album.artists)"
-          [imageUrl]="album.cover_url || 'assets/default-cover.jpg'"
+          [imageUrl]="album.cover_url || 'no-image.svg'"
         ></app-media-card>
       </div>
     </section>
@@ -46,7 +46,7 @@
           [id]="song.id"
           [title]="song.title"
           [subtitle]="getArtistString(song.artists)"
-          [imageUrl]="song.cover_url || 'assets/default-cover.jpg'"
+          [imageUrl]="song.cover_url || 'no-image.svg'"
         ></app-media-card>
       </div>
     </section>

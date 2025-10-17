@@ -84,24 +84,8 @@ def handler(event, _context):
     audio_url = get_public_s3_url(song_data["audioPath"])
 
     cover_url = None
-    if song_data.get("coverPath"):
+    if song_data.get("coverType"):
         cover_url = get_public_s3_url(song_data["coverPath"])
-
-    album_info = None
-    if song_data.get("album_id"):
-        album_response = dynamodb.get_item(
-            TableName=TABLE_NAME,
-            Key={"PK": {"S": song_data["album_id"]}, "SK": {"S": "METADATA"}}
-        )
-        if "Item" in album_response:
-            album_data = deserialize_dynamodb_item(album_response["Item"])
-            album_cover_url = get_public_s3_url(album_data["coverPath"]) if album_data.get("coverPath") else None
-            album_info = {
-                "id": song_data["album_id"],
-                "title": album_data["title"],
-                "year": album_data.get("year"),
-                "cover_url": album_cover_url
-            }
 
     song_response = {
         "id": song_id,
@@ -112,8 +96,7 @@ def handler(event, _context):
         "track_number": song_data.get("trackNumber"),
         "description": song_data.get("description", ""),
         "audio_url": audio_url,
-        "cover_url": cover_url or (album_info["cover_url"] if album_info else None),
-        "album": album_info,
+        "cover_url": cover_url,
         "created_at": song_data.get("created_at"),
     }
 
