@@ -8,10 +8,8 @@ from constructs import Construct
 
 class SubscriptionStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, shared_layer, api, authorizer,  **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, shared_layer, api, authorizer, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
-
-
 
         subscription_table = dynamodb.Table(
             self, "SubscriptionsTable",
@@ -40,7 +38,34 @@ class SubscriptionStack(Stack):
             }
         )
 
-        subscription_table.grant_read_write_data(subscribe_lambda)
+        unsubscribe_lambda = aws_lambda.Function(
+            self, "UnsubscribeFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="unsubscribe.handler",
+            code=aws_lambda.Code.from_asset("lambda/subscription/unsubscribe"),
+            layers=[shared_layer],
+            environment={
+                "SUBSCRIPTION_TABLE": subscription_table.table_name
+            }
+        )
 
-        subscribe_api = api.root.add_resource("subscription")
-        subscribe_api.add_method("POST", apigw.LambdaIntegration(subscribe_lambda), authorizer=authorizer)
+        check_lambda = aws_lambda.Function(
+            self, "CheckSubscriptionFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="check_subscription.handler",
+            code=aws_lambda.Code.from_asset("lambda/subscription/check"),
+            layers=[shared_layer],
+            environment={
+                "SUBSCRIPTION_TABLE": subscription_table.table_name
+            }
+        )
+
+        subscription_table.grant_read_write_data(subscribe_lambda)
+        subscription_table.grant_read_write_data(unsubscribe_lambda)
+        subscription_table.grant_read_data(check_lambda)
+
+        subscription_api = api.root.add_resource("subscription")
+
+        subscription_api.add_method("POST", apigw.LambdaIntegration(subscribe_lambda), authorizer=authorizer)
+        subscription_api.add_method("DELETE", apigw.LambdaIntegration(unsubscribe_lambda), authorizer=authorizer)
+        subscription_api.add_method("GET", apigw.LambdaIntegration(check_lambda), authorizer=authorizer)

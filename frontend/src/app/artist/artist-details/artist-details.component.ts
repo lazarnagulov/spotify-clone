@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../env/environment';
 import { Artist } from '../model/artist.model';
 
@@ -24,7 +24,7 @@ export class ArtistDetailsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.artistId = this.route.snapshot.paramMap.get('id') || '';
+    this.artistId = this.route.snapshot.paramMap.get('id') ?? '';
     if (this.artistId) {
       this.loadArtist(this.artistId);
       this.checkSubscription(this.artistId);
@@ -50,31 +50,26 @@ export class ArtistDetailsComponent implements OnInit {
   }
 
   checkSubscription(artistId: string): void {
-    this.checkingSubscription = false;
+    this.checkingSubscription = true;
     this.isSubscribed = false;
-    //TODO
 
-    // this.checkingSubscription = true;
-    //
-    // this.http.get<any[]>(
-    //   `${environment.apiHost}/subscriptions`,
-    // ).subscribe({
-    //   next: (subscriptions) => {
-    //     this.isSubscribed = subscriptions.some(
-    //       sub => sub.SK === artistId && sub.type === 'artist'
-    //     );
-    //     this.checkingSubscription = false;
-    //   },
-    //   error: (err) => {
-    //     console.error('Error checking subscription:', err);
-    //     this.checkingSubscription = false;
-    //   }
-    // });
+    this.http.get<{ subscribed: boolean }>(
+      `${environment.apiHost}/subscription`,
+      { params: { content_id: artistId } }
+    ).subscribe({
+      next: (response) => {
+        this.isSubscribed = response.subscribed;
+        this.checkingSubscription = false;
+      },
+      error: (err) => {
+        console.error('Error checking subscription:', err);
+        this.checkingSubscription = false;
+      }
+    });
   }
 
   toggleSubscription(): void {
     if (!this.artist || !this.artistId) return;
-
 
     if (this.isSubscribed) {
       this.http.request('DELETE', `${environment.apiHost}/subscription`, {
@@ -97,7 +92,7 @@ export class ArtistDetailsComponent implements OnInit {
         {
           content_id: this.artistId,
           content_type: 'artist'
-        },
+        }
       ).subscribe({
         next: () => {
           this.isSubscribed = true;
@@ -109,5 +104,4 @@ export class ArtistDetailsComponent implements OnInit {
       });
     }
   }
-
 }
