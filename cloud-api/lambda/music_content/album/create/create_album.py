@@ -60,7 +60,7 @@ def handler(event, _context):
             "type": "album_song",
             "title": song_data.title,
             "trackNumber": i + 1,
-            "audioPath": audio_path,
+            "audioPath": song_audio_path,
             "audioType": song_data.audio_type,
             "duration": song_data.duration or 0,
         }
@@ -81,7 +81,7 @@ def handler(event, _context):
             "album_id": album_id,
             "trackNumber": i + 1,
             "description": song_data.description or "",
-            "audioPath": audio_path,
+            "audioPath": song_audio_path,
             "audioType": song_data.audio_type,
             "duration": song_data.duration or 0,
             "createdAt": timestamp,

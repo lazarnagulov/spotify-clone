@@ -1,18 +1,18 @@
 import os
-
 import boto3
 from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.types import TypeDeserializer
+from decimal import Decimal
 
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
-from decimal import Decimal
 
 
 dynamodb = boto3.client("dynamodb")
 dynamodb_resource = boto3.resource("dynamodb")
 table = dynamodb_resource.Table(os.environ["SONGS_TABLE"])
+artists_table_name = os.environ["ARTISTS_TABLE"]
 
 TABLE_NAME = os.environ["SONGS_TABLE"]
 MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
@@ -39,6 +39,29 @@ def get_public_s3_url(key):
     return f"https://{MEDIA_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{key}"
 
 
+def fetch_artist_names(artist_ids):
+    if not artist_ids:
+        return {}
+
+    request_items = {
+        artists_table_name: {
+            "Keys": [{"PK": {"S": artist_id}, "SK": {"S": "METADATA"}} for artist_id in artist_ids],
+            "ProjectionExpression": "PK, #n",
+            "ExpressionAttributeNames": {"#n": "name"}
+        }
+    }
+
+    response = dynamodb.batch_get_item(RequestItems=request_items)
+    artists = response.get("Responses", {}).get(artists_table_name, [])
+
+    artist_name_map = {}
+    for artist in artists:
+        artist_data = deserialize_item(artist)
+        artist_name_map[artist_data["PK"]] = artist_data.get("name", "Unknown")
+
+    return artist_name_map
+
+
 @handle_lambda_exceptions
 def handler(event, _context):
     album_id = event["pathParameters"]["id"]
@@ -58,29 +81,22 @@ def handler(event, _context):
     album_data = deserialize_item(album_response["Item"])
     logger.info("Album metadata retrieved", extra={"album_id": album_id})
 
-    cover_url = None
-    if album_data.get("coverPath"):
-        cover_url = get_public_s3_url(album_data["coverPath"])
+    cover_url = get_public_s3_url(album_data["coverPath"]) if album_data.get("coverPath") else None
 
     query_response = table.query(
         KeyConditionExpression=Key("PK").eq(album_id) & Key("SK").begins_with("SONG#")
     )
+
     songs = []
-
     for item in query_response.get("Items", []):
-        song_data = item
-
-        song_audio_url = get_public_s3_url(song_data["audioPath"])
-
-        song_cover_url = None
-        if song_data.get("coverPath"):
-            song_cover_url = get_public_s3_url(song_data["coverPath"])
+        song_audio_url = get_public_s3_url(item["audioPath"])
+        song_cover_url = get_public_s3_url(item["coverPath"]) if item.get("coverPath") else None
 
         song_item = {
-            "id": song_data["SK"],
-            "title": song_data["title"],
-            "track_number": int(song_data.get("trackNumber", 0)),
-            "duration": float(song_data.get("duration", 0)),
+            "id": item["SK"],
+            "title": item["title"],
+            "track_number": int(item.get("trackNumber", 0)),
+            "duration": float(item.get("duration", 0)),
             "audio_url": song_audio_url,
         }
 
@@ -91,10 +107,14 @@ def handler(event, _context):
 
     songs.sort(key=lambda s: s["track_number"])
 
+    artist_ids = album_data.get("artists", [])
+    artist_name_map = fetch_artist_names(artist_ids)
+    artist_names = [artist_name_map.get(aid, aid) for aid in artist_ids]
+
     album_response_body = {
         "id": album_id,
         "title": album_data["title"],
-        "artists": album_data.get("artists", []),
+        "artists": artist_names,
         "genres": album_data.get("genres", []),
         "year": album_data.get("year"),
         "description": album_data.get("description", ""),

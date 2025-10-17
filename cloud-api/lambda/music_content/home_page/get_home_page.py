@@ -36,12 +36,27 @@ def get_public_s3_url(key):
     return f"https://{MEDIA_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{key}"
 
 
-# TODO: Personalize feed, this is just a sloooooow, boring example here!!!
 @handle_lambda_exceptions
 def handler(event, _context):
     logger.info("Fetching home page data")
 
-    albums = []
+    artists_table = dynamodb_resource.Table(ARTISTS_TABLE)
+    artists_scan = artists_table.scan()
+    artists = []
+    artists_names = {}
+
+    for item in artists_scan.get("Items", [])[:5]:
+        artist_id = item.get("PK")
+        artist_name = item.get("name")
+        artists.append({
+            "id": artist_id,
+            "name": artist_name,
+            "genres": item.get("genres", [])
+        })
+        artists_names[artist_id] = artist_name
+
+    logger.info(f"Found {len(artists)} artists", extra={"artists": artists_names})
+
     albums_response = dynamodb.scan(
         TableName=TABLE_NAME,
         FilterExpression="attribute_exists(#type) AND #type = :type AND SK = :metadata",
@@ -52,17 +67,18 @@ def handler(event, _context):
         }
     )
 
+    albums = []
     for item in albums_response.get("Items", [])[:5]:
         album_data = deserialize_item(item)
+        cover_url = get_public_s3_url(album_data["coverPath"]) if album_data.get("coverPath") else None
 
-        cover_url = None
-        if album_data.get("coverPath"):
-            cover_url = get_public_s3_url(album_data["coverPath"])
+        artist_ids = album_data.get("artists", [])
+        artist_names = [artists_names.get(aid, aid) for aid in artist_ids]
 
         albums.append({
             "id": album_data["PK"],
             "title": album_data.get("title", ""),
-            "artists": album_data.get("artists", []),
+            "artists": artist_names,
             "genres": album_data.get("genres", []),
             "year": album_data.get("year"),
             "cover_url": cover_url
@@ -70,7 +86,6 @@ def handler(event, _context):
 
     logger.info(f"Found {len(albums)} albums")
 
-    songs = []
     songs_response = dynamodb.scan(
         TableName=TABLE_NAME,
         FilterExpression="attribute_exists(#type) AND #type = :type AND SK = :metadata",
@@ -81,34 +96,22 @@ def handler(event, _context):
         }
     )
 
+    songs = []
     for item in songs_response.get("Items", [])[:5]:
         song_data = deserialize_item(item)
+        cover_url = get_public_s3_url(song_data["coverPath"]) if song_data.get("coverPath") else None
 
-        cover_url = None
-        if song_data.get("coverPath"):
-            cover_url = get_public_s3_url(song_data["coverPath"])
+        artist_ids = song_data.get("artists", [])
+        artist_names = [artists_names.get(aid, aid) for aid in artist_ids]
 
         songs.append({
             "id": song_data["PK"],
             "title": song_data.get("title", ""),
-            "artists": song_data.get("artists", []),
+            "artists": artist_names,
             "cover_url": cover_url
         })
 
     logger.info(f"Found {len(songs)} songs")
-
-    artists_table = dynamodb_resource.Table(ARTISTS_TABLE)
-    artists_scan = artists_table.scan()
-
-    artists = []
-    for item in artists_scan.get("Items", [])[:5]:
-        artists.append({
-            "id": item.get("PK"),
-            "name": item.get("SK"),
-            "genres": item.get("genres", [])
-        })
-
-    logger.info(f"Found {len(artists)} artists")
 
     response_body = {
         "albums": convert_decimals_to_float(albums),

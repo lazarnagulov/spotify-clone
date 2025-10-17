@@ -94,6 +94,7 @@ class ContentStack(Stack):
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
                 "SONGS_TABLE": "MusicCatalog",
+                'ARTISTS_TABLE': "Artists",
             }
         )
 
@@ -107,6 +108,7 @@ class ContentStack(Stack):
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
                 "SONGS_TABLE": "MusicCatalog",
+                'ARTISTS_TABLE': "Artists",
             }
         )
 
@@ -187,10 +189,12 @@ class ContentStack(Stack):
         get_song_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
                 "dynamodb:GetItem",
+                "dynamodb:BatchGetItem",
                 "s3:GetObject"
             ],
             resources=[
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                 "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
                 "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
             ]
@@ -201,10 +205,12 @@ class ContentStack(Stack):
                 "dynamodb:GetItem",
                 "dynamodb:Query",
                 "s3:GetObject",
-                "s3:ListBucket"
+                "s3:ListBucket",
+                "dynamodb:BatchGetItem"
             ],
             resources=[
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                 "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
                 "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
             ]
