@@ -1,7 +1,9 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../env/environment';
+import { MediaService } from '../media.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface Song {
   id: string;
@@ -27,10 +29,11 @@ interface Song {
   selector: 'app-song-details',
   templateUrl: './song-details.component.html',
   standalone: false,
-  styleUrls: ['./song-details.component.css']
+  styleUrls: ['./song-details.component.css'],
 })
 export class SongDetailsComponent implements OnInit, OnDestroy {
   song?: Song;
+  id?: string;
   loading = true;
   error?: string;
 
@@ -43,33 +46,33 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
+    private service: MediaService,
+    private snackBar: MatSnackBar,
+    private router: Router,
     private http: HttpClient
   ) {}
 
   ngOnInit(): void {
-    const songId = this.route.snapshot.paramMap.get('id');
-    if (songId) {
-      this.loadSong(songId);
-    }
+    this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
+    if (this.id) this.loadSong(this.id);
   }
 
   loadSong(songId: string): void {
     this.loading = true;
     this.error = undefined;
 
-    this.http.get<Song>(`${environment.apiHost}/songs/${songId}`)
-      .subscribe({
-        next: (song) => {
-          this.song = song;
-          this.loading = false;
-          this.initializeAudioPlayer();
-        },
-        error: (err) => {
-          console.error('Error loading song:', err);
-          this.error = 'Failed to load song. Please try again.';
-          this.loading = false;
-        }
-      });
+    this.http.get<Song>(`${environment.apiHost}/songs/${songId}`).subscribe({
+      next: (song) => {
+        this.song = song;
+        this.loading = false;
+        this.initializeAudioPlayer();
+      },
+      error: (err) => {
+        console.error('Error loading song:', err);
+        this.error = 'Failed to load song. Please try again.';
+        this.loading = false;
+      },
+    });
   }
 
   initializeAudioPlayer(): void {
@@ -134,6 +137,24 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
 
   getGenresString(): string {
     return this.song?.genres.join(', ') ?? '';
+  }
+
+  onDelete(): void {
+    if (!this.id) return;
+    console.log(this.song);
+    this.service.deleteSong(this.id).subscribe({
+      next: () => {
+        this.snackBar.open('Song successfully deleted', 'Close', {
+          duration: 3000,
+        });
+        this.router.navigate(['/home']);
+      },
+      error: () => {
+        this.snackBar.open('Failed to delete song', 'Close', {
+          duration: 3000,
+        });
+      },
+    });
   }
 
   ngOnDestroy(): void {

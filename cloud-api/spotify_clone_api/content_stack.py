@@ -70,6 +70,20 @@ class ContentStack(Stack):
             }
         )
 
+        delete_song_lambda = aws_lambda.Function(
+            self,
+            "DeleteSongFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="delete_song.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/song/delete"),
+            layers=[shared_layer],
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "MUSIC_CATALOG": "MusicCatalog",
+                "GENRE_RELATIONS_TABLE": "GenreRelations"
+            }
+        )
+
         create_album_lambda = aws_lambda.Function(
             self, "CreateAlbumFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
@@ -148,6 +162,23 @@ class ContentStack(Stack):
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
         ))
 
+        delete_song_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "dynamodb:GetItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:BatchWriteItem",
+                    "s3:DeleteObject"
+                ],
+                resources=[
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                    f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
+                    "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
+                    "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+                ]
+            )
+        )
+
         create_album_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
                 "dynamodb:BatchWriteItem",
@@ -176,6 +207,7 @@ class ContentStack(Stack):
         song_api.add_method("POST", apigw.LambdaIntegration(create_song_lambda), authorizer=authorizer)
         song_id_resource = song_api.add_resource("{id}")
         song_id_resource.add_method("GET", apigw.LambdaIntegration(get_song_lambda), authorizer=authorizer)
+        song_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_song_lambda), authorizer=authorizer)
 
         album_api = api.root.add_resource("albums")
         album_api.add_method("POST", apigw.LambdaIntegration(create_album_lambda), authorizer=authorizer)

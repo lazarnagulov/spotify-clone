@@ -20,7 +20,12 @@
           class="cover-image"
         />
         <mat-card-content class="song-info">
-          <h1 class="song-title">{{ song.title }}</h1>
+          <div class="song-title-row">
+            <h1 class="song-title">{{ song.title }}</h1>
+            <button mat-icon-button color="warn" aria-label="Delete" (click)="onDelete()">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
           <p class="artists">{{ getArtistsString() }}</p>
           <p class="album-info" *ngIf="song.album">
             <mat-icon>album</mat-icon>
