@@ -6,6 +6,7 @@ from decimal import Decimal
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
+from util.auth import require_role
 
 dynamodb = boto3.client("dynamodb")
 dynamodb_resource = boto3.resource("dynamodb", region_name="eu-central-1")
@@ -37,6 +38,7 @@ def get_public_s3_url(key):
 
 
 @handle_lambda_exceptions
+@require_role('user', 'admin')
 def handler(event, _context):
     logger.info("Fetching home page data")
 

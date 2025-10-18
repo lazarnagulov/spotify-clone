@@ -154,6 +154,20 @@ class ContentStack(Stack):
             }
         )
 
+        get_discover_page = aws_lambda.Function(
+            self, "GetDiscoverPageFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_discover_page.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/discover_page"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "SONGS_TABLE": "MusicCatalog",
+                "GENRE_RELATIONS_TABLE": "GenreRelations"
+            }
+        )
+
         audio_bucket.grant_put(create_song_lambda)
         images_bucket.grant_put(create_song_lambda)
 
@@ -234,6 +248,22 @@ class ContentStack(Stack):
             ]
         ))
 
+        get_discover_page.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:GetItem",
+                "s3:GetObject"
+            ],
+            resources=[
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+            ]
+        ))
+
         song_api = api.root.add_resource("songs")
         song_api.add_method("POST", apigw.LambdaIntegration(create_song_lambda), authorizer=authorizer)
         song_id_resource = song_api.add_resource("{id}")
@@ -248,7 +278,15 @@ class ContentStack(Stack):
         album_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_album_lambda), authorizer=authorizer)
 
         home_api = api.root.add_resource("home")
-        home_api.add_method("GET", apigw.LambdaIntegration(get_home_page))
+        home_api.add_method("GET", apigw.LambdaIntegration(get_home_page), authorizer=authorizer)
+
+        discover_root = api.root.add_resource("discover")
+        discover_genre = discover_root.add_resource("{genre}")
+        discover_genre.add_method(
+            "GET",
+            apigw.LambdaIntegration(get_discover_page),
+            authorizer=authorizer
+        )
 
         get_song_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[

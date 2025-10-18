@@ -78,6 +78,8 @@ def handler(event, _context):
             "title": song_data.title,
             "artists": request.artists,
             "genres": request.genres,
+            "coverPath": song_cover_path,
+            "coverType": song_data.cover_type,
             "album_id": album_id,
             "trackNumber": i + 1,
             "description": song_data.description or "",
@@ -175,7 +177,7 @@ def update_genre_relations_table(request, album_id, path_to_cover, songs):
                         "SK": song["PK"],
                         "EntityType": "song",
                         "Title": song["title"],
-                        "CoverPath": path_to_cover,
+                        "CoverPath": song["coverPath"],
                         "ArtistNames": request.artists,
                     }
                 )

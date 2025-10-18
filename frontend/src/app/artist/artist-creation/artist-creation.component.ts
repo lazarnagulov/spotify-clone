@@ -45,7 +45,7 @@ export class ArtistCreationComponent implements OnInit {
       this.artistService.createArtist(this.artistForm.value).subscribe({
         next: (response) => {
           console.log('Artist successfully created:', response)
-          // TODO: Navigate to the artist list or to home page after creation
+          void this.router.navigate(['/home']);
         },
         error: (err) => console.error('Error creating artist:', err)
       });

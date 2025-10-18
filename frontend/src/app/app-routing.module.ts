@@ -10,6 +10,7 @@ import { ArtistCreationComponent } from './artist/artist-creation/artist-creatio
 import {CreateSongComponent} from './music-content/create-song/create-song.component';
 import {CreateAlbumComponent} from './music-content/create-album/create-album.component';
 import {AuthGuard} from './auth/auth.guard';
+import { DiscoverComponent } from './discover/discover/discover.component';
 import {SubscriptionsComponent} from './subscription/subscriptions/subscriptions.component';
 
 const routes: Routes = [
@@ -38,6 +39,11 @@ const routes: Routes = [
     component: SubscriptionsComponent,
     canActivate: [AuthGuard],
     data: { roles: ['admin', 'user'] }
+  },
+  { path: 'discover',
+    component: DiscoverComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['user'] }
   },
   { path: 'home', component: HomeComponent },
   { path: 'artist/:id', component: ArtistDetailsComponent },
