@@ -12,4 +12,8 @@ export class MediaService {
   deleteSong(id: string): Observable<void> {
     return this.http.delete<void>(`${environment.apiHost}/songs/${id}`);
   }
+
+  deleteAlbum(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiHost}/albums/${id}`);
+  }
 }

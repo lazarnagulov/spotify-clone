@@ -46,7 +46,7 @@ def handler(event, _context):
             )
 
     objects_to_delete = []
-    
+
     if audio_path:
         objects_to_delete.append({'Key': audio_path})
     if cover_path:

@@ -20,7 +20,13 @@
           class="cover-image"
         />
         <mat-card-content class="album-info">
-          <h1 class="album-title">{{ album.title }}</h1>
+          <div class="album-title-row">
+            <h1 class="album-title">{{ album.title }}</h1>
+            <button mat-icon-button color="warn" aria-label="Delete" (click)="onDelete()">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+
           <p class="artists">{{ getArtistsString() }}</p>
           <p class="album-meta">
             <mat-icon>calendar_today</mat-icon>
