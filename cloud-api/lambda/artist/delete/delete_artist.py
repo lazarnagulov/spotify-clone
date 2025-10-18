@@ -1,4 +1,6 @@
 import boto3, os
+from util.auth import require_role
+from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
 
 dynamodb = boto3.resource('dynamodb', region_name='eu-central-1')
