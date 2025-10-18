@@ -5,27 +5,7 @@ import { environment } from '../../../env/environment';
 import { MediaService } from '../media.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../auth/auth.service';
-
-interface Song {
-  id: string;
-  title: string;
-  duration?: number;
-  audio_url?: string;
-  track_number?: number;
-  cover_url?: string;
-}
-
-interface Album {
-  id: string;
-  title: string;
-  artists: string[];
-  genres: string[];
-  year?: number;
-  description?: string;
-  imageUrl?: string;
-  songs: Song[];
-  created_at?: string;
-}
+import {Album} from '../model/album.model';
 
 @Component({
   selector: 'app-album-details',
@@ -79,9 +59,9 @@ export class AlbumDetailsComponent implements OnInit {
   }
 
   private loadUserRating(albumId: string): void {
-    this.http.get<any>(`${environment.apiHost}/ratings/id?content_id=${albumId}`).subscribe({
+    this.http.get<any>(`${environment.apiHost}/ratings/${albumId}`).subscribe({
       next: (response) => {
-        if (response && response.rating) {
+        if (response?.rating) {
           this.userRating = response.rating;
         }
       },
@@ -121,7 +101,7 @@ export class AlbumDetailsComponent implements OnInit {
   getArtistsString(): string {
     console.log(this.album);
     if (!this.album?.artists || this.album.artists.length === 0) {
-      return 'Unknown Artist';
+      return 'Unknown';
     }
     return this.album.artists.join(', ');
   }

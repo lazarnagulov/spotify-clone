@@ -15,7 +15,7 @@
       <div class="header-content">
         <img
           mat-card-image
-          [src]="album.imageUrl || 'publix/no-image.svg'"
+          [src]="album.coverUrl || 'no-image.svg'"
           [alt]="album.title"
           class="cover-image"
         />
@@ -79,7 +79,7 @@
           [title]="song.title"
           [subtitle]="song.track_number ? 'Track ' + song.track_number : 'Song'"
           [imageUrl]="song.cover_url || 'no-image.svg'"
-          [audioUrl]="song.audio_url"
+          [audioUrl]="song.audioUrl"
         ></app-media-card>
       </div>
     </section>
