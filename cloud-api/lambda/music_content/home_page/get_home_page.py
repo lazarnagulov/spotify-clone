@@ -75,7 +75,7 @@ def handler(event, _context):
         cover_url = get_public_s3_url(album_data["coverPath"]) if album_data.get("coverPath") else None
 
         artist_ids = album_data.get("artists", [])
-        artist_names = [artists_names.get(aid, aid) for aid in artist_ids]
+        artist_names = [artists_names.get(aid, "Unknown") for aid in artist_ids]
 
         albums.append({
             "id": album_data["PK"],
@@ -105,7 +105,7 @@ def handler(event, _context):
         cover_url = get_public_s3_url(song_data["coverPath"]) if song_data.get("coverType") else None
 
         artist_ids = song_data.get("artists", [])
-        artist_names = [artists_names.get(aid, aid) for aid in artist_ids]
+        artist_names = [artists_names.get(aid, "Unknown") for aid in artist_ids]
 
         songs.append({
             "id": song_data["PK"],

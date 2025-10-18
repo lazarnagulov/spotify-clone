@@ -28,6 +28,19 @@ class SubscriptionStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
+        subscription_table.add_global_secondary_index(
+            index_name="GSI1",
+            partition_key=dynamodb.Attribute(
+                name="SK",
+                type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="PK",
+                type=dynamodb.AttributeType.STRING
+            ),
+            projection_type=dynamodb.ProjectionType.ALL
+        )
+
         subscribe_lambda = aws_lambda.Function(
             self, "SubscribeFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
