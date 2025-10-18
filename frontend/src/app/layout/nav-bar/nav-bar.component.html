@@ -7,6 +7,10 @@
     <button mat-raised-button *ngIf="userRoles.includes('admin')" color="accent" routerLink="/song-creation" class="toolbar-button">Create song</button>
     <button mat-raised-button *ngIf="userRoles.includes('admin')" color="accent" routerLink="/album-creation" class="toolbar-button">Create album</button>
     <button mat-raised-button *ngIf="userRoles.includes('admin')" color="accent" routerLink="/artist-creation" class="toolbar-button">Create artist</button>
+    <button mat-raised-button *ngIf="userRoles.includes('user')" color="accent" routerLink="/discover" class="toolbar-button">
+      <mat-icon>explore</mat-icon>
+      Discover
+    </button>
     <button *ngIf="userRoles.length > 0" mat-raised-button color="accent" (click)="logout()" class="toolbar-button">Logout</button>
   </div>
 </mat-toolbar>

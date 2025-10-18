@@ -26,7 +26,7 @@ def handler(event, _context):
     song_ids, genres = parse_album_items(items)
 
     delete_music_catalog_items(album_pk, items, song_ids)
-    delete_genre_relations(genres, album_id, song_ids)
+    delete_genre_relations(genres, album_pk, song_ids)
     delete_media_from_s3(album_id, song_ids)
 
     return http_response(status_code=200, body={"message": "Album deleted successfully"})

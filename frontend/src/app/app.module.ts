@@ -12,6 +12,7 @@ import { ArtistModule } from './artist/artist.module';
 import {MusicContentModule} from './music-content/music-content.module';
 import {AuthInterceptor} from './auth/auth.interceptor';
 import {MediaModule} from './media/media.module';
+import { DiscoverModule } from './discover/discover.module';
 
 @NgModule({
   declarations: [
@@ -26,6 +27,7 @@ import {MediaModule} from './media/media.module';
     MediaModule,
     ArtistModule,
     MusicContentModule,
+    DiscoverModule
   ],
   providers: [
     provideNativeDateAdapter(),

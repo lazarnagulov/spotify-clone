@@ -1,0 +1,71 @@
+<section class="discover-hero">
+  <div class="hero-inner">
+    <span class="discover-icon material-icons" aria-hidden="true">explore</span>
+    <h1 class="discover-title">Discover</h1>
+  </div>
+  <p class="discover-sub">New recommendations and popular — browse by genre</p>
+</section>
+
+<section class="genre-select-section">
+  <mat-form-field appearance="outline" class="genre-select">
+    <mat-label>Select Genre</mat-label>
+    <mat-select [(value)]="selectedGenre" (selectionChange)="onGenreChange()">
+      <mat-option *ngFor="let genre of genres" [value]="genre">{{ genre }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+</section>
+
+<div class="no-genre" *ngIf="!selectedGenre">
+  <p>Select a genre to see recommendations 🎧</p>
+</div>
+
+<div *ngIf="selectedGenre">
+  <section class="discover-section">
+    <h2 class="section-title">Albums</h2>
+    <div class="cards-grid">
+        <app-media-card
+          *ngFor="let album of albums"
+          class="media-card"
+          [cardType]="'album'"
+          [id]="album.id"
+          [title]="album.title"
+          [imageUrl]="album.cover_url || 'no-image.svg'"
+        ></app-media-card>
+    </div>
+  </section>
+
+  <section class="discover-section">
+    <h2 class="section-title">Songs</h2>
+    <div class="cards-grid">
+        <app-media-card
+          *ngFor="let song of songs"
+          class="media-card"
+          [cardType]="'song'"
+          [id]="song.id"
+          [title]="song.title"
+          [imageUrl]="song.cover_url || 'no-image.svg'"
+        ></app-media-card>
+    </div>
+  </section>
+
+  <section class="media-section" *ngIf="artists.length > 0">
+      <h2>Artists</h2>
+      <div class="artists-grid">
+        <mat-card
+          *ngFor="let artist of artists"
+          class="artist-card"
+          (click)="navigateToArtist(artist.id)"
+        >
+          <mat-card-content>
+            <div class="artist-avatar">
+              <mat-icon>person</mat-icon>
+            </div>
+            <h3>{{ artist.name }}</h3>
+            <p class="artist-genres" *ngIf="artist.genres && artist.genres.length > 0">
+              {{ artist.genres.join(', ') }}
+            </p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+</div>
