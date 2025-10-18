@@ -15,7 +15,7 @@
       <div class="header-content">
         <img
           mat-card-image
-          [src]="album.imageUrl || 'publix/no-image.svg'"
+          [src]="album.coverUrl || 'no-image.svg'"
           [alt]="album.title"
           class="cover-image"
         />
@@ -28,6 +28,24 @@
           </div>
 
           <p class="artists">{{ getArtistsString() }}</p>
+
+          <div class="rating-section">
+            <div class="rating-display">
+              <span class="rating-label">Your Rating:</span>
+              <div class="star-rating">
+                <button
+                  mat-icon-button
+                  *ngFor="let star of [1,2,3,4,5]"
+                  (click)="onRate(star)"
+                  [class.filled]="star <= userRating"
+                  class="star-button">
+                  <mat-icon>{{ star <= userRating ? 'star' : 'star_border' }}</mat-icon>
+                </button>
+              </div>
+              <span class="rating-value" *ngIf="userRating">{{ userRating }}/5</span>
+            </div>
+          </div>
+
           <p class="album-meta">
             <mat-icon>calendar_today</mat-icon>
             <span *ngIf="album.year">{{ album.year }}</span>
@@ -61,7 +79,7 @@
           [title]="song.title"
           [subtitle]="song.track_number ? 'Track ' + song.track_number : 'Song'"
           [imageUrl]="song.cover_url || 'no-image.svg'"
-          [audioUrl]="song.audio_url"
+          [audioUrl]="song.audioUrl"
         ></app-media-card>
       </div>
     </section>

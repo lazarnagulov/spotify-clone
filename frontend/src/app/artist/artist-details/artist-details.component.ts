@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { switchMap, EMPTY } from 'rxjs';
-import { environment } from '../../../env/environment';
 import { Artist } from '../model/artist.model';
 import { ArtistService } from '../artist.service';
 import { AuthService } from '../../auth/auth.service';
+import {HttpClient} from '@angular/common/http';
+import {environment} from '../../../env/environment';
 
 @Component({
   selector: 'app-artist-details',
@@ -22,6 +22,7 @@ export class ArtistDetailsComponent implements OnInit {
   isSubscribed = false;
   checkingSubscription = true;
   userRoles: string[] = [];
+  userRating: number = 0;
 
   constructor(
     private http: HttpClient,
@@ -49,7 +50,9 @@ export class ArtistDetailsComponent implements OnInit {
         next: (artist) => {
           this.artist = artist;
           this.loading = false;
-          if (this.id) this.checkSubscription(this.id);
+          if (this.id) {
+            this.checkSubscription(this.id);
+          }
         },
         error: (err) => {
           console.error('Error loading artist:', err);
@@ -57,6 +60,32 @@ export class ArtistDetailsComponent implements OnInit {
           this.loading = false;
         }
       });
+  }
+
+  onRate(rating: number): void {
+    if (!this.id || !this.artist) return;
+
+    const ratingData = {
+      content_id: this.id,
+      content_type: 'artist',
+      rating: rating,
+      genres: this.artist?.genres,
+    };
+
+    this.http.post(`${environment.apiHost}/ratings`, ratingData).subscribe({
+      next: () => {
+        this.userRating = rating;
+        this.snackBar.open(`Rated ${rating} stars!`, 'Close', {
+          duration: 2000,
+        });
+      },
+      error: (err) => {
+        console.error('Failed to submit rating:', err);
+        this.snackBar.open('Failed to submit rating', 'Close', {
+          duration: 3000,
+        });
+      },
+    });
   }
 
   onDelete(): void {
@@ -75,7 +104,6 @@ export class ArtistDetailsComponent implements OnInit {
   checkSubscription(artistId: string): void {
     this.checkingSubscription = true;
     this.isSubscribed = false;
-
     this.http.get<{ subscribed: boolean }>(
       `${environment.apiHost}/subscription`,
       { params: { content_id: artistId } }
@@ -93,7 +121,6 @@ export class ArtistDetailsComponent implements OnInit {
 
   toggleSubscription(): void {
     if (!this.id) return;
-
     if (this.isSubscribed)
       this.unsubscribe();
     else
@@ -134,5 +161,4 @@ export class ArtistDetailsComponent implements OnInit {
       }
     });
   }
-
 }

@@ -2,32 +2,45 @@
   <div *ngIf="loading" class="loading-container">
     <mat-spinner></mat-spinner>
   </div>
-
   <mat-card *ngIf="error && !loading" class="error-card">
     <mat-card-content>
       <mat-icon color="warn">error</mat-icon>
       <p>{{ error }}</p>
     </mat-card-content>
   </mat-card>
-
   <div *ngIf="artist && !loading">
     <mat-card class="artist-header">
       <div class="header-content">
         <mat-card-content class="artist-info">
           <h1 class="artist-name">{{ artist.name }}</h1>
 
+          <div class="rating-section">
+            <div class="rating-display">
+              <span class="rating-label">Your Rating:</span>
+              <div class="star-rating">
+                <button
+                  mat-icon-button
+                  *ngFor="let star of [1,2,3,4,5]"
+                  (click)="onRate(star)"
+                  [class.filled]="star <= userRating"
+                  class="star-button">
+                  <mat-icon>{{ star <= userRating ? 'star' : 'star_border' }}</mat-icon>
+                </button>
+              </div>
+              <span class="rating-value" *ngIf="userRating">{{ userRating }}/5</span>
+            </div>
+          </div>
+
           <p class="genres" *ngIf="artist.genres?.length">
             <mat-chip-set>
               <mat-chip *ngFor="let genre of artist.genres">{{ genre }}</mat-chip>
             </mat-chip-set>
           </p>
-
           <p class="artist-bio" *ngIf="artist.bio">
             {{ artist.bio }}
           </p>
         </mat-card-content>
       </div>
-
       <mat-card-actions class="action-buttons">
         <button
           mat-raised-button
@@ -35,13 +48,10 @@
           [disabled]="checkingSubscription"
           (click)="toggleSubscription()"
           class="subscribe-button">
-
           <mat-icon>{{ isSubscribed ? 'notifications_active' : 'notifications' }}</mat-icon>
-
           <span *ngIf="!checkingSubscription">
             {{ isSubscribed ? 'Unsubscribe' : 'Subscribe' }}
           </span>
-
           <mat-progress-spinner
             *ngIf="checkingSubscription"
             diameter="20"

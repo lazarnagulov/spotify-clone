@@ -44,6 +44,70 @@
   color: rgba(0, 0, 0, 0.87);
 }
 
+/* Rating Section Styles */
+.rating-section {
+  margin: 1rem 0;
+}
+
+.rating-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rating-label {
+  font-size: 1rem;
+  color: rgba(0, 0, 0, 0.7);
+  font-weight: 500;
+}
+
+.star-rating {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.star-button {
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  transition: transform 0.2s ease;
+}
+
+.star-button:hover {
+  transform: scale(1.1);
+}
+
+.star-button mat-icon {
+  color: #ddd;
+  transition: color 0.2s ease;
+}
+
+.star-button.filled mat-icon {
+  color: #ffd700;
+}
+
+.star-rating:hover .star-button mat-icon {
+  color: #ddd;
+}
+
+.star-button:hover mat-icon {
+  color: #ffd700;
+}
+
+.star-rating:has(.star-button:nth-child(1):hover) .star-button:nth-child(-n+1) mat-icon,
+.star-rating:has(.star-button:nth-child(2):hover) .star-button:nth-child(-n+2) mat-icon,
+.star-rating:has(.star-button:nth-child(3):hover) .star-button:nth-child(-n+3) mat-icon,
+.star-rating:has(.star-button:nth-child(4):hover) .star-button:nth-child(-n+4) mat-icon,
+.star-rating:has(.star-button:nth-child(5):hover) .star-button:nth-child(-n+5) mat-icon {
+  color: #ffd700;
+}
+
+.rating-value {
+  font-size: 1rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+}
+
 .genres {
   margin: 1rem 0;
 }
@@ -100,5 +164,11 @@
 
   .subscribe-button {
     width: 100%;
+  }
+
+  .rating-display {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }

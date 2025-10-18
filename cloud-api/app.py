@@ -8,6 +8,7 @@ from spotify_clone_api.auth_stack import AuthStack
 from spotify_clone_api.cognito_stack import CognitoStack
 from spotify_clone_api.content_stack import ContentStack
 from spotify_clone_api.layer_stack import LayerStack
+from spotify_clone_api.ratings_stack import RatingsStack
 from spotify_clone_api.spotify_clone_stack import SpotifyCloneStack
 from spotify_clone_api.subscription_stack import SubscriptionStack
 
@@ -59,6 +60,15 @@ content_stack = ContentStack(
 SubscriptionStack(
     app,
     "SpotifyCloneSubscriptionStack",
+    shared_layer=layer_stack.shared_layer,
+    authorizer=gw_stack.authorizer,
+    api=gw_stack.api,
+    env=env
+)
+
+RatingsStack(
+    app,
+    "SpotifyCloneRatingsStack",
     shared_layer=layer_stack.shared_layer,
     authorizer=gw_stack.authorizer,
     api=gw_stack.api,
