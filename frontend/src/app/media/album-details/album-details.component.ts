@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../env/environment';
 import { MediaService } from '../media.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../auth/auth.service';
 
 interface Song {
   id: string;
@@ -37,10 +38,12 @@ export class AlbumDetailsComponent implements OnInit {
   id?: string;
   loading = true;
   error: string | null = null;
+  userRoles: string[] = [];
 
   constructor(
     private router: Router,
     private service: MediaService,
+    private authService: AuthService,
     private snackBar: MatSnackBar,
     private route: ActivatedRoute,
     private http: HttpClient
@@ -54,6 +57,7 @@ export class AlbumDetailsComponent implements OnInit {
       return;
     }
 
+    this.userRoles = this.authService.getRoles();
     this.loadAlbum(this.id);
   }
 

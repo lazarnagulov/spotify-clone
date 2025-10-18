@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../env/environment';
 import { MediaService } from '../media.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../auth/auth.service';
 
 interface Song {
   id: string;
@@ -36,6 +37,7 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
   id?: string;
   loading = true;
   error?: string;
+  userRoles: string[] = [];
 
   isPlaying = false;
   currentTime = 0;
@@ -47,6 +49,7 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private service: MediaService,
+    private authService: AuthService,
     private snackBar: MatSnackBar,
     private router: Router,
     private http: HttpClient
@@ -55,6 +58,7 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
     if (this.id) this.loadSong(this.id);
+    this.userRoles = this.authService.getRoles();
   }
 
   loadSong(songId: string): void {

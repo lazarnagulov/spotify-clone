@@ -22,7 +22,7 @@
         <mat-card-content class="album-info">
           <div class="album-title-row">
             <h1 class="album-title">{{ album.title }}</h1>
-            <button mat-icon-button color="warn" aria-label="Delete" (click)="onDelete()">
+            <button mat-icon-button color="warn" aria-label="Delete" (click)="onDelete()" *ngIf="userRoles.includes('admin')">
               <mat-icon>delete</mat-icon>
             </button>
           </div>
