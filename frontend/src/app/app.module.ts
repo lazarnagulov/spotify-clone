@@ -12,6 +12,9 @@ import { ArtistModule } from './artist/artist.module';
 import {MusicContentModule} from './music-content/music-content.module';
 import {AuthInterceptor} from './auth/auth.interceptor';
 import {MediaModule} from './media/media.module';
+import {SubscriptionsComponent} from './subscription/subscriptions/subscriptions.component';
+import {SubscriptionModule} from './subscription/subscription.module';
+import { DiscoverModule } from './discover/discover.module';
 
 @NgModule({
   declarations: [
@@ -25,7 +28,9 @@ import {MediaModule} from './media/media.module';
     AuthModule,
     MediaModule,
     ArtistModule,
+    SubscriptionModule,
     MusicContentModule,
+    DiscoverModule
   ],
   providers: [
     provideNativeDateAdapter(),

@@ -6,6 +6,7 @@ from decimal import Decimal
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
+from util.auth import require_role
 
 dynamodb = boto3.client("dynamodb")
 dynamodb_resource = boto3.resource("dynamodb", region_name="eu-central-1")
@@ -37,6 +38,7 @@ def get_public_s3_url(key):
 
 
 @handle_lambda_exceptions
+@require_role('user', 'admin')
 def handler(event, _context):
     logger.info("Fetching home page data")
 
@@ -73,7 +75,7 @@ def handler(event, _context):
         cover_url = get_public_s3_url(album_data["coverPath"]) if album_data.get("coverPath") else None
 
         artist_ids = album_data.get("artists", [])
-        artist_names = [artists_names.get(aid, aid) for aid in artist_ids]
+        artist_names = [artists_names.get(aid, "Unknown") for aid in artist_ids]
 
         albums.append({
             "id": album_data["PK"],
@@ -103,7 +105,7 @@ def handler(event, _context):
         cover_url = get_public_s3_url(song_data["coverPath"]) if song_data.get("coverType") else None
 
         artist_ids = song_data.get("artists", [])
-        artist_names = [artists_names.get(aid, aid) for aid in artist_ids]
+        artist_names = [artists_names.get(aid, "Unknown") for aid in artist_ids]
 
         songs.append({
             "id": song_data["PK"],

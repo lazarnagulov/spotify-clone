@@ -7,7 +7,7 @@ import {from, of, switchMap, throwError} from 'rxjs';
 export class UploadService {
 
   uploadFileToS3(presignedUrl: string, file: File, contentType?: string) {
-    const actualContentType = contentType || file.type;
+    const actualContentType = contentType ?? file.type;
 
     console.log('Uploading file:', {
       name: file.name,
@@ -17,11 +17,12 @@ export class UploadService {
       url: presignedUrl.substring(0, 100) + '...'
     });
 
-    const blob = new Blob([file], { type: actualContentType });
-
     return from(fetch(presignedUrl, {
       method: 'PUT',
-      body: blob
+      headers: {
+        'Content-Type': actualContentType
+      },
+      body: file
     })).pipe(
       switchMap(response => {
         if (!response.ok) {

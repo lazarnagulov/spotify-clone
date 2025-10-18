@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { switchMap, EMPTY } from 'rxjs';
-import { environment } from '../../../env/environment';
+import { Artist } from '../model/artist.model';
 import { ArtistService } from '../artist.service';
 import { AuthService } from '../../auth/auth.service';
-import {Artist} from '../model/create-artist.model';
+import {HttpClient} from '@angular/common/http';
+import {environment} from '../../../env/environment';
 
 @Component({
   selector: 'app-artist-details',
@@ -35,6 +35,7 @@ export class ArtistDetailsComponent implements OnInit {
 
   ngOnInit(): void {
     this.userRoles = this.authService.getRoles();
+
     this.route.paramMap
       .pipe(
         switchMap((params) => {

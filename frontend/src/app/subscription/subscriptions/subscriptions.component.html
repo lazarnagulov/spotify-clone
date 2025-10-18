@@ -1,0 +1,53 @@
+<div class="subscriptions-container">
+  <h1>My Subscriptions</h1>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <mat-card *ngIf="error && !loading" class="error-card">
+    <mat-card-content>
+      <mat-icon color="warn">error</mat-icon>
+      <p>{{ error }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <div *ngIf="!loading && !error">
+    <mat-card *ngIf="subscriptions.length === 0" class="empty-state">
+      <mat-card-content>
+        <mat-icon>notifications_none</mat-icon>
+        <h2>No Subscriptions Yet</h2>
+        <p>Subscribe to artists or genres to get notified about new content!</p>
+        <button mat-raised-button color="primary" routerLink="/discover">
+          Discover Music
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <div *ngIf="subscriptions.length > 0" class="subscriptions-list">
+      <mat-card *ngFor="let subscription of subscriptions" class="subscription-card">
+        <mat-card-content>
+          <div class="subscription-info">
+            <mat-icon class="subscription-icon">
+              {{ subscription.type === 'artist' ? 'person' : 'music_note' }}
+            </mat-icon>
+            <div class="subscription-details">
+              <h3>{{ subscription.name }}</h3>
+              <p class="subscription-type">
+                {{ subscription.type === 'artist' ? 'Artist' : 'Genre' }}
+              </p>
+            </div>
+          </div>
+          <button
+            mat-raised-button
+            color="warn"
+            (click)="unsubscribe(subscription)"
+            class="unsubscribe-button">
+            <mat-icon>notifications_off</mat-icon>
+            Unsubscribe
+          </button>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>
