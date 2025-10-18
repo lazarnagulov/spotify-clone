@@ -164,6 +164,7 @@ class ContentStack(Stack):
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
                 "SONGS_TABLE": "MusicCatalog",
+                "GENRE_RELATIONS_TABLE": "GenreRelations"
             }
         )
 
@@ -249,6 +250,7 @@ class ContentStack(Stack):
 
         get_discover_page.role.add_to_policy(iam.PolicyStatement(
             actions=[
+                "dynamodb:Query",
                 "dynamodb:Scan",
                 "dynamodb:GetItem",
                 "s3:GetObject"
@@ -256,6 +258,7 @@ class ContentStack(Stack):
             resources=[
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
                 "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
                 "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
             ]
@@ -275,10 +278,15 @@ class ContentStack(Stack):
         album_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_album_lambda), authorizer=authorizer)
 
         home_api = api.root.add_resource("home")
-        home_api.add_method("GET", apigw.LambdaIntegration(get_home_page))
+        home_api.add_method("GET", apigw.LambdaIntegration(get_home_page), authorizer=authorizer)
 
-        discover_api = api.root.add_resource("discover")
-        discover_api.add_method("GET", apigw.LambdaIntegration(get_discover_page))
+        discover_root = api.root.add_resource("discover")
+        discover_genre = discover_root.add_resource("{genre}")
+        discover_genre.add_method(
+            "GET",
+            apigw.LambdaIntegration(get_discover_page),
+            authorizer=authorizer
+        )
 
         get_song_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
