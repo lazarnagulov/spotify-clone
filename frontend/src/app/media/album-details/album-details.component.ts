@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../env/environment';
+import { MediaService } from '../media.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../auth/auth.service';
 
 interface Song {
   id: string;
@@ -28,27 +31,34 @@ interface Album {
   selector: 'app-album-details',
   standalone: false,
   templateUrl: './album-details.component.html',
-  styleUrls: ['./album-details.component.css']
+  styleUrls: ['./album-details.component.css'],
 })
 export class AlbumDetailsComponent implements OnInit {
   album?: Album;
+  id?: string;
   loading = true;
   error: string | null = null;
+  userRoles: string[] = [];
 
   constructor(
+    private router: Router,
+    private service: MediaService,
+    private authService: AuthService,
+    private snackBar: MatSnackBar,
     private route: ActivatedRoute,
     private http: HttpClient
   ) {}
 
   ngOnInit(): void {
-    const albumId = this.route.snapshot.paramMap.get('id');
-    if (!albumId) {
+    this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
+    if (!this.id) {
       this.error = 'Album ID not provided';
       this.loading = false;
       return;
     }
 
-    this.loadAlbum(albumId);
+    this.userRoles = this.authService.getRoles();
+    this.loadAlbum(this.id);
   }
 
   private loadAlbum(albumId: string): void {
@@ -62,7 +72,7 @@ export class AlbumDetailsComponent implements OnInit {
         console.error('Failed to load album:', err);
         this.error = 'Failed to load album. Please try again later.';
         this.loading = false;
-      }
+      },
     });
   }
 
@@ -86,4 +96,21 @@ export class AlbumDetailsComponent implements OnInit {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
+  onDelete(): void {
+    if (!this.id) return;
+
+    this.service.deleteAlbum(this.id).subscribe({
+      next: () => {
+        this.snackBar.open('Album successfully deleted', 'Close', {
+          duration: 3000,
+        });
+        this.router.navigate(['/home']);
+      },
+      error: () => {
+        this.snackBar.open('Failed to delete album', 'Close', {
+          duration: 3000,
+        });
+      },
+    });
+  }
 }
