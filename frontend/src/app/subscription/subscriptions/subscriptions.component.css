@@ -1,0 +1,145 @@
+.subscriptions-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.subscriptions-container h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.error-card {
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-card mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-state mat-icon {
+  font-size: 80px;
+  width: 80px;
+  height: 80px;
+  color: rgba(0, 0, 0, 0.4);
+  margin-bottom: 1rem;
+}
+
+.empty-state h2 {
+  margin: 1rem 0;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.empty-state p {
+  margin-bottom: 2rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.subscriptions-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.subscription-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.subscription-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.subscription-card mat-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+}
+
+.subscription-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.subscription-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.subscription-details h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.subscription-type {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.subscription-date {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.unsubscribe-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.unsubscribe-button mat-icon {
+  margin-right: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .subscriptions-container {
+    padding: 1rem;
+  }
+
+  .subscriptions-container h1 {
+    font-size: 2rem;
+  }
+
+  .subscription-card mat-card-content {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .subscription-info {
+    width: 100%;
+  }
+
+  .unsubscribe-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

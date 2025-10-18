@@ -51,6 +51,7 @@ def handler(event, _context):
         Params={
             "Bucket": MEDIA_BUCKET,
             "Key": path_to_cover,
+            "ContentType": request.cover_type,
         },
         ExpiresIn=3600
     )
@@ -60,6 +61,7 @@ def handler(event, _context):
         Params={
             "Bucket": MEDIA_BUCKET,
             "Key": path_to_audio,
+            "ContentType": request.audio_type,
         },
         ExpiresIn=3600
     )
@@ -77,14 +79,15 @@ def handler(event, _context):
 def update_genre_relations_table(request, song_id, path_to_cover):
     genre_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
 
-    for genre in request.genres:
-        genre_table.put_item(
-            Item={
-                "PK": genre,
-                "SK": song_id,
-                "EntityType": "song",
-                "Title": request.title,
-                "CoverPath": path_to_cover,
-                "ArtistNames": request.artists
-            }
-        )
+    with genre_table.batch_writer() as batch:
+        for genre in request.genres:
+            batch.put_item(
+                Item={
+                    "PK": genre,
+                    "SK": song_id,
+                    "EntityType": "song",
+                    "Title": request.title,
+                    "CoverPath": path_to_cover,
+                    "ArtistNames": request.artists
+                }
+            )

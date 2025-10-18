@@ -1,23 +1,30 @@
 import { Component, OnInit } from '@angular/core';
-import { ArtistService } from '../artist.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, switchMap } from 'rxjs';
-import { Artist } from '../model/create-artist.model';
+import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { switchMap, EMPTY } from 'rxjs';
+import { environment } from '../../../env/environment';
+import { Artist } from '../model/artist.model';
+import { ArtistService } from '../artist.service';
 import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-artist-details',
   standalone: false,
   templateUrl: './artist-details.component.html',
-  styleUrl: './artist-details.component.css',
+  styleUrls: ['./artist-details.component.css']
 })
 export class ArtistDetailsComponent implements OnInit {
   id?: string;
   artist?: Artist;
+  loading = true;
+  error?: string;
+  isSubscribed = false;
+  checkingSubscription = true;
   userRoles: string[] = [];
 
   constructor(
+    private http: HttpClient,
     private artistService: ArtistService,
     private authService: AuthService,
     private route: ActivatedRoute,
@@ -26,17 +33,30 @@ export class ArtistDetailsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.userRoles = this.authService.getRoles();
+
     this.route.paramMap
       .pipe(
         switchMap((params) => {
           const id = params.get('id');
-          this.id = id ?? undefined;
-          return id ? this.artistService.getDetails(id) : EMPTY;
+          if (!id) return EMPTY;
+          this.id = id;
+          this.loading = true;
+          return this.artistService.getDetails(id);
         })
       )
-      .subscribe(artist => this.artist = artist);
-
-    this.userRoles = this.authService.getRoles();
+      .subscribe({
+        next: (artist) => {
+          this.artist = artist;
+          this.loading = false;
+          if (this.id) this.checkSubscription(this.id);
+        },
+        error: (err) => {
+          console.error('Error loading artist:', err);
+          this.error = 'Failed to load artist.';
+          this.loading = false;
+        }
+      });
   }
 
   onDelete(): void {
@@ -44,11 +64,75 @@ export class ArtistDetailsComponent implements OnInit {
     this.artistService.deleteArtist(this.id).subscribe({
       next: () => {
         this.snackBar.open('Artist successfully deleted', 'Close', { duration: 3000 });
-        this.router.navigate(['/']);
+        void this.router.navigate(['/home']);
       },
       error: () => {
         this.snackBar.open('Failed to delete artist', 'Close', { duration: 3000 });
       }
     });
   }
+
+  checkSubscription(artistId: string): void {
+    this.checkingSubscription = true;
+    this.isSubscribed = false;
+
+    this.http.get<{ subscribed: boolean }>(
+      `${environment.apiHost}/subscription`,
+      { params: { content_id: artistId } }
+    ).subscribe({
+      next: (response) => {
+        this.isSubscribed = response.subscribed;
+        this.checkingSubscription = false;
+      },
+      error: (err) => {
+        console.error('Error checking subscription:', err);
+        this.checkingSubscription = false;
+      }
+    });
+  }
+
+  toggleSubscription(): void {
+    if (!this.id) return;
+
+    if (this.isSubscribed)
+      this.unsubscribe();
+    else
+      this.subscribe();
+  }
+
+  private unsubscribe(): void {
+    this.http.request('DELETE', `${environment.apiHost}/subscription`, {
+      body: {
+        content_id: this.id,
+        content_type: 'artist'
+      }
+    }).subscribe({
+      next: () => {
+        this.isSubscribed = false;
+      },
+      error: (err) => {
+        console.error('Error unsubscribing:', err);
+        this.error = 'Failed to unsubscribe. Please try again.';
+      }
+    });
+  }
+
+  private subscribe(): void {
+    this.http.post(
+      `${environment.apiHost}/subscription`,
+      {
+        content_id: this.id,
+        content_type: 'artist'
+      }
+    ).subscribe({
+      next: () => {
+        this.isSubscribed = true;
+      },
+      error: (err) => {
+        console.error('Error subscribing:', err);
+        this.error = 'Failed to subscribe. Please try again.';
+      }
+    });
+  }
+
 }

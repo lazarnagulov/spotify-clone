@@ -11,6 +11,7 @@
       <mat-icon>explore</mat-icon>
       Discover
     </button>
+    <button *ngIf="userRoles.length > 0" mat-raised-button color="accent" routerLink="/subscriptions" class="toolbar-button">Subscriptions</button>
     <button *ngIf="userRoles.length > 0" mat-raised-button color="accent" (click)="logout()" class="toolbar-button">Logout</button>
   </div>
 </mat-toolbar>

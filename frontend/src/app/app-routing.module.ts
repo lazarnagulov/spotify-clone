@@ -11,6 +11,7 @@ import {CreateSongComponent} from './music-content/create-song/create-song.compo
 import {CreateAlbumComponent} from './music-content/create-album/create-album.component';
 import {AuthGuard} from './auth/auth.guard';
 import { DiscoverComponent } from './discover/discover/discover.component';
+import {SubscriptionsComponent} from './subscription/subscriptions/subscriptions.component';
 
 const routes: Routes = [
   { path: 'register', component: RegisterComponent },
@@ -32,6 +33,12 @@ const routes: Routes = [
     component: CreateAlbumComponent,
     canActivate: [AuthGuard],
     data: { roles: ['admin'] }
+  },
+  {
+    path: 'subscriptions',
+    component: SubscriptionsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['admin', 'user'] }
   },
   { path: 'discover',
     component: DiscoverComponent,

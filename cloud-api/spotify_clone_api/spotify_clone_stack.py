@@ -100,7 +100,8 @@ class SpotifyCloneStack(Stack):
             layers=[shared_layer],
             environment={
                 'ARTISTS_TABLE': artists_table.table_name,
-                "GENRE_RELATIONS_TABLE": genre_relations_table.table_name
+                "GENRE_RELATIONS_TABLE": genre_relations_table.table_name,
+                "SUBSCRIPTION_TABLE": "Subscriptions"
             }
         )
 
@@ -135,7 +136,7 @@ class SpotifyCloneStack(Stack):
 
         artist_id_resource = artist_api.add_resource("{id}")
         artist_id_resource.add_method("GET", apigw.LambdaIntegration(get_artist_details_lambda))
-        artist_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_artist_lambda))
+        artist_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_artist_lambda), authorizer=authorizer)
 
         create_artist_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
@@ -187,11 +188,13 @@ class SpotifyCloneStack(Stack):
             actions=[
               "dynamodb:GetItem",
               "dynamodb:DeleteItem",
-              "dynamodb:BatchWriteItem"
+              "dynamodb:BatchWriteItem",
+              "dynamodb:Query"
             ],
           resources=[
               artists_table.table_arn,
               genre_relations_table.table_arn,
+              f"arn:aws:dynamodb:{self.region}:{self.account}:table/Subscriptions*",
           ],
     )
 )
