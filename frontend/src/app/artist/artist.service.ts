@@ -5,23 +5,23 @@ import { Observable } from 'rxjs';
 import { environment } from '../../env/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ArtistService {
-
-  constructor(
-    private httpClient: HttpClient
-  ) { }
+  constructor(private httpClient: HttpClient) {}
 
   createArtist(artist: Artist): Observable<Artist> {
-    return this.httpClient.post<Artist>(environment.apiHost + "/artists", artist);
-  }
+    return this.httpClient.post<Artist>(environment.apiHost + "/artists",artist);}
 
-  getArtists(): Observable<{ 'artists': Artist[] }> {
-    return this.httpClient.get<{ 'artists': Artist[] }>(environment.apiHost + "/artists");
+  getArtists(): Observable<{ artists: Artist[] }> {
+    return this.httpClient.get<{ artists: Artist[] }>(environment.apiHost + '/artists');
   }
 
   getDetails(id: string): Observable<Artist> {
     return this.httpClient.get<Artist>(`${environment.apiHost}/artists/${id}`);
+  }
+
+  deleteArtist(id: string): Observable<void> {
+    return this.httpClient.delete<void>(`${environment.apiHost}/artists/${id}`);
   }
 }
