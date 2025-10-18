@@ -66,8 +66,8 @@ def handler(event, _context):
         }
 
         if song_data.cover_type:
-            album_song_item["coverPath"] = {"S": song_cover_path or ""}
-            album_song_item["coverType"] = {"S": song_data.cover_type or ""}
+            album_song_item["coverPath"] = song_cover_path
+            album_song_item["coverType"] = song_data.cover_type
 
         table.put_item(Item=album_song_item)
 
