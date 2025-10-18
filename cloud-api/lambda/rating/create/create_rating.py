@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import timezone, datetime
+from datetime import datetime
 
 import boto3
 from util.exception_handler import handle_lambda_exceptions
@@ -22,7 +22,7 @@ def handler(event, context):
     user_id = claims["sub"]
     username = claims.get("cognito:username")
 
-    subscription = {
+    rating = {
         "PK": request.content_id,
         "SK": f"USER#{user_id}",
         "rater": username,
@@ -31,6 +31,12 @@ def handler(event, context):
         "createdAt": datetime.utcnow().isoformat()
     }
 
-    table.put_item(Item=subscription)
+    if request.artistIds:
+        rating['artistIds'] = request.artistIds
+    if request.albumIds:
+        rating['genres'] = request.albumIds
 
-    return http_response(201, {"message": "Subscription success!"})
+    table.put_item(Item=rating)
+
+    return http_response(201, {"message": "Success!"})
+

@@ -23,7 +23,6 @@ interface Song {
     cover_url: string;
   };
   created_at: string;
-  related_songs: any[];
 }
 
 @Component({
@@ -38,6 +37,7 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
   loading = true;
   error?: string;
   userRoles: string[] = [];
+  userRating: number = 0;
 
   isPlaying = false;
   currentTime = 0;
@@ -57,7 +57,10 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
-    if (this.id) this.loadSong(this.id);
+    if (this.id) {
+      this.loadSong(this.id);
+      this.loadUserRating(this.id);
+    }
     this.userRoles = this.authService.getRoles();
   }
 
@@ -75,6 +78,46 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
         console.error('Error loading song:', err);
         this.error = 'Failed to load song. Please try again.';
         this.loading = false;
+      },
+    });
+  }
+
+  private loadUserRating(songId: string): void {
+    // this.http.get<any>(`${environment.apiHost}/ratings/${songId}`).subscribe({
+    //   next: (response) => {
+    //     if (response?.rating) {
+    //       this.userRating = response.rating;
+    //     }
+    //   },
+    //   error: (err) => {
+    //     console.log('No existing rating found');
+    //   },
+    // });
+  }
+
+  onRate(rating: number): void {
+    if (!this.id || !this.song) return;
+
+    const ratingData = {
+      content_id: this.id,
+      content_type: 'song',
+      rating: rating,
+      artistIds: this.song.artists,
+      albumIds: this.song.album ? [this.song.album.id] : []
+    };
+
+    this.http.post(`${environment.apiHost}/ratings`, ratingData).subscribe({
+      next: () => {
+        this.userRating = rating;
+        this.snackBar.open(`Rated ${rating} stars!`, 'Close', {
+          duration: 2000,
+        });
+      },
+      error: (err) => {
+        console.error('Failed to submit rating:', err);
+        this.snackBar.open('Failed to submit rating', 'Close', {
+          duration: 3000,
+        });
       },
     });
   }

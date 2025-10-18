@@ -39,6 +39,7 @@ export class AlbumDetailsComponent implements OnInit {
   loading = true;
   error: string | null = null;
   userRoles: string[] = [];
+  userRating: number = 0;
 
   constructor(
     private router: Router,
@@ -59,6 +60,7 @@ export class AlbumDetailsComponent implements OnInit {
 
     this.userRoles = this.authService.getRoles();
     this.loadAlbum(this.id);
+    this.loadUserRating(this.id);
   }
 
   private loadAlbum(albumId: string): void {
@@ -76,6 +78,46 @@ export class AlbumDetailsComponent implements OnInit {
     });
   }
 
+  private loadUserRating(albumId: string): void {
+    this.http.get<any>(`${environment.apiHost}/ratings/id?content_id=${albumId}`).subscribe({
+      next: (response) => {
+        if (response && response.rating) {
+          this.userRating = response.rating;
+        }
+      },
+      error: (err) => {
+        console.log('No existing rating found');
+      },
+    });
+  }
+
+  onRate(rating: number): void {
+    if (!this.id || !this.album) return;
+
+    const ratingData = {
+      content_id: this.id,
+      content_type: 'album',
+      rating: rating,
+      artistIds: this.album.artists,
+      genres: this.album.genres,
+    };
+
+    this.http.post(`${environment.apiHost}/ratings`, ratingData).subscribe({
+      next: () => {
+        this.userRating = rating;
+        this.snackBar.open(`Rated ${rating} stars!`, 'Close', {
+          duration: 2000,
+        });
+      },
+      error: (err) => {
+        console.error('Failed to submit rating:', err);
+        this.snackBar.open('Failed to submit rating', 'Close', {
+          duration: 3000,
+        });
+      },
+    });
+  }
+
   getArtistsString(): string {
     console.log(this.album);
     if (!this.album?.artists || this.album.artists.length === 0) {
@@ -88,7 +130,7 @@ export class AlbumDetailsComponent implements OnInit {
     if (!this.album?.songs) return '0:00';
 
     const totalSeconds = this.album.songs.reduce((sum, song) => {
-      return sum + (song.duration || 0);
+      return sum + (song.duration ?? 0);
     }, 0);
 
     const minutes = Math.floor(totalSeconds / 60);
@@ -104,7 +146,7 @@ export class AlbumDetailsComponent implements OnInit {
         this.snackBar.open('Album successfully deleted', 'Close', {
           duration: 3000,
         });
-        this.router.navigate(['/home']);
+        void this.router.navigate(['/home']);
       },
       error: () => {
         this.snackBar.open('Failed to delete album', 'Close', {

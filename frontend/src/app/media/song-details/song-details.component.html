@@ -27,6 +27,24 @@
             </button>
           </div>
           <p class="artists">{{ getArtistsString() }}</p>
+
+          <div class="rating-section">
+            <div class="rating-display">
+              <span class="rating-label">Your Rating:</span>
+              <div class="star-rating">
+                <button
+                  mat-icon-button
+                  *ngFor="let star of [1,2,3,4,5]"
+                  (click)="onRate(star)"
+                  [class.filled]="star <= userRating"
+                  class="star-button">
+                  <mat-icon>{{ star <= userRating ? 'star' : 'star_border' }}</mat-icon>
+                </button>
+              </div>
+              <span class="rating-value" *ngIf="userRating">{{ userRating }}/5</span>
+            </div>
+          </div>
+
           <p class="album-info" *ngIf="song.album">
             <mat-icon>album</mat-icon>
             {{ song.album.title }}
@@ -88,18 +106,5 @@
         </div>
       </mat-card-actions>
     </mat-card>
-
-    <section class="related-section" *ngIf="song.related_songs && song.related_songs.length > 0">
-      <h2>More by {{ getArtistsString() }}</h2>
-      <div class="media-grid">
-        <app-media-card
-          *ngFor="let related of song.related_songs"
-          [id]="related.id"
-          [title]="related.title"
-          [subtitle]="'Song'"
-          [imageUrl]="related.cover_url"
-        ></app-media-card>
-      </div>
-    </section>
   </div>
 </div>

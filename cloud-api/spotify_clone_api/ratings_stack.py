@@ -27,17 +27,30 @@ class RatingsStack(Stack):
         )
 
         create_rating_lambda = aws_lambda.Function(
-            self, "SubscribeFunction",
+            self, "CreateRatingFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
             handler="create_rating.handler",
             code=aws_lambda.Code.from_asset("lambda/rating/create"),
             layers=[shared_layer],
             environment={
-                "RATINGS_TABLE": ratings_table.table_name
+                "RATINGS_TABLE": ratings_table.table_name,
+                "MUSIC_CATALOG": "MusicCatalog",
             }
         )
 
-        ratings_table.grant_read_write_data(create_rating_lambda)
-        subscription_api = api.root.add_resource("ratings")
+        get_ratings_lambda = aws_lambda.Function(
+            self, "GetRatingsFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_ratings.handler",
+            code=aws_lambda.Code.from_asset("lambda/rating/get"),
+            layers=[shared_layer],
+            environment={ "RATINGS_TABLE": ratings_table.table_name }
+        )
 
-        subscription_api.add_method("POST", apigw.LambdaIntegration(create_rating_lambda), authorizer=authorizer)
+        ratings_table.grant_read_write_data(create_rating_lambda)
+        ratings_api = api.root.add_resource("ratings")
+        ratings_api.add_method("POST", apigw.LambdaIntegration(create_rating_lambda), authorizer=authorizer)
+
+        ratings_id_api = ratings_api.add_resource("id")
+        ratings_id_api.add_method("GET", apigw.LambdaIntegration(get_ratings_lambda), authorizer=authorizer)
+

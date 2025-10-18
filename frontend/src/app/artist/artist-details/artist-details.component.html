@@ -1,51 +1,69 @@
 <div class="artist-detail">
-  <mat-card class="artist-header">
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+  <mat-card *ngIf="error && !loading" class="error-card">
     <mat-card-content>
-      <h1 class="artist-name">{{ artist?.name }}</h1>
-      <p class="artist-bio">{{ artist?.bio }}</p>
+      <mat-icon color="warn">error</mat-icon>
+      <p>{{ error }}</p>
     </mat-card-content>
-    <mat-card-actions align="end">
-      <button mat-raised-button color="primary">▶ Play</button>
-      <button mat-stroked-button color="accent">+ Follow</button>
-      <button mat-icon-button color="warn" aria-label="Delete" (click)="onDelete()" *ngIf="userRoles.includes('admin')">
-        <mat-icon>delete</mat-icon>
-      </button>
-    </mat-card-actions>
   </mat-card>
+  <div *ngIf="artist && !loading">
+    <mat-card class="artist-header">
+      <div class="header-content">
+        <mat-card-content class="artist-info">
+          <h1 class="artist-name">{{ artist.name }}</h1>
 
-  <section class="albums-section">
-    <h2>Albums</h2>
-    <ng-container *ngIf="(artist?.albums?.length ?? 0) > 0; else noAlbums">
-      <div class="media-grid">
-        <app-media-card
-          *ngFor="let album of artist?.albums"
-          [id]="album.id"
-          [title]="album.title"
-          [subtitle]="'Album'"
-          [imageUrl]="album.image"
-        ></app-media-card>
-      </div>
-    </ng-container>
-    <ng-template #noAlbums>
-      <p class="empty-state">No albums found.</p>
-    </ng-template>
-  </section>
+          <div class="rating-section">
+            <div class="rating-display">
+              <span class="rating-label">Your Rating:</span>
+              <div class="star-rating">
+                <button
+                  mat-icon-button
+                  *ngFor="let star of [1,2,3,4,5]"
+                  (click)="onRate(star)"
+                  [class.filled]="star <= userRating"
+                  class="star-button">
+                  <mat-icon>{{ star <= userRating ? 'star' : 'star_border' }}</mat-icon>
+                </button>
+              </div>
+              <span class="rating-value" *ngIf="userRating">{{ userRating }}/5</span>
+            </div>
+          </div>
 
-  <section class="songs-section">
-    <h2>Songs</h2>
-    <ng-container *ngIf="(artist?.songs?.length ?? 0) > 0; else noSongs">
-      <div class="media-grid">
-        <app-media-card
-          *ngFor="let song of artist?.songs"
-          [id]="song.id"
-          [title]="song.title"
-          [subtitle]="'Song'"
-          [imageUrl]="song.image"
-        ></app-media-card>
+          <p class="genres" *ngIf="artist.genres?.length">
+            <mat-chip-set>
+              <mat-chip *ngFor="let genre of artist.genres">{{ genre }}</mat-chip>
+            </mat-chip-set>
+          </p>
+          <p class="artist-bio" *ngIf="artist.bio">
+            {{ artist.bio }}
+          </p>
+        </mat-card-content>
       </div>
-    </ng-container>
-    <ng-template #noSongs>
-      <p class="empty-state">No songs found.</p>
-    </ng-template>
-  </section>
+      <mat-card-actions class="action-buttons">
+        <button
+          mat-raised-button
+          [color]="isSubscribed ? 'warn' : 'accent'"
+          [disabled]="checkingSubscription"
+          (click)="toggleSubscription()"
+          class="subscribe-button">
+          <mat-icon>{{ isSubscribed ? 'notifications_active' : 'notifications' }}</mat-icon>
+          <span *ngIf="!checkingSubscription">
+            {{ isSubscribed ? 'Unsubscribe' : 'Subscribe' }}
+          </span>
+          <mat-progress-spinner
+            *ngIf="checkingSubscription"
+            diameter="20"
+            mode="indeterminate"
+            color="primary"
+            class="inline-spinner">
+          </mat-progress-spinner>
+        </button>
+        <button mat-icon-button color="warn" aria-label="Delete" (click)="onDelete()" *ngIf="userRoles.includes('admin')">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
 </div>
