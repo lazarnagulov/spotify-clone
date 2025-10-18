@@ -57,10 +57,8 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
-    if (this.id) {
+    if (this.id)
       this.loadSong(this.id);
-      this.loadUserRating(this.id);
-    }
     this.userRoles = this.authService.getRoles();
   }
 
@@ -82,19 +80,6 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadUserRating(songId: string): void {
-    // this.http.get<any>(`${environment.apiHost}/ratings/${songId}`).subscribe({
-    //   next: (response) => {
-    //     if (response?.rating) {
-    //       this.userRating = response.rating;
-    //     }
-    //   },
-    //   error: (err) => {
-    //     console.log('No existing rating found');
-    //   },
-    // });
-  }
-
   onRate(rating: number): void {
     if (!this.id || !this.song) return;
 
@@ -103,7 +88,8 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
       content_type: 'song',
       rating: rating,
       artistIds: this.song.artists,
-      albumIds: this.song.album ? [this.song.album.id] : []
+      albumIds: this.song.album ? [this.song.album.id] : [],
+      genres: this.song.genres
     };
 
     this.http.post(`${environment.apiHost}/ratings`, ratingData).subscribe({

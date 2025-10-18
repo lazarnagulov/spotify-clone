@@ -52,7 +52,6 @@ export class ArtistDetailsComponent implements OnInit {
           this.loading = false;
           if (this.id) {
             this.checkSubscription(this.id);
-            this.loadUserRating(this.id);
           }
         },
         error: (err) => {
@@ -63,19 +62,6 @@ export class ArtistDetailsComponent implements OnInit {
       });
   }
 
-  private loadUserRating(artistId: string): void {
-    this.http.get<any>(`${environment.apiHost}/ratings/id?content_id=${artistId}`).subscribe({
-      next: (response) => {
-        if (response && response.rating) {
-          this.userRating = response.rating;
-        }
-      },
-      error: (err) => {
-        console.log('No existing rating found');
-      },
-    });
-  }
-
   onRate(rating: number): void {
     if (!this.id || !this.artist) return;
 
@@ -83,8 +69,7 @@ export class ArtistDetailsComponent implements OnInit {
       content_id: this.id,
       content_type: 'artist',
       rating: rating,
-      artistIds: [this.id],
-      albumIds: []
+      genres: this.artist?.genres,
     };
 
     this.http.post(`${environment.apiHost}/ratings`, ratingData).subscribe({

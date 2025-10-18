@@ -40,7 +40,6 @@ export class AlbumDetailsComponent implements OnInit {
 
     this.userRoles = this.authService.getRoles();
     this.loadAlbum(this.id);
-    this.loadUserRating(this.id);
   }
 
   private loadAlbum(albumId: string): void {
@@ -58,19 +57,6 @@ export class AlbumDetailsComponent implements OnInit {
     });
   }
 
-  private loadUserRating(albumId: string): void {
-    this.http.get<any>(`${environment.apiHost}/ratings/${albumId}`).subscribe({
-      next: (response) => {
-        if (response?.rating) {
-          this.userRating = response.rating;
-        }
-      },
-      error: (err) => {
-        console.log('No existing rating found');
-      },
-    });
-  }
-
   onRate(rating: number): void {
     if (!this.id || !this.album) return;
 
@@ -81,6 +67,8 @@ export class AlbumDetailsComponent implements OnInit {
       artistIds: this.album.artists,
       genres: this.album.genres,
     };
+
+    console.log(ratingData);
 
     this.http.post(`${environment.apiHost}/ratings`, ratingData).subscribe({
       next: () => {

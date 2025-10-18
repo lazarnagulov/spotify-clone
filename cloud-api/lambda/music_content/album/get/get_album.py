@@ -109,7 +109,7 @@ def handler(event, _context):
 
     artist_ids = album_data.get("artists", [])
     artist_name_map = fetch_artist_names(artist_ids)
-    artist_names = [artist_name_map.get(aid, aid) for aid in artist_ids]
+    artist_names = [artist_name_map.get(aid, "Unknown") for aid in artist_ids]
 
     album_response_body = {
         "id": album_id,
@@ -118,7 +118,7 @@ def handler(event, _context):
         "genres": album_data.get("genres", []),
         "year": album_data.get("year"),
         "description": album_data.get("description", ""),
-        "imageUrl": cover_url,
+        "coverUrl": cover_url,
         "songs": songs,
         "created_at": album_data.get("created_at"),
     }

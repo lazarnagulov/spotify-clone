@@ -5,6 +5,7 @@ from datetime import datetime
 import boto3
 from util.exception_handler import handle_lambda_exceptions
 from util.auth import require_role
+from util.logger import logger
 from util.http_response import http_response
 
 from model.rating_request import RatingRequest
@@ -33,8 +34,8 @@ def handler(event, context):
 
     if request.artistIds:
         rating['artistIds'] = request.artistIds
-    if request.albumIds:
-        rating['genres'] = request.albumIds
+    if request.genres:
+        rating['genres'] = request.genres
 
     table.put_item(Item=rating)
 
