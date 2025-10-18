@@ -7,7 +7,7 @@ export interface Album {
   genres: string[];
   year?: number;
   description?: string;
-  imageUrl: string;
+  cover_url: string;
   songs: Song[];
   created_at?: string;
   coverUrl?: string;

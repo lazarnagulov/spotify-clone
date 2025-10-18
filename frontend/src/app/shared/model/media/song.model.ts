@@ -7,7 +7,7 @@ export interface Song {
   track_number?: number;
   description: string;
   audioUrl: string;
-  coverUrl: string;
+  cover_url: string;
   album?: {
     id: string;
     title: string;

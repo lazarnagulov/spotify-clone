@@ -4,6 +4,7 @@ import { Song } from '../../shared/model/media/song.model';
 import { Artist } from '../../artist/model/artist-details.model';
 import { DiscoverService } from '../discover.service';
 import { GenreService } from '../../shared/genre.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-discover',
@@ -21,7 +22,8 @@ export class DiscoverComponent implements OnInit {
 
   constructor(
     private discoverService: DiscoverService,
-    private genreService: GenreService
+    private genreService: GenreService,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -32,7 +34,7 @@ export class DiscoverComponent implements OnInit {
   }
 
   navigateToArtist(artistId: string): void {
-    // TODO: navigate to artist details page
+    this.router.navigate(['/artist', artistId]);
   }
 
   onGenreChange() {

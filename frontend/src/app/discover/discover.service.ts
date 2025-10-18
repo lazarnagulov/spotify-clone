@@ -12,6 +12,6 @@ export class DiscoverService {
   constructor(private http: HttpClient) { }
 
   getGenreData(genre: string): Observable<DiscoverResponse> {
-    return this.http.post<DiscoverResponse>(environment.apiHost + "/genre", {genre: genre});
+    return this.http.get<DiscoverResponse>(environment.apiHost + "/discover/" + genre);
   }
 }

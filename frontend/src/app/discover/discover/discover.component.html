@@ -23,50 +23,49 @@
   <section class="discover-section">
     <h2 class="section-title">Albums</h2>
     <div class="cards-grid">
-      <app-media-card
-        *ngFor="let album of albums"
-        class="media-card"
-        [title]="album.title"
-        [subtitle]="album.artists.join(', ')"
-        [imageUrl]="album.imageUrl"
-        [cardType]="'album'">
-      </app-media-card>
+        <app-media-card
+          *ngFor="let album of albums"
+          class="media-card"
+          [cardType]="'album'"
+          [id]="album.id"
+          [title]="album.title"
+          [imageUrl]="album.cover_url || 'no-image.svg'"
+        ></app-media-card>
     </div>
   </section>
 
   <section class="discover-section">
     <h2 class="section-title">Songs</h2>
     <div class="cards-grid">
-      <app-media-card
-        *ngFor="let song of songs"
-        class="media-card"
-        [title]="song.title"
-        [subtitle]="song.artists.join(', ')"
-        [imageUrl]="song.coverUrl"
-        [cardType]="'song'"
-        [audioUrl]="song.audioUrl">
-      </app-media-card>
+        <app-media-card
+          *ngFor="let song of songs"
+          class="media-card"
+          [cardType]="'song'"
+          [id]="song.id"
+          [title]="song.title"
+          [imageUrl]="song.cover_url || 'no-image.svg'"
+        ></app-media-card>
     </div>
   </section>
 
-  <section class="discover-section">
-    <h2 class="section-title">Artists</h2>
-    <div class="artists-grid">
-      <mat-card
-        *ngFor="let artist of artists"
-        class="artist-card"
-        (click)="navigateToArtist(artist.id)"
-      >
-        <mat-card-content>
-          <div class="artist-avatar">
-            <mat-icon>person</mat-icon>
-          </div>
-          <h3>{{ artist.name }}</h3>
-          <p class="artist-genres" *ngIf="artist.genres && artist.genres.length > 0">
-            {{ artist.genres.join(', ') }}
-          </p>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  </section>
+  <section class="media-section" *ngIf="artists.length > 0">
+      <h2>Artists</h2>
+      <div class="artists-grid">
+        <mat-card
+          *ngFor="let artist of artists"
+          class="artist-card"
+          (click)="navigateToArtist(artist.id)"
+        >
+          <mat-card-content>
+            <div class="artist-avatar">
+              <mat-icon>person</mat-icon>
+            </div>
+            <h3>{{ artist.name }}</h3>
+            <p class="artist-genres" *ngIf="artist.genres && artist.genres.length > 0">
+              {{ artist.genres.join(', ') }}
+            </p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
 </div>
