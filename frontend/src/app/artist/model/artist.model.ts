@@ -4,5 +4,4 @@ export interface Artist {
   bio: string;
   genres: string[];
   image_url?: string;
-  created_at: string;
 }

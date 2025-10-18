@@ -1,8 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { switchMap, EMPTY } from 'rxjs';
 import { environment } from '../../../env/environment';
 import { Artist } from '../model/artist.model';
+import { ArtistService } from '../artist.service';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-artist-details',
@@ -11,42 +15,61 @@ import { Artist } from '../model/artist.model';
   styleUrls: ['./artist-details.component.css']
 })
 export class ArtistDetailsComponent implements OnInit {
+  id?: string;
   artist?: Artist;
   loading = true;
   error?: string;
   isSubscribed = false;
   checkingSubscription = true;
-  artistId = '';
+  userRoles: string[] = [];
 
   constructor(
+    private http: HttpClient,
+    private artistService: ArtistService,
+    private authService: AuthService,
     private route: ActivatedRoute,
-    private http: HttpClient
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.artistId = this.route.snapshot.paramMap.get('id') ?? '';
-    if (this.artistId) {
-      this.loadArtist(this.artistId);
-      this.checkSubscription(this.artistId);
-    }
-  }
+    this.userRoles = this.authService.getRoles();
 
-  loadArtist(artistId: string): void {
-    this.loading = true;
-    this.error = undefined;
-
-    this.http.get<Artist>(`${environment.apiHost}/artists/${artistId}`)
+    this.route.paramMap
+      .pipe(
+        switchMap((params) => {
+          const id = params.get('id');
+          if (!id) return EMPTY;
+          this.id = id;
+          this.loading = true;
+          return this.artistService.getDetails(id);
+        })
+      )
       .subscribe({
         next: (artist) => {
           this.artist = artist;
           this.loading = false;
+          if (this.id) this.checkSubscription(this.id);
         },
         error: (err) => {
           console.error('Error loading artist:', err);
-          this.error = 'Failed to load artist. Please try again.';
+          this.error = 'Failed to load artist.';
           this.loading = false;
         }
       });
+  }
+
+  onDelete(): void {
+    if (!this.id) return;
+    this.artistService.deleteArtist(this.id).subscribe({
+      next: () => {
+        this.snackBar.open('Artist successfully deleted', 'Close', { duration: 3000 });
+        void this.router.navigate(['/home']);
+      },
+      error: () => {
+        this.snackBar.open('Failed to delete artist', 'Close', { duration: 3000 });
+      }
+    });
   }
 
   checkSubscription(artistId: string): void {
@@ -69,39 +92,47 @@ export class ArtistDetailsComponent implements OnInit {
   }
 
   toggleSubscription(): void {
-    if (!this.artist || !this.artistId) return;
+    if (!this.id) return;
 
-    if (this.isSubscribed) {
-      this.http.request('DELETE', `${environment.apiHost}/subscription`, {
-        body: {
-          content_id: this.artistId,
-          content_type: 'artist'
-        }
-      }).subscribe({
-        next: () => {
-          this.isSubscribed = false;
-        },
-        error: (err) => {
-          console.error('Error unsubscribing:', err);
-          this.error = 'Failed to unsubscribe. Please try again.';
-        }
-      });
-    } else {
-      this.http.post(
-        `${environment.apiHost}/subscription`,
-        {
-          content_id: this.artistId,
-          content_type: 'artist'
-        }
-      ).subscribe({
-        next: () => {
-          this.isSubscribed = true;
-        },
-        error: (err) => {
-          console.error('Error subscribing:', err);
-          this.error = 'Failed to subscribe. Please try again.';
-        }
-      });
-    }
+    if (this.isSubscribed)
+      this.unsubscribe();
+    else
+      this.subscribe();
   }
+
+  private unsubscribe(): void {
+    this.http.request('DELETE', `${environment.apiHost}/subscription`, {
+      body: {
+        content_id: this.id,
+        content_type: 'artist'
+      }
+    }).subscribe({
+      next: () => {
+        this.isSubscribed = false;
+      },
+      error: (err) => {
+        console.error('Error unsubscribing:', err);
+        this.error = 'Failed to unsubscribe. Please try again.';
+      }
+    });
+  }
+
+  private subscribe(): void {
+    this.http.post(
+      `${environment.apiHost}/subscription`,
+      {
+        content_id: this.id,
+        content_type: 'artist'
+      }
+    ).subscribe({
+      next: () => {
+        this.isSubscribed = true;
+      },
+      error: (err) => {
+        console.error('Error subscribing:', err);
+        this.error = 'Failed to subscribe. Please try again.';
+      }
+    });
+  }
+
 }

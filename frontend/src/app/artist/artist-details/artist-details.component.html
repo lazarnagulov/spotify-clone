@@ -49,6 +49,9 @@
             color="primary"
             class="inline-spinner">
           </mat-progress-spinner>
+          <button mat-icon-button color="warn" aria-label="Delete" (click)="onDelete()" *ngIf="userRoles.includes('admin')">
+            <mat-icon>delete</mat-icon>
+          </button>
         </button>
       </mat-card-actions>
     </mat-card>
