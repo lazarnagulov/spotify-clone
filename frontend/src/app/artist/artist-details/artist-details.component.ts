@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { EMPTY, switchMap } from 'rxjs';
 import { Artist } from '../model/create-artist.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-artist-details',
@@ -14,22 +15,28 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class ArtistDetailsComponent implements OnInit {
   id?: string;
   artist?: Artist;
+  userRoles: string[] = [];
 
   constructor(
     private artistService: ArtistService,
+    private authService: AuthService,
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.pipe(
-        switchMap(params => {
+    this.route.paramMap
+      .pipe(
+        switchMap((params) => {
           const id = params.get('id');
           this.id = id ?? undefined;
           return id ? this.artistService.getDetails(id) : EMPTY;
         })
-      ).subscribe(artist => this.artist = artist);
+      )
+      .subscribe(artist => this.artist = artist);
+
+    this.userRoles = this.authService.getRoles();
   }
 
   onDelete(): void {

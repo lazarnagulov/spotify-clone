@@ -5,6 +5,8 @@ dynamodb = boto3.resource('dynamodb', region_name='eu-central-1')
 artists_table = dynamodb.Table(os.environ["ARTISTS_TABLE"])
 genre_relations_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
 
+@handle_lambda_exceptions
+@require_role('admin')
 def handler(event, _context):
     pk = event["pathParameters"]["id"]
 
