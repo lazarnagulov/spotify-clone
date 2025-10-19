@@ -103,6 +103,7 @@ class SubscriptionStack(Stack):
             environment={
                 "SUBSCRIPTION_TABLE": subscription_table.table_name,
                 "NOTIFICATIONS_TOPIC_ARN": self.notifications_topic.topic_arn,
+                "ARTISTS_TABLE": "Artists",
                 "CONTENT_INDEX": "GSI1",
             }
         )
@@ -136,6 +137,15 @@ class SubscriptionStack(Stack):
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
+        ))
+
+        self.notify_subscribers_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:GetItem",
+                "dynamodb:Query",
+                "dynamodb:BatchGetItem"
+            ],
+            resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*"]
         ))
 
         self.notifications_topic.add_subscription(subscriptions.LambdaSubscription(email_sender_lambda))

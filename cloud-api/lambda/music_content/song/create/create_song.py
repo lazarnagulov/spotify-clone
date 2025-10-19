@@ -8,6 +8,7 @@ from util.auth import require_role
 from util.http_response import http_response
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
+
 from model.create_song_request import CreateSongRequest
 
 dynamodb = boto3.resource('dynamodb')
@@ -78,6 +79,7 @@ def handler(event, _context):
         }
     )
 
+
 def update_genre_relations_table(request, song_id, path_to_cover):
     genre_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
 
@@ -94,15 +96,24 @@ def update_genre_relations_table(request, song_id, path_to_cover):
                 }
             )
 
+
 def notify_subscribers(request):
     lambda_client.invoke(
         FunctionName=os.environ["NOTIFY_SUBSCRIBERS_FUNCTION"],
         InvocationType="Event",
         Payload=json.dumps({
             "event_type": "song",
-            "artist_id": request.artists[0],
-            "artist_name": request.artists[0],
+            "artist_ids": request.artists,
             "song_title": request.title,
             "genres": request.genres
         })
+    )
+
+    logger.info(
+        "Sending notification to subscribers",
+        extra={
+            "artist_ids": request.artists,
+            "song_title": request.title,
+            "genres": request.genres
+        },
     )

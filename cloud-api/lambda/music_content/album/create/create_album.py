@@ -199,10 +199,18 @@ def notify_subscribers(request):
         InvocationType="Event",
         Payload=json.dumps({
             "event_type": "album",
-            "artist_id": request.artists[0],
-            "artist_name": request.artists[0],
+            "artist_ids": request.artists,
             "album_title": request.title,
             "songs": [s.title for s in request.songs],
             "genres": request.genres
         })
+    )
+
+    logger.info(
+        "Sending notification to subscribers",
+        extra={
+            "artist_id": request.artists,
+            "album_title": request.title,
+            "genres": request.genres
+        },
     )
