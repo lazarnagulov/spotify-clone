@@ -2,12 +2,14 @@
   <div *ngIf="loading" class="loading-container">
     <mat-spinner></mat-spinner>
   </div>
+
   <mat-card *ngIf="error && !loading" class="error-card">
     <mat-card-content>
       <mat-icon color="warn">error</mat-icon>
       <p>{{ error }}</p>
     </mat-card-content>
   </mat-card>
+
   <div *ngIf="artist && !loading">
     <mat-card class="artist-header">
       <div class="header-content">
@@ -36,11 +38,13 @@
               <mat-chip *ngFor="let genre of artist.genres">{{ genre }}</mat-chip>
             </mat-chip-set>
           </p>
+
           <p class="artist-bio" *ngIf="artist.bio">
             {{ artist.bio }}
           </p>
         </mat-card-content>
       </div>
+
       <mat-card-actions class="action-buttons">
         <button
           mat-raised-button
@@ -60,6 +64,11 @@
             class="inline-spinner">
           </mat-progress-spinner>
         </button>
+
+        <button mat-raised-button color="accent"class="edit-button" *ngIf="userRoles.includes('admin')" (click)="onEdit()">
+          <mat-icon class="button-icon">edit</mat-icon> Edit artist
+        </button>
+
         <button mat-icon-button color="warn" aria-label="Delete" (click)="onDelete()" *ngIf="userRoles.includes('admin')">
           <mat-icon>delete</mat-icon>
         </button>
