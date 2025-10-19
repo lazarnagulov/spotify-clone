@@ -1,11 +1,11 @@
-import boto3
+import boto3, os
 from boto3.dynamodb.conditions import Key, Attr
 from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
 from util.logger import logger
 
 dynamodb = boto3.resource('dynamodb', region_name='eu-central-1')
-artists_table = dynamodb.Table('Artists')
+artists_table = dynamodb.Table(os.environ["ARTISTS_TABLE"])
 
 @handle_lambda_exceptions
 def handler(event, _context):

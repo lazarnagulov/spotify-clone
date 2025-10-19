@@ -101,6 +101,10 @@ export class ArtistDetailsComponent implements OnInit {
     });
   }
 
+  onEdit(): void {
+      void this.router.navigate(['/edit-artist', this.id]);
+  }
+
   checkSubscription(artistId: string): void {
     this.checkingSubscription = true;
     this.isSubscribed = false;

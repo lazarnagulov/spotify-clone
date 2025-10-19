@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Artist } from './model/create-artist.model';
 import { Observable } from 'rxjs';
 import { environment } from '../../env/environment';
+import { UpdateArtistRequest } from './model/update-artist.model';
 
 @Injectable({
   providedIn: 'root',
@@ -23,5 +24,9 @@ export class ArtistService {
 
   deleteArtist(id: string): Observable<void> {
     return this.httpClient.delete<void>(`${environment.apiHost}/artists/${id}`);
+  }
+
+  updateArtist(id: string, request: UpdateArtistRequest): Observable<void> {
+    return this.httpClient.put<void>(`${environment.apiHost}/artists/${id}`, request);
   }
 }

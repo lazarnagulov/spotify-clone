@@ -113,7 +113,20 @@ class SpotifyCloneStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/artist/get_all"),
             layers=[shared_layer],
             environment={
-                'TABLE_NAME': artists_table.table_name
+                'ARTISTS_TABLE': artists_table.table_name
+            }
+        )
+
+        edit_artist_lambda = aws_lambda.Function(
+            self,
+            "EditArtistFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="edit_artist.handler",
+            code=aws_lambda.Code.from_asset("lambda/artist/edit"),
+            layers=[shared_layer],
+            environment={
+                'ARTISTS_TABLE': artists_table.table_name,
+                'GENRE_RELATIONS_TABLE': genre_relations_table.table_name,
             }
         )
 
@@ -137,6 +150,7 @@ class SpotifyCloneStack(Stack):
         artist_id_resource = artist_api.add_resource("{id}")
         artist_id_resource.add_method("GET", apigw.LambdaIntegration(get_artist_details_lambda))
         artist_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_artist_lambda), authorizer=authorizer)
+        artist_id_resource.add_method("PUT", apigw.LambdaIntegration(edit_artist_lambda), authorizer=authorizer)
 
         create_artist_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
@@ -155,6 +169,17 @@ class SpotifyCloneStack(Stack):
                 "dynamodb:Scan"
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*"]
+        ))
+
+        edit_artist_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:PutItem",
+                "dynamodb:GetItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:UpdateItem"
+            ],
+             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
         ))
 
         get_genres_lambda = aws_lambda.Function(
