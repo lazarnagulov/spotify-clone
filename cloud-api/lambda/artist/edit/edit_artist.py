@@ -61,7 +61,7 @@ def sync_genre_relations(artist: dict, body: dict, old_genres: set, new_genres: 
                 Item={
                     "PK": genre,
                     "SK": artist['PK'],
-                    "name": body["name"],
+                    "Name": body["name"],
                     "bio": body["bio"],
                 }
             )
@@ -70,8 +70,8 @@ def sync_genre_relations(artist: dict, body: dict, old_genres: set, new_genres: 
         for genre in genres_to_update:
             genre_relations_table.update_item(
                 Key={"PK": genre, "SK": artist['PK']},
-                UpdateExpression="SET #n = :name, bio = :bio",
-                ExpressionAttributeNames={"#n": "name"},
+                UpdateExpression="SET #N = :name, bio = :bio",
+                ExpressionAttributeNames={"#N": "Name"},
                 ExpressionAttributeValues={
                     ":name": body["name"],
                     ":bio": body["bio"],
