@@ -13,41 +13,100 @@
   </mat-card>
 
   <div *ngIf="!loading && !error">
-    <mat-card *ngIf="subscriptions.length === 0" class="empty-state">
+    <!-- Genre Subscriptions Section -->
+    <mat-card class="section-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>music_note</mat-icon>
+          Genre Subscriptions
+        </mat-card-title>
+      </mat-card-header>
       <mat-card-content>
-        <mat-icon>notifications_none</mat-icon>
-        <h2>No Subscriptions Yet</h2>
-        <p>Subscribe to artists or genres to get notified about new content!</p>
-        <button mat-raised-button color="primary" routerLink="/discover">
-          Discover Music
-        </button>
+        <!-- Available Genres to Subscribe -->
+        <div class="available-genres" *ngIf="availableGenres.length > 0">
+          <h3>Available Genres</h3>
+          <mat-chip-set>
+            <mat-chip
+              *ngFor="let genre of availableGenres"
+              [class.subscribed]="isSubscribedToGenre(genre)"
+              (click)="!isSubscribedToGenre(genre) && subscribeToGenre(genre)">
+              {{ genre }}
+              <mat-icon *ngIf="isSubscribedToGenre(genre)">check</mat-icon>
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+
+        <!-- Subscribed Genres -->
+        <div class="subscribed-genres" *ngIf="genreSubscriptions.length > 0">
+          <h3>My Genre Subscriptions</h3>
+          <div class="subscriptions-list">
+            <mat-card *ngFor="let subscription of genreSubscriptions" class="subscription-card genre-card">
+              <mat-card-content>
+                <div class="subscription-info">
+                  <mat-icon class="subscription-icon">music_note</mat-icon>
+                  <div class="subscription-details">
+                    <h3>{{ subscription.name }}</h3>
+                    <p class="subscription-type">Genre</p>
+                  </div>
+                </div>
+                <button
+                  mat-raised-button
+                  color="warn"
+                  (click)="unsubscribeGenre(subscription)"
+                  class="unsubscribe-button">
+                  <mat-icon>notifications_off</mat-icon>
+                  Unsubscribe
+                </button>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+
+        <div *ngIf="genreSubscriptions.length === 0 && !loadingGenres" class="empty-message">
+          <p>You haven't subscribed to any genres yet. Click on a genre above to subscribe!</p>
+        </div>
       </mat-card-content>
     </mat-card>
 
-    <div *ngIf="subscriptions.length > 0" class="subscriptions-list">
-      <mat-card *ngFor="let subscription of subscriptions" class="subscription-card">
-        <mat-card-content>
-          <div class="subscription-info">
-            <mat-icon class="subscription-icon">
-              {{ subscription.type === 'artist' ? 'person' : 'music_note' }}
-            </mat-icon>
-            <div class="subscription-details">
-              <h3>{{ subscription.name }}</h3>
-              <p class="subscription-type">
-                {{ subscription.type === 'artist' ? 'Artist' : 'Genre' }}
-              </p>
-            </div>
-          </div>
-          <button
-            mat-raised-button
-            color="warn"
-            (click)="unsubscribe(subscription)"
-            class="unsubscribe-button">
-            <mat-icon>notifications_off</mat-icon>
-            Unsubscribe
+    <!-- Artist Subscriptions Section -->
+    <mat-card class="section-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>person</mat-icon>
+          Artist Subscriptions
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="artistSubscriptions.length === 0" class="empty-message">
+          <mat-icon>person_outline</mat-icon>
+          <p>You haven't subscribed to any artists yet.</p>
+          <button mat-raised-button color="primary" routerLink="/discover">
+            Discover Artists
           </button>
-        </mat-card-content>
-      </mat-card>
-    </div>
+        </div>
+
+        <div *ngIf="artistSubscriptions.length > 0" class="subscriptions-list">
+          <mat-card *ngFor="let subscription of artistSubscriptions" class="subscription-card artist-card">
+            <mat-card-content>
+              <div class="subscription-info">
+                <mat-icon class="subscription-icon">person</mat-icon>
+                <div class="subscription-details">
+                  <h3>{{ subscription.name }}</h3>
+                  <p class="subscription-type">Artist</p>
+                </div>
+              </div>
+              <button
+                mat-raised-button
+                color="warn"
+                (click)="unsubscribeArtist(subscription)"
+                class="unsubscribe-button">
+                <mat-icon>notifications_off</mat-icon>
+                Unsubscribe
+              </button>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </div>
 </div>
