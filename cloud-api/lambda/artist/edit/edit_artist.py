@@ -49,7 +49,6 @@ def sync_genre_relations(artist: dict, body: dict, old_genres: set, new_genres: 
     genres_to_update = new_genres & old_genres
 
     name_changed = body["name"] != artist.get("name")
-    bio_changed = body["bio"] != artist.get("bio")
 
     with genre_relations_table.batch_writer() as batch:
         for genre in genres_to_remove:
@@ -62,18 +61,17 @@ def sync_genre_relations(artist: dict, body: dict, old_genres: set, new_genres: 
                     "PK": genre,
                     "SK": artist['PK'],
                     "Name": body["name"],
-                    "bio": body["bio"],
+                    "EntityType": 'artist'
                 }
             )
 
-    if name_changed or bio_changed:
+    if name_changed:
         for genre in genres_to_update:
             genre_relations_table.update_item(
                 Key={"PK": genre, "SK": artist['PK']},
-                UpdateExpression="SET #N = :name, bio = :bio",
+                UpdateExpression="SET #N = :name",
                 ExpressionAttributeNames={"#N": "Name"},
                 ExpressionAttributeValues={
                     ":name": body["name"],
-                    ":bio": body["bio"],
                 },
             )
