@@ -39,25 +39,8 @@ auth_stack = AuthStack(
     env=env
 )
 
-table_stack = SpotifyCloneStack(
-    app,
-    "CloudApiStack",
-    shared_layer=layer_stack.shared_layer,
-    authorizer=gw_stack.authorizer,
-    api=gw_stack.api,
-    env=env
-)
 
-content_stack = ContentStack(
-    app,
-    "SpotifyCloneContentStack",
-    shared_layer=layer_stack.shared_layer,
-    authorizer=gw_stack.authorizer,
-    api=gw_stack.api,
-    env=env
-)
-
-SubscriptionStack(
+subscription_stack = SubscriptionStack(
     app,
     "SpotifyCloneSubscriptionStack",
     shared_layer=layer_stack.shared_layer,
@@ -75,5 +58,23 @@ RatingsStack(
     env=env
 )
 
+table_stack = SpotifyCloneStack(
+    app,
+    "CloudApiStack",
+    shared_layer=layer_stack.shared_layer,
+    authorizer=gw_stack.authorizer,
+    api=gw_stack.api,
+    env=env
+)
+
+content_stack = ContentStack(
+    app,
+    "SpotifyCloneContentStack",
+    shared_layer=layer_stack.shared_layer,
+    authorizer=gw_stack.authorizer,
+    api=gw_stack.api,
+    notify_subscribers_fn=subscription_stack.notify_subscribers_lambda,
+    env=env
+)
 
 app.synth()

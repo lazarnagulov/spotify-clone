@@ -2,7 +2,9 @@ from aws_cdk import (
     Stack,
     aws_dynamodb as dynamodb, RemovalPolicy, aws_lambda,
     aws_apigateway as apigw,
-    aws_iam as iam
+    aws_iam as iam,
+    aws_sns as sns,
+    aws_sns_subscriptions as subscriptions
 )
 from constructs import Construct
 
@@ -11,6 +13,11 @@ class SubscriptionStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, shared_layer, api, authorizer, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        self.notifications_topic = sns.Topic(
+            self, "NotificationsTopic",
+            topic_name="UserNotifications"
+        )
 
         subscription_table = dynamodb.Table(
             self, "SubscriptionsTable",
@@ -87,7 +94,36 @@ class SubscriptionStack(Stack):
             }
         )
 
+        self.notify_subscribers_lambda = aws_lambda.Function(
+            self, "NotifySubscribersFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="notify_subscribers.handler",
+            code=aws_lambda.Code.from_asset("lambda/subscription/notify"),
+            layers=[shared_layer],
+            environment={
+                "SUBSCRIPTION_TABLE": subscription_table.table_name,
+                "NOTIFICATIONS_TOPIC_ARN": self.notifications_topic.topic_arn,
+                "CONTENT_INDEX": "GSI1",
+            }
+        )
 
+        email_sender_lambda = aws_lambda.Function(
+            self, "EmailSenderFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="send_email.handler",
+            code=aws_lambda.Code.from_asset("lambda/subscription/send_email"),
+            layers=[shared_layer],
+            environment={
+                "SENDER_EMAIL": "lazarnagulov1@gmail.com",
+            }
+        )
+
+        email_sender_lambda.add_to_role_policy(iam.PolicyStatement(
+            actions=["ses:SendEmail"],
+            resources=["*"]
+        ))
+
+        subscription_table.grant_read_data(self.notify_subscribers_lambda)
         subscription_table.grant_read_write_data(subscribe_lambda)
         subscription_table.grant_read_write_data(unsubscribe_lambda)
         subscription_table.grant_read_data(check_lambda)
@@ -101,6 +137,10 @@ class SubscriptionStack(Stack):
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
         ))
+
+        self.notifications_topic.add_subscription(subscriptions.LambdaSubscription(email_sender_lambda))
+        self.notifications_topic.grant_publish(self.notify_subscribers_lambda)
+        subscription_table.grant_read_data(self.notify_subscribers_lambda)
 
         subscription_api = api.root.add_resource("subscription")
 
