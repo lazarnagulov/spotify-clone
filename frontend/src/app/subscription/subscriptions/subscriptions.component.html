@@ -13,7 +13,6 @@
   </mat-card>
 
   <div *ngIf="!loading && !error">
-    <!-- Genre Subscriptions Section -->
     <mat-card class="section-card">
       <mat-card-header>
         <mat-card-title>
@@ -22,7 +21,6 @@
         </mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <!-- Available Genres to Subscribe -->
         <div class="available-genres" *ngIf="availableGenres.length > 0">
           <h3>Available Genres</h3>
           <mat-chip-set>
@@ -36,7 +34,6 @@
           </mat-chip-set>
         </div>
 
-        <!-- Subscribed Genres -->
         <div class="subscribed-genres" *ngIf="genreSubscriptions.length > 0">
           <h3>My Genre Subscriptions</h3>
           <div class="subscriptions-list">
@@ -45,7 +42,7 @@
                 <div class="subscription-info">
                   <mat-icon class="subscription-icon">music_note</mat-icon>
                   <div class="subscription-details">
-                    <h3>{{ subscription.name }}</h3>
+                    <h3>{{ subscription.contentId }}</h3>
                     <p class="subscription-type">Genre</p>
                   </div>
                 </div>
@@ -68,7 +65,6 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Artist Subscriptions Section -->
     <mat-card class="section-card">
       <mat-card-header>
         <mat-card-title>
