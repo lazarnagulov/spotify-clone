@@ -1,12 +1,15 @@
 import boto3
 import os
+import json
 from util.logger import logger
 from botocore.exceptions import ClientError
 
 from util.exception_handler import handle_lambda_exceptions
 
 MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
+RETRY_QUEUE_URL = os.environ["RETRY_QUEUE_URL"]
 transcribe = boto3.client("transcribe")
+sqs = boto3.client("sqs")
 
 @handle_lambda_exceptions
 def handler(event, context):
@@ -30,6 +33,11 @@ def handler(event, context):
             elif job_status == "FAILED":
                 logger.warning(f"Transcription failed for {key}, retrying...")
                 transcribe.delete_transcription_job(TranscriptionJobName=job_name)
+                sqs.send_message(
+                    QueueUrl=RETRY_QUEUE_URL,
+                    MessageBody=json.dumps({"bucket": MEDIA_BUCKET, "key": key})
+                )
+                continue
 
         except ClientError as e:
             if e.response["Error"]["Code"] == "BadRequestException" and \

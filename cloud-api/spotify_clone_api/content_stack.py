@@ -8,6 +8,8 @@ from aws_cdk import (
     CfnOutput, Duration
 )
 from aws_cdk import aws_s3_notifications as s3n
+from aws_cdk import aws_sqs as sqs
+from aws_cdk import aws_lambda_event_sources as lambda_events
 from constructs import Construct
 
 
@@ -261,6 +263,28 @@ class ContentStack(Stack):
             ]
         ))
 
+        retry_lambda = aws_lambda.Function(
+            self, "RetryTranscriptionLambda",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="retry_transcription.handler",
+            code=aws_lambda.Code.from_asset("lambda/transcription/retry"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(60),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name
+            }
+        )
+
+        transcription_retry_queue = sqs.Queue(
+            self, "TranscriptionRetryQueue",
+            visibility_timeout=Duration.minutes(5),
+            retention_period=Duration.days(7),
+            dead_letter_queue=sqs.DeadLetterQueue(
+                max_receive_count=3, # max number of retries
+                queue=sqs.Queue(self, "TranscriptionDLQ")
+            )
+        )
+
         transcription_lambda = aws_lambda.Function(
             self, "StartTranscriptionLambda",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
@@ -269,7 +293,8 @@ class ContentStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/transcription/create"),
             timeout=Duration.seconds(60),
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "RETRY_QUEUE_URL": transcription_retry_queue.queue_url
             }
         )
 
@@ -282,7 +307,14 @@ class ContentStack(Stack):
                     "s3:PutObject",
                     "s3:ListBucket"
                 ],
-                resources=["*"]
+                resources=["*"],
+            )
+        )
+
+        retry_lambda.add_event_source(
+            lambda_events.SqsEventSource(
+                transcription_retry_queue,
+                batch_size=1
             )
         )
 
