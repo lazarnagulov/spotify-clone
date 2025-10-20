@@ -15,7 +15,7 @@ table = dynamodb.Table(os.environ["MUSIC_CATALOG"])
 MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
 
 s3 = boto3.client("s3", region_name="eu-central-1")
-
+lambda_client = boto3.client("lambda")
 
 @handle_lambda_exceptions
 @require_role('admin')
@@ -140,6 +140,7 @@ def handler(event, _context):
     )
 
     update_genre_relations_table(request, album_id, album_cover_path, songs)
+    notify_subscribers(request)
 
     return http_response(
         status_code=201,
@@ -188,5 +189,28 @@ def update_genre_relations_table(request, album_id, path_to_cover, songs):
             "album_id": album_id,
             "total_genres": len(request.genres),
             "total_songs": len(songs),
+        },
+    )
+
+
+def notify_subscribers(request):
+    lambda_client.invoke(
+        FunctionName=os.environ["NOTIFY_SUBSCRIBERS_FUNCTION"],
+        InvocationType="Event",
+        Payload=json.dumps({
+            "event_type": "album",
+            "artist_ids": request.artists,
+            "album_title": request.title,
+            "songs": [s.title for s in request.songs],
+            "genres": request.genres
+        })
+    )
+
+    logger.info(
+        "Sending notification to subscribers",
+        extra={
+            "artist_id": request.artists,
+            "album_title": request.title,
+            "genres": request.genres
         },
     )

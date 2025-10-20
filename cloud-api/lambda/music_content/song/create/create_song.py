@@ -8,6 +8,7 @@ from util.auth import require_role
 from util.http_response import http_response
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
+
 from model.create_song_request import CreateSongRequest
 
 dynamodb = boto3.resource('dynamodb')
@@ -15,6 +16,7 @@ table = dynamodb.Table(os.environ["MUSIC_CATALOG"])
 
 MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
 
+lambda_client = boto3.client("lambda")
 s3 = boto3.client("s3", region_name="eu-central-1")
 
 
@@ -67,6 +69,7 @@ def handler(event, _context):
     )
 
     update_genre_relations_table(request, song_id, path_to_cover)
+    notify_subscribers(request)
 
     return http_response(
         status_code=201,
@@ -75,6 +78,7 @@ def handler(event, _context):
             'audioUploadPresignedUrl': presigned_audio_url
         }
     )
+
 
 def update_genre_relations_table(request, song_id, path_to_cover):
     genre_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
@@ -91,3 +95,25 @@ def update_genre_relations_table(request, song_id, path_to_cover):
                     "ArtistNames": request.artists
                 }
             )
+
+
+def notify_subscribers(request):
+    lambda_client.invoke(
+        FunctionName=os.environ["NOTIFY_SUBSCRIBERS_FUNCTION"],
+        InvocationType="Event",
+        Payload=json.dumps({
+            "event_type": "song",
+            "artist_ids": request.artists,
+            "song_title": request.title,
+            "genres": request.genres
+        })
+    )
+
+    logger.info(
+        "Sending notification to subscribers",
+        extra={
+            "artist_ids": request.artists,
+            "song_title": request.title,
+            "genres": request.genres
+        },
+    )

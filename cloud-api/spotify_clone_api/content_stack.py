@@ -15,7 +15,16 @@ from constructs import Construct
 
 class ContentStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, authorizer, shared_layer, api, **kwargs) -> None:
+    def __init__(
+        self,
+        scope: Construct,
+        construct_id: str,
+        authorizer,
+        shared_layer,
+        notify_subscribers_fn,
+        api,
+        **kwargs
+    ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         cors_rule = s3.CorsRule(
@@ -69,7 +78,8 @@ class ContentStack(Stack):
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
-                "GENRE_RELATIONS_TABLE": "GenreRelations"
+                "GENRE_RELATIONS_TABLE": "GenreRelations",
+                "NOTIFY_SUBSCRIBERS_FUNCTION": notify_subscribers_fn.function_name
             }
         )
 
@@ -97,7 +107,8 @@ class ContentStack(Stack):
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
-                "GENRE_RELATIONS_TABLE": "GenreRelations"
+                "GENRE_RELATIONS_TABLE": "GenreRelations",
+                "NOTIFY_SUBSCRIBERS_FUNCTION": notify_subscribers_fn.function_name
             }
         )
 
@@ -202,9 +213,11 @@ class ContentStack(Stack):
                 "dynamodb:BatchWriteItem",
                 "dynamodb:PutItem",
                 "dynamodb:UpdateItem",
+                "lambda:InvokeFunction"
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*", 
-                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
+                       notify_subscribers_fn.function_arn ]
         ))
 
         delete_song_lambda.add_to_role_policy(
@@ -229,9 +242,11 @@ class ContentStack(Stack):
                 "dynamodb:BatchWriteItem",
                 "dynamodb:PutItem",
                 "dynamodb:UpdateItem",
+                "lambda:InvokeFunction"
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
-                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*"]
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
+                       notify_subscribers_fn.function_arn]
         ))
 
         delete_album_lambda.role.add_to_policy(iam.PolicyStatement(
