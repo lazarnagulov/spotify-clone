@@ -1,4 +1,5 @@
 import os
+import json
 from decimal import Decimal
 import boto3
 from boto3.dynamodb.types import TypeDeserializer
@@ -57,6 +58,30 @@ def fetch_artist_names(artist_ids):
     return artist_name_map
 
 
+def get_transcription(song_key: str):
+    s3 = boto3.client("s3")
+    clean_key = song_key.replace("songs/", "")
+    transcription_key = f"transcriptions/{clean_key}.json"
+    logger.info(f"Looking for transcription: {transcription_key}")
+
+    try:
+        response = s3.get_object(Bucket=MEDIA_BUCKET, Key=transcription_key)
+        content = response["Body"].read().decode("utf-8")
+        transcript_json = json.loads(content)
+
+        segments = transcript_json.get("results", {}).get("audio_segments", [])
+        if not segments:
+            logger.info("No audio_segments found, falling back to items parsing")
+            return None
+
+        lines = [seg.get("transcript", "").strip() for seg in segments if seg.get("transcript")]
+        return "\n".join(lines) if lines else None
+
+    except s3.exceptions.NoSuchKey:
+        logger.info(f"No transcription found for {transcription_key}")
+        return None
+
+
 @handle_lambda_exceptions
 def handler(event, _context):
     song_id = event["pathParameters"]["id"]
@@ -98,6 +123,7 @@ def handler(event, _context):
         "audio_url": audio_url,
         "cover_url": cover_url,
         "created_at": song_data.get("created_at"),
+        "transcript": get_transcription(song_data["audioPath"])
     }
 
     logger.info("Song fetched successfully", extra={"song_id": song_id})

@@ -7,6 +7,9 @@ from aws_cdk import (
     aws_iam as iam,
     CfnOutput, Duration
 )
+from aws_cdk import aws_s3_notifications as s3n
+from aws_cdk import aws_sqs as sqs
+from aws_cdk import aws_lambda_event_sources as lambda_events
 from constructs import Construct
 
 
@@ -138,6 +141,18 @@ class ContentStack(Stack):
             }
         )
 
+        get_transcription_lambda = aws_lambda.Function(
+            self, "GetTranscriptionFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_transcription.handler",
+            code=aws_lambda.Code.from_asset("lambda/transcription/get"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name
+            }
+        )
+
         get_album_lambda = aws_lambda.Function(
             self, "GetAlbumFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
@@ -263,6 +278,66 @@ class ContentStack(Stack):
             ]
         ))
 
+        retry_lambda = aws_lambda.Function(
+            self, "RetryTranscriptionLambda",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="retry_transcription.handler",
+            code=aws_lambda.Code.from_asset("lambda/transcription/retry"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(60),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name
+            }
+        )
+
+        transcription_retry_queue = sqs.Queue(
+            self, "TranscriptionRetryQueue",
+            visibility_timeout=Duration.minutes(5),
+            retention_period=Duration.days(7),
+            dead_letter_queue=sqs.DeadLetterQueue(
+                max_receive_count=3, # max number of retries
+                queue=sqs.Queue(self, "TranscriptionDLQ")
+            )
+        )
+
+        transcription_lambda = aws_lambda.Function(
+            self, "StartTranscriptionLambda",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="start_transcription.handler",
+            layers=[shared_layer],
+            code=aws_lambda.Code.from_asset("lambda/transcription/create"),
+            timeout=Duration.seconds(60),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "RETRY_QUEUE_URL": transcription_retry_queue.queue_url
+            }
+        )
+
+        transcription_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "transcribe:StartTranscriptionJob",
+                    "transcribe:GetTranscriptionJob",
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:ListBucket"
+                ],
+                resources=["*"],
+            )
+        )
+
+        retry_lambda.add_event_source(
+            lambda_events.SqsEventSource(
+                transcription_retry_queue,
+                batch_size=1
+            )
+        )
+
+        images_bucket.add_event_notification(
+            s3.EventType.OBJECT_CREATED,
+            s3n.LambdaDestination(transcription_lambda)
+        )
+
         get_discover_page.role.add_to_policy(iam.PolicyStatement(
             actions=[
                 "dynamodb:Query",
@@ -292,6 +367,10 @@ class ContentStack(Stack):
         album_id_resource.add_method("GET", apigw.LambdaIntegration(get_album_lambda), authorizer=authorizer)
         album_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_album_lambda), authorizer=authorizer)
 
+        transcription_api = api.root.add_resource("transcriptions")
+        transcription_id_resource = transcription_api.add_resource("{id}")
+        transcription_id_resource.add_method("GET", apigw.LambdaIntegration(get_transcription_lambda), authorizer=authorizer)
+
         home_api = api.root.add_resource("home")
         home_api.add_method("GET", apigw.LambdaIntegration(get_home_page), authorizer=authorizer)
 
@@ -307,15 +386,32 @@ class ContentStack(Stack):
             actions=[
                 "dynamodb:GetItem",
                 "dynamodb:BatchGetItem",
-                "s3:GetObject"
+                "s3:GetObject",
+                "s3:ListBucket"
             ],
             resources=[
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                 "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
-                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/transcriptions/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket"
             ]
         ))
+
+        get_transcription_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["s3:ListBucket"],
+                resources=["arn:aws:s3:::cc-spotify-clone-images-bucket"]
+            )
+        )
+
+        get_transcription_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["s3:GetObject"],
+                resources=["arn:aws:s3:::cc-spotify-clone-images-bucket/transcriptions/*"]
+            )
+        )
 
         get_album_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[

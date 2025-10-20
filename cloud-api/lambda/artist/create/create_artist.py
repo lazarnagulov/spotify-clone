@@ -35,10 +35,10 @@ def handler(event, _context):
 
 
 def update_genre_relations_table(request, artist_id):
-    genre_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
+    genre_relations_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
 
     for genre in request.genres:
-        genre_table.put_item(
+        genre_relations_table.put_item(
             Item={
                 "PK": genre,
                 "SK": artist_id,

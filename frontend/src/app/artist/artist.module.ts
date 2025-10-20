@@ -5,11 +5,13 @@ import { MaterialModule } from '../infrastructure/material/material.module';
 import { ArtistCreationComponent } from './artist-creation/artist-creation.component';
 import {ArtistDetailsComponent} from './artist-details/artist-details.component';
 import {MediaModule} from '../media/media.module';
+import { ArtistEditingComponent } from './artist-editing/artist-editing.component';
 
 @NgModule({
   declarations: [
     ArtistDetailsComponent,
     ArtistCreationComponent,
+    ArtistEditingComponent,
   ],
   exports: [
     ArtistDetailsComponent,

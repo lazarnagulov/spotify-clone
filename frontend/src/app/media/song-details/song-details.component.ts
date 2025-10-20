@@ -23,6 +23,7 @@ interface Song {
     cover_url: string;
   };
   created_at: string;
+  transcript?: string | null;
 }
 
 @Component({
@@ -45,6 +46,8 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
   volume = 1;
 
   audio?: HTMLAudioElement;
+  audioInitialized = false;
+  showLyrics = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -55,29 +58,63 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     private http: HttpClient
   ) {}
 
-  ngOnInit(): void {
-    this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
-    if (this.id)
-      this.loadSong(this.id);
-    this.userRoles = this.authService.getRoles();
+ngOnInit(): void {
+  this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
+  if (this.id) {
+    this.loadSong(this.id);
+    this.pollTranscript();
   }
+  this.userRoles = this.authService.getRoles();
+}
 
-  loadSong(songId: string): void {
-    this.loading = true;
-    this.error = undefined;
+loadSong(songId?: string): void {
+  this.loading = true;
+  this.error = undefined;
 
-    this.http.get<Song>(`${environment.apiHost}/songs/${songId}`).subscribe({
-      next: (song) => {
-        this.song = song;
-        this.loading = false;
+  this.http.get<Song>(`${environment.apiHost}/songs/${songId}`).subscribe({
+    next: (song) => {
+      this.song = song;
+      this.loading = false;
+      if (!this.audioInitialized) {
         this.initializeAudioPlayer();
+        this.audioInitialized = true;
+      }
+    },
+    error: (err) => {
+      console.error('Error loading song:', err);
+      this.error = 'Failed to load song. Please try again.';
+      this.loading = false;
+    },
+  });
+}
+
+pollTranscript() {
+  if (!this.id) return;
+
+  const interval = setInterval(() => {
+    if (this.song?.transcript) {
+      clearInterval(interval);
+      console.log('Transcript available, stopping polling.');
+      return;
+    }
+
+
+    this.service.getTranscription(this.id!).subscribe({
+      next: (res) => {
+        if (res.transcript) {
+          this.song!.transcript = res.transcript;
+          console.log('Transcript fetched:', res.transcript);
+        }
       },
       error: (err) => {
-        console.error('Error loading song:', err);
-        this.error = 'Failed to load song. Please try again.';
-        this.loading = false;
-      },
+        console.warn('Error polling transcript:', err);
+      }
     });
+    }, 5000);
+  }
+
+  toggleLyrics() {
+    this.showLyrics = !this.showLyrics;
   }
 
   onRate(rating: number): void {

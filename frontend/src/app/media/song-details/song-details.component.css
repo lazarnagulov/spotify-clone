@@ -27,6 +27,43 @@
   margin-bottom: 2rem;
 }
 
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  transition: all 0.3s ease;
+}
+
+.two-column-layout.show-lyrics {
+  grid-template-columns: 2fr 1fr;
+}
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.right-column {
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  background-color: #fafafa;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #3f51b5;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.3s ease;
+}
+
+.two-column-layout.show-lyrics .right-column {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 .header-content {
   display: grid;
   grid-template-columns: 300px 1fr;
@@ -34,12 +71,29 @@
   margin-bottom: 2rem;
 }
 
-.cover-image {
+.cover-image-wrapper {
   width: 300px;
   height: 300px;
-  object-fit: cover;
-  border-radius: 8px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 8px solid #fff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cover-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s linear;
+}
+
+.cover-image-wrapper.playing img {
+  animation: spin 20s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .song-info {
@@ -61,7 +115,6 @@
   margin: 0;
 }
 
-/* Rating Section Styles */
 .rating-section {
   margin: 1rem 0;
 }
@@ -241,54 +294,19 @@
   gap: 1rem;
 }
 
-.song-title-row .song-title {
-  margin: 0;
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.87);
+.transcript-section h3 {
+  margin-top: 0;
 }
 
-.song-title-row button {
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  .song-detail {
-    padding: 1rem;
-  }
-
-  .header-content {
+@media (max-width: 900px) {
+  .two-column-layout,
+  .two-column-layout.show-lyrics {
     grid-template-columns: 1fr;
   }
 
-  .cover-image {
-    width: 100%;
-    height: auto;
-    max-width: 300px;
-    margin: 0 auto;
-  }
-
-  .song-title {
-    font-size: 2rem;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-  }
-
-  .playback-area {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .player-info {
-    width: 100%;
-    max-width: none;
-  }
-
-  .rating-display {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+  .right-column {
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
 }
