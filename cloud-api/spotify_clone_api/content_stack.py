@@ -7,6 +7,7 @@ from aws_cdk import (
     aws_iam as iam,
     CfnOutput, Duration
 )
+from aws_cdk import aws_s3_notifications as s3n
 from constructs import Construct
 
 
@@ -248,6 +249,36 @@ class ContentStack(Stack):
             ]
         ))
 
+        transcription_lambda = aws_lambda.Function(
+            self, "StartTranscriptionLambda",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="start_transcription.handler",
+            layers=[shared_layer],
+            code=aws_lambda.Code.from_asset("lambda/transcription"),
+            timeout=Duration.seconds(60),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name
+            }
+        )
+
+        transcription_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "transcribe:StartTranscriptionJob",
+                    "transcribe:GetTranscriptionJob",
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:ListBucket"
+                ],
+                resources=["*"]
+            )
+        )
+
+        images_bucket.add_event_notification(
+            s3.EventType.OBJECT_CREATED,
+            s3n.LambdaDestination(transcription_lambda)
+        )
+
         get_discover_page.role.add_to_policy(iam.PolicyStatement(
             actions=[
                 "dynamodb:Query",
@@ -292,15 +323,19 @@ class ContentStack(Stack):
             actions=[
                 "dynamodb:GetItem",
                 "dynamodb:BatchGetItem",
-                "s3:GetObject"
+                "s3:GetObject",
+                "s3:ListBucket"
             ],
             resources=[
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                 "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
-                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/transcriptions/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket"
             ]
         ))
+
 
         get_album_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
