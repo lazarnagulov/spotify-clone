@@ -16,4 +16,10 @@ export class MediaService {
   deleteAlbum(id: string): Observable<void> {
     return this.http.delete<void>(`${environment.apiHost}/albums/${id}`);
   }
+
+  getTranscription(id: string): Observable<{ transcript: string | null }> {
+    return this.http.get<{ transcript: string | null }>(
+      `${environment.apiHost}/transcriptions/${id}`
+    );
+  }
 }
