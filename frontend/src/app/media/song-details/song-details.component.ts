@@ -23,6 +23,7 @@ interface Song {
     cover_url: string;
   };
   created_at: string;
+  transcript?: string | null;
 }
 
 @Component({
@@ -45,6 +46,7 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
   volume = 1;
 
   audio?: HTMLAudioElement;
+  showLyrics = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -57,12 +59,14 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
-    if (this.id)
+    if (this.id) {
       this.loadSong(this.id);
+      this.pollTranscript();
+    }
     this.userRoles = this.authService.getRoles();
   }
 
-  loadSong(songId: string): void {
+  loadSong(songId?: string): void {
     this.loading = true;
     this.error = undefined;
 
@@ -78,6 +82,23 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
     });
+  }
+
+  pollTranscript() {
+    if (!this.id) return;
+    const interval = setInterval(() => {
+      if (this.song?.transcript) {
+        clearInterval(interval);
+        console.log('Transcript available, stopping polling.');
+        console.log("TRANSCRIPT: " + this.song.transcript);
+        return;
+      }
+      this.loadSong(this.id);
+    }, 5000);
+  }
+
+  toggleLyrics() {
+    this.showLyrics = !this.showLyrics;
   }
 
   onRate(rating: number): void {
