@@ -128,6 +128,18 @@ class ContentStack(Stack):
             }
         )
 
+        get_transcription_lambda = aws_lambda.Function(
+            self, "GetTranscriptionFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_transcription.handler",
+            code=aws_lambda.Code.from_asset("lambda/transcription/get"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
+            environment={
+                "MEDIA_BUCKET": images_bucket.bucket_name
+            }
+        )
+
         get_album_lambda = aws_lambda.Function(
             self, "GetAlbumFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
@@ -254,7 +266,7 @@ class ContentStack(Stack):
             runtime=aws_lambda.Runtime.PYTHON_3_11,
             handler="start_transcription.handler",
             layers=[shared_layer],
-            code=aws_lambda.Code.from_asset("lambda/transcription"),
+            code=aws_lambda.Code.from_asset("lambda/transcription/create"),
             timeout=Duration.seconds(60),
             environment={
                 "MEDIA_BUCKET": images_bucket.bucket_name
@@ -308,6 +320,10 @@ class ContentStack(Stack):
         album_id_resource.add_method("GET", apigw.LambdaIntegration(get_album_lambda), authorizer=authorizer)
         album_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_album_lambda), authorizer=authorizer)
 
+        transcription_api = api.root.add_resource("transcriptions")
+        transcription_id_resource = transcription_api.add_resource("{id}")
+        transcription_id_resource.add_method("GET", apigw.LambdaIntegration(get_transcription_lambda), authorizer=authorizer)
+
         home_api = api.root.add_resource("home")
         home_api.add_method("GET", apigw.LambdaIntegration(get_home_page), authorizer=authorizer)
 
@@ -336,6 +352,19 @@ class ContentStack(Stack):
             ]
         ))
 
+        get_transcription_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["s3:ListBucket"],
+                resources=["arn:aws:s3:::cc-spotify-clone-images-bucket"]
+            )
+        )
+
+        get_transcription_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["s3:GetObject"],
+                resources=["arn:aws:s3:::cc-spotify-clone-images-bucket/transcriptions/*"]
+            )
+        )
 
         get_album_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
