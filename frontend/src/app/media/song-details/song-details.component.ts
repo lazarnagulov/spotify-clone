@@ -167,14 +167,6 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     this.isPlaying = !this.isPlaying;
   }
 
-  toggleOffline(): void {
-    if (this.isOfflineAvailable) {
-      this.removeOffline();
-    } else {
-      this.downloadOffline();
-    }
-  }
-
   seek(event: any): void {
     if (!this.audio) return;
     const value = event.target.value;
@@ -198,10 +190,6 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
 
   getArtistsString(): string {
     return this.song?.artists.join(', ') ?? 'Unknown Artist';
-  }
-
-  getGenresString(): string {
-    return this.song?.genres.join(', ') ?? '';
   }
 
   onDelete(): void {
@@ -259,10 +247,6 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
             id: this.song!.id,
             blob: response.body!,
             downloadedAt: Date.now(),
-            title: this.song!.title,
-            artists: this.song!.artists,
-            coverUrl: this.song!.cover_url,
-            duration: this.song!.duration
           })
         ),
         tap(() => {
@@ -284,48 +268,6 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
         this.isDownloading = false;
         this.downloadProgress = 0;
       });
-  }
-
-  removeOffline(): void {
-    if (!this.id) return;
-
-    this.offlineStorage.deleteSong(this.id)
-      .pipe(
-        tap(() => {
-          this.isOfflineAvailable = false;
-          this.snackBar.open('Removed from offline storage', 'Close', {
-            duration: 2000,
-          });
-
-          if (this.audio) {
-            const wasPlaying = this.isPlaying;
-            const currentTimeBackup = this.currentTime;
-
-            this.audio.pause();
-            this.audio.src = '';
-            this.audio = undefined;
-
-            this.initializeAudioPlayer();
-
-            setTimeout(() => {
-              if (wasPlaying && this.audio) {
-                this.audio.currentTime = currentTimeBackup;
-                this.audio.play();
-                this.isPlaying = true;
-              }
-            }, 100);
-          }
-        }),
-        catchError(err => {
-          console.error('Failed to remove offline song:', err);
-          this.snackBar.open('Failed to remove offline version', 'Close', {
-            duration: 3000,
-          });
-          return of(null);
-        }),
-        takeUntil(this.destroy$)
-      )
-      .subscribe();
   }
 
   private setupAudioListeners(): void {

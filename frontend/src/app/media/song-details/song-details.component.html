@@ -77,8 +77,8 @@
               <button
                 mat-raised-button
                 [color]="isOfflineAvailable ? 'accent' : 'primary'"
-                (click)="toggleOffline()"
-                [disabled]="isDownloading"
+                (click)="downloadOffline()"
+                [disabled]="isDownloading || isOfflineAvailable"
                 class="offline-button"
               >
               <mat-icon>{{ isOfflineAvailable ? 'offline_pin' : 'download' }}</mat-icon>
@@ -96,11 +96,6 @@
                 [value]="downloadProgress"
                 class="download-progress"
               ></mat-progress-bar>
-
-              <mat-chip *ngIf="isOfflineAvailable" class="offline-badge">
-                <mat-icon>offline_bolt</mat-icon>
-                Offline Ready
-              </mat-chip>
             </div>
 
             <button mat-stroked-button color="primary" (click)="toggleLyrics()">
