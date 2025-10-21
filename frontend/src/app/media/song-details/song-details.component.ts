@@ -6,28 +6,9 @@ import { MediaService } from '../media.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../auth/auth.service';
 import {OfflineStorageService} from '../offline-storage.service';
-import {catchError, filter, from, of, Subject, switchMap, takeUntil, tap} from 'rxjs';
+import {catchError, filter, of, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {SKIP_AUTH} from '../../auth/auth.interceptor';
-
-interface Song {
-  id: string;
-  title: string;
-  artists: string[];
-  genres: string[];
-  duration: number;
-  track_number?: number;
-  description: string;
-  audio_url: string;
-  cover_url?: string;
-  album?: {
-    id: string;
-    title: string;
-    year: number;
-    cover_url: string;
-  };
-  created_at: string;
-  transcript?: string | null;
-}
+import {Song} from '../../shared/model/media/song.model';
 
 @Component({
   selector: 'app-song-details',
