@@ -11,6 +11,7 @@ from spotify_clone_api.layer_stack import LayerStack
 from spotify_clone_api.ratings_stack import RatingsStack
 from spotify_clone_api.spotify_clone_stack import SpotifyCloneStack
 from spotify_clone_api.subscription_stack import SubscriptionStack
+from spotify_clone_api.listening_history_stack import ListeningHistoryStack
 
 REGION = 'eu-central-1'
 
@@ -56,6 +57,15 @@ RatingsStack(
     authorizer=gw_stack.authorizer,
     api=gw_stack.api,
     env=env
+)
+
+listening_histoy_stack = ListeningHistoryStack(
+      app,
+      "SpotifyCloneListeningHistoryStack",
+      shared_layer=layer_stack.shared_layer,
+      authorizer=gw_stack.authorizer,
+      api=gw_stack.api,
+      env=env
 )
 
 table_stack = SpotifyCloneStack(

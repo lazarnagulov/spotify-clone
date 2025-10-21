@@ -60,13 +60,6 @@
               </div>
             </div>
 
-            <p class="album-info" *ngIf="song.album">
-              <mat-icon>album</mat-icon>
-              {{ song.album.title }}
-              <span *ngIf="song.album.year">({{ song.album.year }})</span>
-              <span *ngIf="song.track_number"> • Track {{ song.track_number }}</span>
-            </p>
-
             <p class="genres" *ngIf="song.genres.length > 0">
               <mat-chip-set>
                 <mat-chip *ngFor="let genre of song.genres">{{ genre }}</mat-chip>

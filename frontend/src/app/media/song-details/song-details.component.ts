@@ -5,6 +5,7 @@ import { environment } from '../../../env/environment';
 import { MediaService } from '../media.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../auth/auth.service';
+import { CreateListeningHistoryRequest } from '../model/listening-history-request.model';
 
 interface Song {
   id: string;
@@ -16,12 +17,8 @@ interface Song {
   description: string;
   audio_url: string;
   cover_url?: string;
-  album?: {
-    id: string;
-    title: string;
-    year: number;
-    cover_url: string;
-  };
+  album_id?: string;
+  artist_ids: string[];
   created_at: string;
   transcript?: string | null;
 }
@@ -58,58 +55,57 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     private http: HttpClient
   ) {}
 
-ngOnInit(): void {
-  this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
-  if (this.id) {
-    this.loadSong(this.id);
-    this.pollTranscript();
-  }
-  this.userRoles = this.authService.getRoles();
-}
-
-loadSong(songId?: string): void {
-  this.loading = true;
-  this.error = undefined;
-
-  this.http.get<Song>(`${environment.apiHost}/songs/${songId}`).subscribe({
-    next: (song) => {
-      this.song = song;
-      this.loading = false;
-      if (!this.audioInitialized) {
-        this.initializeAudioPlayer();
-        this.audioInitialized = true;
-      }
-    },
-    error: (err) => {
-      console.error('Error loading song:', err);
-      this.error = 'Failed to load song. Please try again.';
-      this.loading = false;
-    },
-  });
-}
-
-pollTranscript() {
-  if (!this.id) return;
-
-  const interval = setInterval(() => {
-    if (this.song?.transcript) {
-      clearInterval(interval);
-      console.log('Transcript available, stopping polling.');
-      return;
+  ngOnInit(): void {
+    this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
+    if (this.id) {
+      this.loadSong(this.id);
+      this.pollTranscript();
     }
+    this.userRoles = this.authService.getRoles();
+  }
 
+  loadSong(songId?: string): void {
+    this.loading = true;
+    this.error = undefined;
 
-    this.service.getTranscription(this.id!).subscribe({
-      next: (res) => {
-        if (res.transcript) {
-          this.song!.transcript = res.transcript;
-          console.log('Transcript fetched:', res.transcript);
+    this.http.get<Song>(`${environment.apiHost}/songs/${songId}`).subscribe({
+      next: (song) => {
+        this.song = song;
+        this.loading = false;
+        if (!this.audioInitialized) {
+          this.initializeAudioPlayer();
+          this.audioInitialized = true;
         }
       },
       error: (err) => {
-        console.warn('Error polling transcript:', err);
-      }
+        console.error('Error loading song:', err);
+        this.error = 'Failed to load song. Please try again.';
+        this.loading = false;
+      },
     });
+  }
+
+  pollTranscript() {
+    if (!this.id) return;
+
+    const interval = setInterval(() => {
+      if (this.song?.transcript) {
+        clearInterval(interval);
+        console.log('Transcript available, stopping polling.');
+        return;
+      }
+
+      this.service.getTranscription(this.id!).subscribe({
+        next: (res) => {
+          if (res.transcript) {
+            this.song!.transcript = res.transcript;
+            console.log('Transcript fetched:', res.transcript);
+          }
+        },
+        error: (err) => {
+          console.warn('Error polling transcript:', err);
+        },
+      });
     }, 5000);
   }
 
@@ -125,8 +121,8 @@ pollTranscript() {
       content_type: 'song',
       rating: rating,
       artistIds: this.song.artists,
-      albumIds: this.song.album ? [this.song.album.id] : [],
-      genres: this.song.genres
+      albumId: this.song.album_id,
+      genres: this.song.genres,
     };
 
     this.http.post(`${environment.apiHost}/ratings`, ratingData).subscribe({
@@ -176,8 +172,22 @@ pollTranscript() {
       this.audio.pause();
     } else {
       this.audio.play();
+      this.createListeningHistoryRecord();
     }
     this.isPlaying = !this.isPlaying;
+  }
+
+  createListeningHistoryRecord() {
+    if (!this.song) return;
+
+    const request: CreateListeningHistoryRequest = {
+      songId: this.song.id,
+      albumId: this.song?.album_id,
+      genres: this.song?.genres,
+      artists: this.song?.artist_ids,
+    };
+
+    this.service.createListeningHistoryRecord(request).subscribe();
   }
 
   seek(event: any): void {
