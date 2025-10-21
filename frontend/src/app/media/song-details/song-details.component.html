@@ -81,13 +81,13 @@
                 [disabled]="isDownloading || isOfflineAvailable"
                 class="offline-button"
               >
-              <mat-icon>{{ isOfflineAvailable ? 'offline_pin' : 'download' }}</mat-icon>
-              <span *ngIf="!isDownloading">
-                {{ isOfflineAvailable ? 'Available Offline' : 'Download for Offline' }}
-              </span>
-              <span *ngIf="isDownloading">
-                Downloading... {{ downloadProgress }}%
-              </span>
+                <mat-icon>{{ isOfflineAvailable ? 'offline_pin' : 'cloud_download' }}</mat-icon>
+                <span *ngIf="!isDownloading">
+                  {{ isOfflineAvailable ? 'Available Offline' : 'Save for Offline' }}
+                </span>
+                <span *ngIf="isDownloading">
+                  Downloading... {{ downloadProgress }}%
+                </span>
               </button>
 
               <mat-progress-bar
@@ -96,7 +96,18 @@
                 [value]="downloadProgress"
                 class="download-progress"
               ></mat-progress-bar>
+
+              <button
+                mat-stroked-button
+                color="accent"
+                (click)="download()"
+                class="download-file-button"
+              >
+                <mat-icon>file_download</mat-icon>
+                Download File
+              </button>
             </div>
+
 
             <button mat-stroked-button color="primary" (click)="toggleLyrics()">
               <mat-icon>{{ showLyrics ? 'expand_less' : 'expand_more' }}</mat-icon>

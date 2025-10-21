@@ -299,4 +299,36 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
       this.audio = undefined;
     }
   }
+
+  download(): void {
+    if (!this.id || !this.song) return;
+
+    this.http.get<any>(`${environment.apiHost}/songs/${this.id}/offline_url`)
+      .pipe(
+        switchMap(res =>
+          this.http.get(res.offline_url, {
+            responseType: 'blob',
+            context: new HttpContext().set(SKIP_AUTH, true)
+          })
+        )
+      )
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${this.song!.title}.mp3`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+          this.snackBar.open('File downloaded successfully!', 'Close', { duration: 3000 });
+        },
+        error: (err) => {
+          console.error('Direct download failed:', err);
+          this.snackBar.open('Failed to download file.', 'Close', { duration: 3000 });
+        }
+      });
+  }
+
 }
