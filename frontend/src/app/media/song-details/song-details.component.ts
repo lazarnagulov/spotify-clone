@@ -62,7 +62,8 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = undefined;
 
-    this.http.get<Song>(`${environment.apiHost}/songs/${songId}`).subscribe({
+    if(!songId) return;
+    this.service.getSong(songId).subscribe({
       next: (song) => {
         this.song = song;
         this.loading = false;
@@ -90,7 +91,6 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
         console.log('Transcript available, stopping polling.');
         return;
       }
-
 
       this.service.getTranscription(this.id!).subscribe({
         next: (res) => {
@@ -194,7 +194,6 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
 
   onDelete(): void {
     if (!this.id) return;
-    console.log(this.song);
     this.service.deleteSong(this.id).subscribe({
       next: () => {
         this.snackBar.open('Song successfully deleted', 'Close', {
@@ -226,7 +225,7 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     this.isDownloading = true;
     this.downloadProgress = 0;
 
-    this.http.get<any>(`${environment.apiHost}/songs/${this.id}/offline_url`)
+    this.service.getOfflineUrl(this.id)
       .pipe(
         switchMap(res =>
           this.http.get(res.offline_url, {
@@ -303,7 +302,7 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
   download(): void {
     if (!this.id || !this.song) return;
 
-    this.http.get<any>(`${environment.apiHost}/songs/${this.id}/offline_url`)
+    this.service.getOfflineUrl(this.id)
       .pipe(
         switchMap(res =>
           this.http.get(res.offline_url, {
