@@ -24,8 +24,6 @@
             />
           </div>
 
-
-
           <mat-card-content class="song-info">
             <div class="song-title-row">
               <h1 class="song-title">{{ song.title }}</h1>
@@ -75,6 +73,42 @@
 
             <p class="description" *ngIf="song.description">{{ song.description }}</p>
 
+            <div class="offline-controls">
+              <button
+                mat-raised-button
+                [color]="isOfflineAvailable ? 'accent' : 'primary'"
+                (click)="downloadOffline()"
+                [disabled]="isDownloading || isOfflineAvailable"
+                class="offline-button"
+              >
+                <mat-icon>{{ isOfflineAvailable ? 'offline_pin' : 'cloud_download' }}</mat-icon>
+                <span *ngIf="!isDownloading">
+                  {{ isOfflineAvailable ? 'Available Offline' : 'Save for Offline' }}
+                </span>
+                <span *ngIf="isDownloading">
+                  Downloading... {{ downloadProgress }}%
+                </span>
+              </button>
+
+              <mat-progress-bar
+                *ngIf="isDownloading"
+                mode="determinate"
+                [value]="downloadProgress"
+                class="download-progress"
+              ></mat-progress-bar>
+
+              <button
+                mat-stroked-button
+                color="accent"
+                (click)="download()"
+                class="download-file-button"
+              >
+                <mat-icon>file_download</mat-icon>
+                Download File
+              </button>
+            </div>
+
+
             <button mat-stroked-button color="primary" (click)="toggleLyrics()">
               <mat-icon>{{ showLyrics ? 'expand_less' : 'expand_more' }}</mat-icon>
               {{ showLyrics ? 'Hide Lyrics' : 'Show Lyrics' }}
@@ -105,7 +139,7 @@
                   (input)="seek($event)"
                   [disabled]="!audio"
                 >
-                  <input matSliderThumb>
+                  <input matSliderThumb [value]="currentTime">
                 </mat-slider>
                 <span class="time-label">{{ formatTime(duration) }}</span>
               </div>
@@ -119,7 +153,7 @@
                   [step]="0.01"
                   (input)="changeVolume($event)"
                 >
-                  <input matSliderThumb>
+                  <input matSliderThumb [value]="volume">
                 </mat-slider>
               </div>
             </div>
