@@ -24,8 +24,8 @@ def handler(event, context):
     username = claims.get("cognito:username")
 
     rating = {
-        "PK": request.content_id,
-        "SK": f"USER#{user_id}",
+        "PK": f"USER#{user_id}",
+        "SK": request.content_id,
         "rater": username,
         "type": request.content_type,
         "rating": request.rating,
