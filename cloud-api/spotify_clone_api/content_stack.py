@@ -167,19 +167,6 @@ class ContentStack(Stack):
             }
         )
 
-        get_home_page = aws_lambda.Function(
-            self, "GetHomePageFunction",
-            runtime=aws_lambda.Runtime.PYTHON_3_11,
-            handler="get_home_page.handler",
-            code=aws_lambda.Code.from_asset("lambda/music_content/home_page"),
-            layers=[shared_layer],
-            timeout=Duration.seconds(15),
-            environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name,
-                "SONGS_TABLE": "MusicCatalog",
-            }
-        )
-
         get_discover_page = aws_lambda.Function(
             self, "GetDiscoverPageFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
@@ -261,20 +248,6 @@ class ContentStack(Stack):
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
                        "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
                        "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
-            ]
-        ))
-
-        get_home_page.role.add_to_policy(iam.PolicyStatement(
-            actions=[
-                "dynamodb:Scan",
-                "dynamodb:GetItem",
-                "s3:GetObject"
-            ],
-            resources=[
-                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
-                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
-                "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
-                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
             ]
         ))
 
@@ -370,9 +343,6 @@ class ContentStack(Stack):
         transcription_api = api.root.add_resource("transcriptions")
         transcription_id_resource = transcription_api.add_resource("{id}")
         transcription_id_resource.add_method("GET", apigw.LambdaIntegration(get_transcription_lambda), authorizer=authorizer)
-
-        home_api = api.root.add_resource("home")
-        home_api.add_method("GET", apigw.LambdaIntegration(get_home_page), authorizer=authorizer)
 
         discover_root = api.root.add_resource("discover")
         discover_genre = discover_root.add_resource("{genre}")
