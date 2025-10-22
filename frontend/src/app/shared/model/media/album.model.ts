@@ -1,4 +1,4 @@
-import { Song } from './song.model';
+import {Song} from './song.model';
 
 export interface Album {
   id: string;
@@ -7,8 +7,6 @@ export interface Album {
   genres: string[];
   year?: number;
   description?: string;
-  cover_url: string;
   songs: Song[];
-  created_at?: string;
   coverUrl?: string;
 }

@@ -6,14 +6,10 @@ export interface Song {
   duration: number;
   track_number?: number;
   description: string;
-  audioUrl: string;
-  cover_url: string;
-  album?: {
-    id: string;
-    title: string;
-    year: number;
-    cover_url: string;
-  };
+  audio_url: string;
+  cover_url?: string;
+  album_id?: string;
+  artist_ids: string[];
   created_at: string;
-  related_songs: any[];
+  transcript?: string | null;
 }

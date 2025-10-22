@@ -6,6 +6,7 @@ import {RouterLink} from '@angular/router';
 import {AlbumDetailsComponent} from './album-details/album-details.component';
 import {SongDetailsComponent} from './song-details/song-details.component';
 import {MatSlider, MatSliderThumb} from '@angular/material/slider';
+import {MatProgressBar} from "@angular/material/progress-bar";
 
 
 
@@ -18,12 +19,13 @@ import {MatSlider, MatSliderThumb} from '@angular/material/slider';
   exports: [
     MediaCardComponent
   ],
-  imports: [
-    CommonModule,
-    MaterialModule,
-    RouterLink,
-    MatSliderThumb,
-    MatSlider,
-  ]
+    imports: [
+        CommonModule,
+        MaterialModule,
+        RouterLink,
+        MatSliderThumb,
+        MatSlider,
+        MatProgressBar,
+    ]
 })
 export class MediaModule { }

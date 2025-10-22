@@ -5,7 +5,7 @@ import { environment } from '../../../env/environment';
 import { MediaService } from '../media.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../auth/auth.service';
-import {Album} from '../model/album.model';
+import {Album} from '../../shared/model/media/album.model';
 
 @Component({
   selector: 'app-album-details',

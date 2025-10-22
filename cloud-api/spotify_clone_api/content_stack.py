@@ -141,6 +141,20 @@ class ContentStack(Stack):
             }
         )
 
+        get_offline_url_lambda = aws_lambda.Function(
+            self, "GetOfflineUrlFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_offline_url.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/song/get_offline_url"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
+            environment={
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
+                "SONGS_TABLE": "MusicCatalog",
+            }
+        )
+
+
         get_transcription_lambda = aws_lambda.Function(
             self, "GetTranscriptionFunction",
             runtime=aws_lambda.Runtime.PYTHON_3_11,
@@ -223,6 +237,7 @@ class ContentStack(Stack):
                 ]
             )
         )
+
 
         create_album_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
@@ -333,6 +348,9 @@ class ContentStack(Stack):
         song_id_resource.add_method("GET", apigw.LambdaIntegration(get_song_lambda), authorizer=authorizer)
         song_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_song_lambda), authorizer=authorizer)
 
+        offline_url_resource = song_id_resource.add_resource("offline-url")
+        offline_url_resource.add_method("GET", apigw.LambdaIntegration(get_offline_url_lambda), authorizer=authorizer)
+
         album_api = api.root.add_resource("albums")
         album_api.add_method("POST", apigw.LambdaIntegration(create_album_lambda), authorizer=authorizer)
 
@@ -366,6 +384,17 @@ class ContentStack(Stack):
                 "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*",
                 "arn:aws:s3:::cc-spotify-clone-images-bucket/transcriptions/*",
                 "arn:aws:s3:::cc-spotify-clone-images-bucket"
+            ]
+        ))
+
+        get_offline_url_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:GetItem",
+                "s3:GetObject",
+            ],
+            resources=[
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
             ]
         ))
 

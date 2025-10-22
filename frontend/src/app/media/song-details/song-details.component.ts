@@ -1,27 +1,15 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpContext, HttpResponse} from '@angular/common/http';
 import { environment } from '../../../env/environment';
 import { MediaService } from '../media.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../auth/auth.service';
 import { CreateListeningHistoryRequest } from '../model/listening-history-request.model';
-
-interface Song {
-  id: string;
-  title: string;
-  artists: string[];
-  genres: string[];
-  duration: number;
-  track_number?: number;
-  description: string;
-  audio_url: string;
-  cover_url?: string;
-  album_id?: string;
-  artist_ids: string[];
-  created_at: string;
-  transcript?: string | null;
-}
+import {OfflineStorageService} from '../offline-storage.service';
+import {catchError, filter, of, Subject, switchMap, takeUntil, tap} from 'rxjs';
+import {SKIP_AUTH} from '../../auth/auth.interceptor';
+import {Song} from '../../shared/model/media/song.model';
 
 @Component({
   selector: 'app-song-details',
@@ -45,6 +33,12 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
   audio?: HTMLAudioElement;
   audioInitialized = false;
   showLyrics = false;
+  isOfflineAvailable = false;
+  isDownloading = false;
+  downloadProgress: number = 0;
+
+  private destroy$ = new Subject<void>();
+
 
   constructor(
     private route: ActivatedRoute,
@@ -52,6 +46,7 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private snackBar: MatSnackBar,
     private router: Router,
+    private offlineStorage: OfflineStorageService,
     private http: HttpClient
   ) {}
 
@@ -68,10 +63,13 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = undefined;
 
-    this.http.get<Song>(`${environment.apiHost}/songs/${songId}`).subscribe({
+    if(!songId) return;
+    this.service.getSong(songId).subscribe({
       next: (song) => {
         this.song = song;
         this.loading = false;
+        this.checkOfflineAvailability();
+
         if (!this.audioInitialized) {
           this.initializeAudioPlayer();
           this.audioInitialized = true;
@@ -142,27 +140,21 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
   }
 
   initializeAudioPlayer(): void {
-    if (!this.song?.audio_url) return;
+    if (!this.song) return;
 
-    this.audio = new Audio(this.song.audio_url);
+    this.offlineStorage.getSong(this.song.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(offlineData => {
+        if (offlineData) {
+          console.log('Playing offline version');
+          const url = URL.createObjectURL(offlineData.blob);
+          this.audio = new Audio(url);
+        } else if (this.song!.audio_url) {
+          this.audio = new Audio(this.song!.audio_url);
+        }
 
-    this.audio.addEventListener('loadedmetadata', () => {
-      this.duration = this.audio!.duration;
-    });
-
-    this.audio.addEventListener('timeupdate', () => {
-      this.currentTime = this.audio!.currentTime;
-    });
-
-    this.audio.addEventListener('ended', () => {
-      this.isPlaying = false;
-      this.currentTime = 0;
-    });
-
-    this.audio.addEventListener('error', (e) => {
-      console.error('Audio error:', e);
-      this.error = 'Failed to load audio file.';
-    });
+        this.setupAudioListeners();
+      });
   }
 
   togglePlay(): void {
@@ -215,13 +207,8 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     return this.song?.artists.join(', ') ?? 'Unknown Artist';
   }
 
-  getGenresString(): string {
-    return this.song?.genres.join(', ') ?? '';
-  }
-
   onDelete(): void {
     if (!this.id) return;
-    console.log(this.song);
     this.service.deleteSong(this.id).subscribe({
       next: () => {
         this.snackBar.open('Song successfully deleted', 'Close', {
@@ -237,6 +224,88 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  checkOfflineAvailability(): void {
+    if (!this.song?.id) return;
+
+    this.offlineStorage.isAvailableOffline(this.song.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isAvailable => {
+        this.isOfflineAvailable = isAvailable;
+      });
+  }
+
+  downloadOffline(): void {
+    if (!this.id || !this.song) return;
+
+    this.isDownloading = true;
+    this.downloadProgress = 0;
+
+    this.service.getOfflineUrl(this.id)
+      .pipe(
+        switchMap(res =>
+          this.http.get(res.offline_url, {
+            responseType: 'blob',
+            reportProgress: true,
+            observe: 'events',
+            context: new HttpContext().set(SKIP_AUTH, true)
+          })
+        ),
+        tap(event => {
+          if (event.type === 1 && event.total) {
+            this.downloadProgress = Math.round((event.loaded / event.total) * 100);
+          }
+        }),
+        filter((event): event is HttpResponse<Blob> => event.type === 4),
+        switchMap(response =>
+          this.offlineStorage.saveSong({
+            id: this.song!.id,
+            blob: response.body!,
+            downloadedAt: Date.now(),
+          })
+        ),
+        tap(() => {
+          this.isOfflineAvailable = true;
+          this.snackBar.open('Song downloaded for offline playback!', 'Close', {
+            duration: 3000,
+          });
+        }),
+        catchError(err => {
+          console.error('Download failed:', err);
+          this.snackBar.open('Failed to download song for offline use.', 'Close', {
+            duration: 3000,
+          });
+          return of(null);
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.isDownloading = false;
+        this.downloadProgress = 0;
+      });
+  }
+
+  private setupAudioListeners(): void {
+    if (!this.audio) return;
+
+    this.audio.addEventListener('loadedmetadata', () => {
+      this.duration = this.audio!.duration;
+    });
+
+    this.audio.addEventListener('timeupdate', () => {
+      this.currentTime = this.audio!.currentTime;
+    });
+
+    this.audio.addEventListener('ended', () => {
+      this.isPlaying = false;
+      this.currentTime = 0;
+    });
+
+    this.audio.addEventListener('error', (e) => {
+      console.error('Audio error:', e);
+      this.error = 'Failed to load audio file.';
+    });
+  }
+
   ngOnDestroy(): void {
     if (this.audio) {
       this.audio.pause();
@@ -244,4 +313,36 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
       this.audio = undefined;
     }
   }
+
+  download(): void {
+    if (!this.id || !this.song) return;
+
+    this.service.getOfflineUrl(this.id)
+      .pipe(
+        switchMap(res =>
+          this.http.get(res.offline_url, {
+            responseType: 'blob',
+            context: new HttpContext().set(SKIP_AUTH, true)
+          })
+        )
+      )
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${this.song!.title}.mp3`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+          this.snackBar.open('File downloaded successfully!', 'Close', { duration: 3000 });
+        },
+        error: (err) => {
+          console.error('Direct download failed:', err);
+          this.snackBar.open('Failed to download file.', 'Close', { duration: 3000 });
+        }
+      });
+  }
+
 }
