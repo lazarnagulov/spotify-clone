@@ -10,7 +10,7 @@ class RatingsStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, shared_layer, api, authorizer, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        ratings_table = dynamodb.Table(
+        self.ratings_table = dynamodb.Table(
             self, "RatingsTable",
             table_name="Ratings",
             partition_key=dynamodb.Attribute(
@@ -23,7 +23,8 @@ class RatingsStack(Stack):
             ),
             read_capacity=1,
             write_capacity=1,
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=RemovalPolicy.DESTROY,
+            stream=dynamodb.StreamViewType.NEW_IMAGE
         )
 
         create_rating_lambda = aws_lambda.Function(
@@ -33,7 +34,7 @@ class RatingsStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/rating/create"),
             layers=[shared_layer],
             environment={
-                "RATINGS_TABLE": ratings_table.table_name,
+                "RATINGS_TABLE": self.ratings_table.table_name,
                 "MUSIC_CATALOG": "MusicCatalog",
             }
         )
@@ -44,10 +45,10 @@ class RatingsStack(Stack):
             handler="get_ratings.handler",
             code=aws_lambda.Code.from_asset("lambda/rating/get"),
             layers=[shared_layer],
-            environment={ "RATINGS_TABLE": ratings_table.table_name }
+            environment={ "RATINGS_TABLE": self.ratings_table.table_name }
         )
 
-        ratings_table.grant_read_write_data(create_rating_lambda)
+        self.ratings_table.grant_read_write_data(create_rating_lambda)
         ratings_api = api.root.add_resource("ratings")
         ratings_api.add_method("POST", apigw.LambdaIntegration(create_rating_lambda), authorizer=authorizer)
 

@@ -9,7 +9,7 @@ class ListeningHistoryStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, shared_layer, api, authorizer, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        listening_history_table = dynamodb.Table(
+        self.listening_history_table = dynamodb.Table(
             self, "ListeningHistoryTable",
                   table_name="ListeningHistory",
                   partition_key=dynamodb.Attribute(
@@ -22,7 +22,8 @@ class ListeningHistoryStack(Stack):
                   ),
                   read_capacity=1,
                   write_capacity=1,
-                  removal_policy=RemovalPolicy.DESTROY
+                  removal_policy=RemovalPolicy.DESTROY,
+                  stream=dynamodb.StreamViewType.NEW_IMAGE
               )
         
         create_listening_history_lambda = aws_lambda.Function(
@@ -32,10 +33,10 @@ class ListeningHistoryStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/listening_history/create"),
             layers=[shared_layer],
             environment={
-                "LISTENING_HISTORY": listening_history_table.table_name,
+                "LISTENING_HISTORY": self.listening_history_table.table_name,
             }
         )
         
-        listening_history_table.grant_read_write_data(create_listening_history_lambda)
+        self.listening_history_table.grant_read_write_data(create_listening_history_lambda)
         listening_history_api = api.root.add_resource("listening-history")
         listening_history_api.add_method("POST", apigw.LambdaIntegration(create_listening_history_lambda), authorizer=authorizer)

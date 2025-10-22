@@ -19,7 +19,7 @@ class SubscriptionStack(Stack):
             topic_name="UserNotifications"
         )
 
-        subscription_table = dynamodb.Table(
+        self.subscription_table = dynamodb.Table(
             self, "SubscriptionsTable",
             table_name="Subscriptions",
             partition_key=dynamodb.Attribute(
@@ -32,10 +32,11 @@ class SubscriptionStack(Stack):
             ),
             read_capacity=1,
             write_capacity=1,
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=RemovalPolicy.DESTROY,
+            stream=dynamodb.StreamViewType.NEW_IMAGE
         )
 
-        subscription_table.add_global_secondary_index(
+        self.subscription_table.add_global_secondary_index(
             index_name="GSI1",
             partition_key=dynamodb.Attribute(
                 name="SK",
@@ -55,7 +56,7 @@ class SubscriptionStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/subscription/subscribe"),
             layers=[shared_layer],
             environment={
-                "SUBSCRIPTION_TABLE": subscription_table.table_name
+                "SUBSCRIPTION_TABLE": self.subscription_table.table_name
             }
         )
 
@@ -66,7 +67,7 @@ class SubscriptionStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/subscription/unsubscribe"),
             layers=[shared_layer],
             environment={
-                "SUBSCRIPTION_TABLE": subscription_table.table_name
+                "SUBSCRIPTION_TABLE": self.subscription_table.table_name
             }
         )
 
@@ -77,7 +78,7 @@ class SubscriptionStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/subscription/check"),
             layers=[shared_layer],
             environment={
-                "SUBSCRIPTION_TABLE": subscription_table.table_name
+                "SUBSCRIPTION_TABLE": self.subscription_table.table_name
             }
         )
 
@@ -88,7 +89,7 @@ class SubscriptionStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/subscription/get_all"),
             layers=[shared_layer],
             environment={
-                "SUBSCRIPTION_TABLE": subscription_table.table_name,
+                "SUBSCRIPTION_TABLE": self.subscription_table.table_name,
                 "ARTISTS_TABLE": "Artists",
                 "GENRES_TABLE": "Genres",
             }
@@ -101,7 +102,7 @@ class SubscriptionStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/subscription/notify"),
             layers=[shared_layer],
             environment={
-                "SUBSCRIPTION_TABLE": subscription_table.table_name,
+                "SUBSCRIPTION_TABLE": self.subscription_table.table_name,
                 "NOTIFICATIONS_TOPIC_ARN": self.notifications_topic.topic_arn,
                 "ARTISTS_TABLE": "Artists",
                 "CONTENT_INDEX": "GSI1",
@@ -124,11 +125,11 @@ class SubscriptionStack(Stack):
             resources=["*"]
         ))
 
-        subscription_table.grant_read_data(self.notify_subscribers_lambda)
-        subscription_table.grant_read_write_data(subscribe_lambda)
-        subscription_table.grant_read_write_data(unsubscribe_lambda)
-        subscription_table.grant_read_data(check_lambda)
-        subscription_table.grant_read_data(all_subscriptions_lambda)
+        self.subscription_table.grant_read_data(self.notify_subscribers_lambda)
+        self.subscription_table.grant_read_write_data(subscribe_lambda)
+        self.subscription_table.grant_read_write_data(unsubscribe_lambda)
+        self.subscription_table.grant_read_data(check_lambda)
+        self.subscription_table.grant_read_data(all_subscriptions_lambda)
 
         all_subscriptions_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
@@ -150,7 +151,7 @@ class SubscriptionStack(Stack):
 
         self.notifications_topic.add_subscription(subscriptions.LambdaSubscription(email_sender_lambda))
         self.notifications_topic.grant_publish(self.notify_subscribers_lambda)
-        subscription_table.grant_read_data(self.notify_subscribers_lambda)
+        self.subscription_table.grant_read_data(self.notify_subscribers_lambda)
 
         subscription_api = api.root.add_resource("subscription")
 
