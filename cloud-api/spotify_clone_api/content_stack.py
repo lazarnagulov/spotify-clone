@@ -35,7 +35,7 @@ class ContentStack(Stack):
             max_age=3600,
         )
 
-        images_bucket = s3.Bucket(
+        self.images_bucket = s3.Bucket(
             self, "ImagesBucket",
             bucket_name="cc-spotify-clone-images-bucket",
             auto_delete_objects=True,
@@ -51,12 +51,12 @@ class ContentStack(Stack):
             )
         )
 
-        images_bucket.add_to_resource_policy(
+        self.images_bucket.add_to_resource_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 principals=[iam.AnyPrincipal()],
                 actions=["s3:GetObject"],
-                resources=[f"{images_bucket.bucket_arn}/*"]
+                resources=[f"{self.images_bucket.bucket_arn}/*"]
             )
         )
 
@@ -76,7 +76,7 @@ class ContentStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/music_content/song/create"),
             layers=[shared_layer],
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
                 "GENRE_RELATIONS_TABLE": "GenreRelations",
                 "NOTIFY_SUBSCRIBERS_FUNCTION": notify_subscribers_fn.function_name
@@ -91,7 +91,7 @@ class ContentStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/music_content/song/delete"),
             layers=[shared_layer],
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
                 "GENRE_RELATIONS_TABLE": "GenreRelations"
             }
@@ -105,7 +105,7 @@ class ContentStack(Stack):
             layers=[shared_layer],
             timeout=Duration.seconds(60),
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
                 "GENRE_RELATIONS_TABLE": "GenreRelations",
                 "NOTIFY_SUBSCRIBERS_FUNCTION": notify_subscribers_fn.function_name
@@ -121,7 +121,7 @@ class ContentStack(Stack):
             layers=[shared_layer],
             timeout=Duration.seconds(60),
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
                 "GENRE_RELATIONS_TABLE": "GenreRelations"
             }
@@ -135,7 +135,7 @@ class ContentStack(Stack):
             layers=[shared_layer],
             timeout=Duration.seconds(15),
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
                 "SONGS_TABLE": "MusicCatalog",
                 'ARTISTS_TABLE': "Artists",
             }
@@ -149,7 +149,7 @@ class ContentStack(Stack):
             layers=[shared_layer],
             timeout=Duration.seconds(15),
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name
+                "MEDIA_BUCKET": self.images_bucket.bucket_name
             }
         )
 
@@ -161,7 +161,7 @@ class ContentStack(Stack):
             layers=[shared_layer],
             timeout=Duration.seconds(15),
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
                 "SONGS_TABLE": "MusicCatalog",
                 'ARTISTS_TABLE': "Artists",
             }
@@ -175,23 +175,23 @@ class ContentStack(Stack):
             layers=[shared_layer],
             timeout=Duration.seconds(15),
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
                 "SONGS_TABLE": "MusicCatalog",
                 "GENRE_RELATIONS_TABLE": "GenreRelations"
             }
         )
 
         audio_bucket.grant_put(create_song_lambda)
-        images_bucket.grant_put(create_song_lambda)
+        self.images_bucket.grant_put(create_song_lambda)
 
         audio_bucket.grant_read(create_song_lambda)
-        images_bucket.grant_read(create_song_lambda)
+        self.images_bucket.grant_read(create_song_lambda)
 
         audio_bucket.grant_put(create_album_lambda)
-        images_bucket.grant_put(create_album_lambda)
+        self.images_bucket.grant_put(create_album_lambda)
 
         audio_bucket.grant_read(create_album_lambda)
-        images_bucket.grant_read(create_album_lambda)
+        self.images_bucket.grant_read(create_album_lambda)
 
 
 
@@ -259,7 +259,7 @@ class ContentStack(Stack):
             layers=[shared_layer],
             timeout=Duration.seconds(60),
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name
+                "MEDIA_BUCKET": self.images_bucket.bucket_name
             }
         )
 
@@ -281,7 +281,7 @@ class ContentStack(Stack):
             code=aws_lambda.Code.from_asset("lambda/transcription/create"),
             timeout=Duration.seconds(60),
             environment={
-                "MEDIA_BUCKET": images_bucket.bucket_name,
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
                 "RETRY_QUEUE_URL": transcription_retry_queue.queue_url
             }
         )
@@ -306,7 +306,7 @@ class ContentStack(Stack):
             )
         )
 
-        images_bucket.add_event_notification(
+        self.images_bucket.add_event_notification(
             s3.EventType.OBJECT_CREATED,
             s3n.LambdaDestination(transcription_lambda)
         )
@@ -400,4 +400,4 @@ class ContentStack(Stack):
         ))
 
         CfnOutput(self, "AudioBucketName", value=audio_bucket.bucket_name)
-        CfnOutput(self, "ImagesBucketName", value=images_bucket.bucket_name)
+        CfnOutput(self, "ImagesBucketName", value=self.images_bucket.bucket_name)
