@@ -1,7 +1,7 @@
 import boto3, os
-
 from util.http_response import http_response
 from util.auth import require_role
+from util.logger import logger
 
 dynamodb = boto3.resource('dynamodb')
 s3 = boto3.client("s3")
@@ -35,6 +35,15 @@ def handler(event, _context):
             'SK': 'METADATA'
         }
     )
+
+    album_id = response.get("Item", {}).get('album_id')
+    if album_id:
+        music_catalog_table.delete_item(
+             Key={
+            'PK': f"ALBUM#{album_id}",
+            'SK': pk
+            }
+        )
 
     with genre_relations_table.batch_writer() as batch:
         for genre in genres:
