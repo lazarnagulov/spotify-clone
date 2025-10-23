@@ -1,4 +1,4 @@
-from aws_cdk import Stack, aws_lambda, CfnOutput
+from aws_cdk import Stack, aws_lambda
 from constructs import Construct
 
 

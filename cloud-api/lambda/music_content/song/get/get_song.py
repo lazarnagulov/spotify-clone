@@ -116,6 +116,7 @@ def handler(event, _context):
         "id": song_id,
         "title": song_data["title"],
         "artists": artist_names,
+        "artist_ids": artist_ids,
         "genres": song_data.get("genres", []),
         "duration": song_data.get("duration", 0),
         "track_number": song_data.get("trackNumber"),
@@ -123,7 +124,8 @@ def handler(event, _context):
         "audio_url": audio_url,
         "cover_url": cover_url,
         "created_at": song_data.get("created_at"),
-        "transcript": get_transcription(song_data["audioPath"])
+        "transcript": get_transcription(song_data["audioPath"]),
+        "album_id": song_data.get("album_id")
     }
 
     logger.info("Song fetched successfully", extra={"song_id": song_id})

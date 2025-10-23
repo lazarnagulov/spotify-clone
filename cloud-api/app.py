@@ -11,6 +11,8 @@ from spotify_clone_api.layer_stack import LayerStack
 from spotify_clone_api.ratings_stack import RatingsStack
 from spotify_clone_api.spotify_clone_stack import SpotifyCloneStack
 from spotify_clone_api.subscription_stack import SubscriptionStack
+from spotify_clone_api.listening_history_stack import ListeningHistoryStack
+from spotify_clone_api.feed_stack import UserFeedStack
 
 REGION = 'eu-central-1'
 
@@ -39,8 +41,7 @@ auth_stack = AuthStack(
     env=env
 )
 
-
-subscription_stack = SubscriptionStack(
+subscriptions_stack = SubscriptionStack(
     app,
     "SpotifyCloneSubscriptionStack",
     shared_layer=layer_stack.shared_layer,
@@ -49,13 +50,22 @@ subscription_stack = SubscriptionStack(
     env=env
 )
 
-RatingsStack(
+ratings_stack = RatingsStack(
     app,
     "SpotifyCloneRatingsStack",
     shared_layer=layer_stack.shared_layer,
     authorizer=gw_stack.authorizer,
     api=gw_stack.api,
     env=env
+)
+
+listening_history_stack = ListeningHistoryStack(
+      app,
+      "SpotifyCloneListeningHistoryStack",
+      shared_layer=layer_stack.shared_layer,
+      authorizer=gw_stack.authorizer,
+      api=gw_stack.api,
+      env=env
 )
 
 table_stack = SpotifyCloneStack(
@@ -73,8 +83,22 @@ content_stack = ContentStack(
     shared_layer=layer_stack.shared_layer,
     authorizer=gw_stack.authorizer,
     api=gw_stack.api,
-    notify_subscribers_fn=subscription_stack.notify_subscribers_lambda,
+    notify_subscribers_fn=subscriptions_stack.notify_subscribers_lambda,
     env=env
+)
+
+feed_stack = UserFeedStack(
+      app,
+      "SpotifyCloneUserFeedStack",
+      shared_layer=layer_stack.shared_layer,
+      authorizer=gw_stack.authorizer,
+      api=gw_stack.api,
+      ratings_table=ratings_stack.ratings_table,
+      subscriptions_table=subscriptions_stack.subscription_table,
+      listening_history_table=listening_history_stack.listening_history_table,
+      music_catalog_table=table_stack.music_catalog_table,
+      media_bucket=content_stack.images_bucket,
+      env=env
 )
 
 app.synth()

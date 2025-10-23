@@ -12,7 +12,7 @@ def handler(event, _context):
     artist_id = event['pathParameters']['id']
 
     response = artists_table.query(
-        KeyConditionExpression=Key('PK').eq(artist_id),
+        KeyConditionExpression=Key('PK').eq(artist_id) & Key('SK').eq('METADATA'),
         ExpressionAttributeNames={
             '#n': 'name',
             '#b': 'bio',

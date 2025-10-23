@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../env/environment';
-import {Song} from '../shared/model/media/song.model';
+import { CreateListeningHistoryRequest } from './model/listening-history-request.model';
+import { Song } from '../shared/model/media/song.model';
 
 @Injectable({
   providedIn: 'root',
@@ -19,7 +20,7 @@ export class MediaService {
   }
 
   getOfflineUrl(id: string) {
-    return this.http.get<any>(`${environment.apiHost}/songs/${id}/offline_url`);
+    return this.http.get<any>(`${environment.apiHost}/songs/${id}/offline-url`);
   }
 
   getSong(id: string): Observable<Song> {
@@ -29,6 +30,15 @@ export class MediaService {
   getTranscription(id: string): Observable<{ transcript: string | null }> {
     return this.http.get<{ transcript: string | null }>(
       `${environment.apiHost}/transcriptions/${id}`
+    );
+  }
+
+  createListeningHistoryRecord(
+    request: CreateListeningHistoryRequest
+  ): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiHost}/listening-history`,
+      request
     );
   }
 }
