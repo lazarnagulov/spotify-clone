@@ -14,10 +14,6 @@
     <section class="media-section" *ngIf="albums.length > 0">
       <div class="section-header">
         <h2>Recent Albums</h2>
-        <button mat-button color="primary" routerLink="/albums">
-          View All
-          <mat-icon>arrow_forward</mat-icon>
-        </button>
       </div>
       <div class="media-grid">
         <app-media-card
@@ -34,10 +30,6 @@
     <section class="media-section" *ngIf="songs.length > 0">
       <div class="section-header">
         <h2>Recent Songs</h2>
-        <button mat-button color="primary" routerLink="/songs">
-          View All
-          <mat-icon>arrow_forward</mat-icon>
-        </button>
       </div>
       <div class="media-grid">
         <app-media-card
@@ -54,10 +46,6 @@
     <section class="media-section" *ngIf="artists.length > 0">
       <div class="section-header">
         <h2>Featured Artists</h2>
-        <button mat-button color="primary" routerLink="/artists">
-          View All
-          <mat-icon>arrow_forward</mat-icon>
-        </button>
       </div>
       <div class="artists-grid">
         <mat-card

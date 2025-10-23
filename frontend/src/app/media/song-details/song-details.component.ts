@@ -5,6 +5,7 @@ import { environment } from '../../../env/environment';
 import { MediaService } from '../media.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../auth/auth.service';
+import { CreateListeningHistoryRequest } from '../model/listening-history-request.model';
 import {OfflineStorageService} from '../offline-storage.service';
 import {catchError, filter, of, Subject, switchMap, takeUntil, tap} from 'rxjs';
 import {SKIP_AUTH} from '../../auth/auth.interceptor';
@@ -101,9 +102,9 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.warn('Error polling transcript:', err);
-        }
+        },
       });
-      }, 5000);
+    }, 5000);
   }
 
   toggleLyrics() {
@@ -118,8 +119,8 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
       content_type: 'song',
       rating: rating,
       artistIds: this.song.artists,
-      albumIds: this.song.album ? [this.song.album.id] : [],
-      genres: this.song.genres
+      albumId: this.song.album_id,
+      genres: this.song.genres,
     };
 
     this.http.post(`${environment.apiHost}/ratings`, ratingData).subscribe({
@@ -163,8 +164,22 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
       this.audio.pause();
     } else {
       this.audio.play();
+      this.createListeningHistoryRecord();
     }
     this.isPlaying = !this.isPlaying;
+  }
+
+  createListeningHistoryRecord() {
+    if (!this.song) return;
+
+    const request: CreateListeningHistoryRequest = {
+      songId: this.song.id,
+      albumId: this.song?.album_id,
+      genres: this.song?.genres,
+      artists: this.song?.artist_ids,
+    };
+
+    this.service.createListeningHistoryRecord(request).subscribe();
   }
 
   seek(event: any): void {

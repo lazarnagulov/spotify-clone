@@ -44,17 +44,14 @@ export class HomeComponent implements OnInit {
   loading = true;
   error: string | null = null;
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit(): void {
     this.loadHomeData();
   }
 
   private loadHomeData(): void {
-    this.http.get<HomeData>(`${environment.apiHost}/home`).subscribe({
+    this.http.get<HomeData>(`${environment.apiHost}/feed`).subscribe({
       next: (data) => {
         console.log(data);
         this.albums = data.albums || [];
@@ -72,7 +69,7 @@ export class HomeComponent implements OnInit {
 
   getArtistString(artists: string[]): string {
     return artists && artists.length > 0 ? artists.join(', ') : 'Unknown Artist';
-  }
+}
 
   navigateToArtist(artistId: string): void {
     this.router.navigate(['/artist', artistId]);

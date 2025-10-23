@@ -8,12 +8,8 @@ export interface Song {
   description: string;
   audio_url: string;
   cover_url?: string;
-  album?: {
-    id: string;
-    title: string;
-    year: number;
-    cover_url: string;
-  };
+  album_id?: string;
+  artist_ids: string[];
   created_at: string;
   transcript?: string | null;
 }

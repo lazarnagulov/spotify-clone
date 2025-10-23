@@ -45,7 +45,7 @@ class SpotifyCloneStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
-        music_catalog_table = dynamodb.Table(
+        self.music_catalog_table = dynamodb.Table(
             self, "MusicCatalogTable",
             table_name="MusicCatalog",
             partition_key=dynamodb.Attribute(
@@ -58,7 +58,8 @@ class SpotifyCloneStack(Stack):
             ),
             read_capacity=1,
             write_capacity=1,
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=RemovalPolicy.DESTROY,
+            stream=dynamodb.StreamViewType.NEW_IMAGE,
         )
 
         artists_table = dynamodb.Table(
