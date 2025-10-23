@@ -7,6 +7,7 @@ from spotify_clone_api.api_gateway_stack import ApiGatewayStack
 from spotify_clone_api.auth_stack import AuthStack
 from spotify_clone_api.cognito_stack import CognitoStack
 from spotify_clone_api.content_stack import ContentStack
+from spotify_clone_api.frontend_deployment_stack import FrontendDeploymentStack
 from spotify_clone_api.layer_stack import LayerStack
 from spotify_clone_api.ratings_stack import RatingsStack
 from spotify_clone_api.spotify_clone_stack import SpotifyCloneStack
@@ -100,5 +101,7 @@ feed_stack = UserFeedStack(
       media_bucket=content_stack.images_bucket,
       env=env
 )
+
+FrontendDeploymentStack(app, "SpotifyCloneFrontendDeploymentStack", env=env)
 
 app.synth()
