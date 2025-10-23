@@ -94,7 +94,8 @@ class ContentStack(Stack):
             environment={
                 "MEDIA_BUCKET": self.images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
-                "GENRE_RELATIONS_TABLE": "GenreRelations"
+                "GENRE_RELATIONS_TABLE": "GenreRelations",
+                "ARTIST_TABLE": "Artists",
             }
         )
 

@@ -10,8 +10,8 @@ from util.logger import logger
 dynamodb = boto3.resource("dynamodb", region_name="eu-central-1")
 table = dynamodb.Table(os.environ["MUSIC_CATALOG"])
 genre_relations_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
+artists_table = dynamodb.Table(os.environ["ARTIST_TABLE"])
 MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
-lambda_client = boto3.client("lambda")
 s3 = boto3.client("s3", region_name="eu-central-1")
 
 @handle_lambda_exceptions
@@ -53,6 +53,7 @@ def handler(event, _context):
 
     update_song_metadata(song_id, body, existing_song)
     sync_genre_relations(existing_song, body, old_genres, new_genres)
+    sync_artist_relations_table(existing_song, body)
 
     logger.info("Song updated successfully", extra={"song_id": song_id})
     return http_response(
@@ -107,16 +108,16 @@ def sync_genre_relations(song: dict, body: dict, old_genres: set, new_genres: se
 
 def add_genres(genres, song, body):
     with genre_relations_table.batch_writer() as batch:
-            for genre in genres:
-                batch.put_item(
-                    Item={
-                        "PK": genre,
-                        "SK": song['PK'].split('#')[1],
-                        "Title": body["title"],
-                        "CoverPath": body.get("coverPath", song.get("coverPath")),
-                        "EntityType": "song"
-                    }
-                )
+        for genre in genres:
+            batch.put_item(
+                Item={
+                    "PK": genre,
+                    "SK": song['PK'].split('#')[1],
+                    "Title": body["title"],
+                    "CoverPath": body.get("coverPath", song.get("coverPath")),
+                    "EntityType": "song"
+                }
+            )
 
 def update_genres(genres, song, body):
     with genre_relations_table.batch_writer() as batch:
@@ -128,5 +129,21 @@ def update_genres(genres, song, body):
                     "Title": body["title"],
                     "EntityType": "song",
                     "CoverPath": body.get("coverPath", song.get("coverPath")),
+                }
+            )
+
+def sync_artist_relations_table(song, body):
+    title_changed = body["title"] != song.get("title")
+    if not title_changed: return
+
+    artists_table=dynamodb.Table(os.environ['ARTIST_TABLE'])
+    with artists_table.batch_writer() as batch:
+        for artist in body['artists']:
+            batch.put_item(
+                Item={
+                    "PK": artist,
+                    "SK": song['PK'],
+                    "EntityType": "song",
+                    "Title": body['title'],
                 }
             )
