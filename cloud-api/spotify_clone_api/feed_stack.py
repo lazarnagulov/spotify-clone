@@ -89,6 +89,8 @@ class UserFeedStack(Stack):
               "dynamodb:GetItem",
               "dynamodb:Query",
               "dynamodb:BatchGetItem",
+              "dynamodb:Scan",
+              "dynamodb:PutItem",
               "s3:GetObject"
           ],
         resources=[
