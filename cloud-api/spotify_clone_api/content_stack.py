@@ -396,17 +396,17 @@ class ContentStack(Stack):
             )
         )
 
-        # retry_lambda.add_event_source(
-        #     lambda_events.SqsEventSource(
-        #         transcription_retry_queue,
-        #         batch_size=1
-        #     )
-        # )
+        retry_lambda.add_event_source(
+            lambda_events.SqsEventSource(
+                transcription_retry_queue,
+                batch_size=1
+            )
+        )
 
-        # self.images_bucket.add_event_notification(
-        #     s3.EventType.OBJECT_CREATED,
-        #     s3n.LambdaDestination(transcription_lambda)
-        # )
+        self.images_bucket.add_event_notification(
+            s3.EventType.OBJECT_CREATED,
+            s3n.LambdaDestination(transcription_lambda)
+        )
 
         get_discover_page.role.add_to_policy(iam.PolicyStatement(
             actions=[
