@@ -43,7 +43,7 @@
           [cardType]="'song'"
           [id]="song.id"
           [title]="song.title"
-          [imageUrl]="song.cover_url || 'no-image.svg'"
+          [imageUrl]="(song.cover_url ? song.cover_url + '?v=' + cacheBuster : 'no-image.svg')"
         ></app-media-card>
     </div>
   </section>

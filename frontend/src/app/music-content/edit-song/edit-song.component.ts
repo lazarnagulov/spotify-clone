@@ -67,6 +67,7 @@ export class EditSongComponent implements OnInit {
     this.mediaService.getSong(songId).subscribe({
       next: (song) => {
         this.song = song;
+        const cacheBuster = `?v=${Date.now()}`;
         console.log('Loaded song: ', song);
         this.songForm.patchValue({
           title: song.title,
@@ -75,8 +76,8 @@ export class EditSongComponent implements OnInit {
           description: song.description || ''
         });
 
-        if (song.cover_url) this.previewUrl = song.cover_url;
-        if (song.audio_url) this.audioPreviewUrl = song.audio_url;
+        if (song.cover_url) this.previewUrl = `${song.cover_url}${cacheBuster}`;
+        if (song.audio_url) this.audioPreviewUrl = `${song.audio_url}${cacheBuster}`;
         
       },
       error: (err) => console.error('Error loading song: ', err)

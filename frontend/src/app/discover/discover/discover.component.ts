@@ -20,6 +20,8 @@ export class DiscoverComponent implements OnInit {
 
   selectedGenre: string | null = null;
 
+  cacheBuster = new Date().getTime();
+
   constructor(
     private discoverService: DiscoverService,
     private genreService: GenreService,

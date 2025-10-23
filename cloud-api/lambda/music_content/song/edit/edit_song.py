@@ -111,7 +111,7 @@ def add_genres(genres, song, body):
                 batch.put_item(
                     Item={
                         "PK": genre,
-                        "SK": song['PK'],
+                        "SK": song['PK'].split('#')[1],
                         "Title": body["title"],
                         "CoverPath": body.get("coverPath", song.get("coverPath")),
                         "EntityType": "song"

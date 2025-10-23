@@ -66,7 +66,14 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     if(!songId) return;
     this.service.getSong(songId).subscribe({
       next: (song) => {
-        this.song = song;
+        const cacheBuster = `?v=${Date.now()}`;
+
+        this.song = {
+          ...song,
+          cover_url: song.cover_url ? `${song.cover_url}${cacheBuster}` : undefined,
+          audio_url: `${song.audio_url}${cacheBuster}`
+        };
+
         this.loading = false;
         this.checkOfflineAvailability();
 

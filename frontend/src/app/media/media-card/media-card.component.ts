@@ -35,7 +35,9 @@ export class MediaCardComponent implements OnDestroy {
   }
 
   onCardClick() {
-    const id = this.id.split("#")[1];
+    let id = this.id.split("#")[1];
+    if (!id) id = this.id;
+    
     if (this.cardType === 'song' && id) {
       void this.router.navigate(['/song', id]);
     } else if (this.cardType === 'album' && id) {
