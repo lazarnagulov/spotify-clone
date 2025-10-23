@@ -69,6 +69,7 @@ def handler(event, _context):
     )
 
     update_genre_relations_table(request, song_id, path_to_cover)
+    update_artist_relations_table(request, song_id, path_to_cover)
     notify_subscribers(request)
 
     return http_response(
@@ -96,6 +97,19 @@ def update_genre_relations_table(request, song_id, path_to_cover):
                 }
             )
 
+def update_artist_relations_table(request, song_id, path_to_cover):
+    artists_table=dynamodb.Table(os.environ['ARTIST_TABLE'])
+    with artists_table.batch_writer() as batch:
+        for artist in request.artists:
+            batch.put_item(
+                Item={
+                    "PK": artist,
+                    "SK": f"SONG#{song_id}",
+                    "EntityType": "song",
+                    "Title": request.title,
+                    "CoverPath": path_to_cover,
+                }
+            )
 
 def notify_subscribers(request):
     lambda_client.invoke(

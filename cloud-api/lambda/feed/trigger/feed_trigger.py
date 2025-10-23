@@ -28,7 +28,8 @@ def handler(event, _context):
         if not new_image:
             continue
 
-        if new_image.get('SK', {}).get('S') != 'METADATA':
+        pk_value = new_image.get('PK', {}).get('S', '')
+        if pk_value.startswith('ALBUM#'):
             continue
 
         table_name = record.get('eventSourceARN', '').split('/')[1]

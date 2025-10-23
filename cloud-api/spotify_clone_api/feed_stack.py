@@ -56,9 +56,10 @@ class UserFeedStack(Stack):
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/UserFeed",
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog",
                 f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists",
-                f"arn:aws:dynamodb:{self.region}:{self.account}:table/RatingsTable",
-                f"arn:aws:dynamodb:{self.region}:{self.account}:table/ListeningHistoryTable",
-                f"arn:aws:dynamodb:{self.region}:{self.account}:table/SubscriptionsTable"
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Ratings",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/ListeningHistory",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Subscriptions",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations",
             ]
          )
       )
@@ -110,6 +111,21 @@ class UserFeedStack(Stack):
             }
         )
 
+        feed_trigger_lambda.add_to_role_policy(
+          iam.PolicyStatement(
+              actions=[
+                  "dynamodb:DescribeStream",
+                  "dynamodb:GetRecords",
+                  "dynamodb:GetShardIterator",
+                  "dynamodb:ListStreams"
+              ],
+              resources=[ratings_table.table_stream_arn,
+                        listening_history_table.table_stream_arn,
+                        subscriptions_table.table_stream_arn,
+                        music_catalog_table.table_stream_arn]
+          )
+        )
+
         feed_trigger_lambda.add_event_source(
             lambda_event_sources.DynamoEventSource(
                 ratings_table,
@@ -128,7 +144,16 @@ class UserFeedStack(Stack):
             )
         )
 
-        feed_trigger_lambda.add_event_source(
+        feed_trigger_lambda.add_event_source( 
+            lambda_event_sources.DynamoEventSource(
+                music_catalog_table,
+                starting_position=aws_lambda.StartingPosition.LATEST,
+                batch_size=1,
+                enabled=True
+            )
+        )
+        
+        feed_trigger_lambda.add_event_source( 
             lambda_event_sources.DynamoEventSource(
                 subscriptions_table,
                 starting_position=aws_lambda.StartingPosition.LATEST,
@@ -137,15 +162,6 @@ class UserFeedStack(Stack):
             )
         )
 
-        feed_trigger_lambda.add_event_source( 
-            lambda_event_sources.DynamoEventSource(
-                music_catalog_table,
-                starting_position=aws_lambda.StartingPosition.LATEST,
-                batch_size=5,
-                enabled=True
-            )
-        )
-        
         feed_queue.grant_send_messages(feed_trigger_lambda)
         user_feed_table.grant_read_write_data(create_user_feed_lambda)
         create_user_feed_lambda.add_event_source(lambda_event_sources.SqsEventSource(feed_queue))

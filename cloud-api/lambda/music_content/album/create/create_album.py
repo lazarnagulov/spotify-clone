@@ -140,6 +140,7 @@ def handler(event, _context):
     )
 
     update_genre_relations_table(request, album_id, album_cover_path, songs)
+    update_artist_relations_table(request, album_id, album_cover_path, songs)
     notify_subscribers(request)
 
     return http_response(
@@ -151,6 +152,31 @@ def handler(event, _context):
         },
     )
 
+def update_artist_relations_table(request, album_id, path_to_cover, songs):
+    artists_table=dynamodb.Table(os.environ['ARTIST_TABLE'])
+    with artists_table.batch_writer() as batch:
+        for artist in request.artists:
+            batch.put_item(
+                Item={
+                    "PK": artist,
+                    "SK": f"ALBUM#{album_id}",
+                    "EntityType": "album",
+                    "Title": request.title,
+                    "CoverPath": path_to_cover,
+                }
+            )
+
+        for artist in request.artists:
+              for song in songs:
+                  batch.put_item(
+                      Item={
+                          "PK": artist,
+                          "SK": f"SONG#{song['PK']}",
+                          "EntityType": "song",
+                          "Title": song["title"],
+                          "CoverPath": song["coverPath"]
+                      }
+                  )
 
 def update_genre_relations_table(request, album_id, path_to_cover, songs):
     genre_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])

@@ -7,6 +7,7 @@ from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
 from util.auth import require_role
+from datetime import datetime, timezone
 
 
 dynamodb = boto3.client("dynamodb")
@@ -91,7 +92,7 @@ def get_user_feed(user_id: str):
     response = feed_table.get_item(
         Key={
             "PK": f"USER#{user_id}",
-            "SK": "FEED"
+            "SK": f"FEED#{get_time_of_day()}"
         }
     )
     return response.get("Item")
@@ -164,3 +165,15 @@ def map_songs(songs_data):
         })
 
     return songs
+
+def get_time_of_day():
+    hour = datetime.utcnow().hour  
+
+    if 5 <= hour < 12:
+        return "morning"    
+    elif 12 <= hour < 17:
+        return "afternoon"  
+    elif 17 <= hour < 21:
+        return "evening"    
+    else:
+        return "night"

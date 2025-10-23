@@ -77,6 +77,7 @@ class ContentStack(Stack):
             layers=[shared_layer],
             environment={
                 "MEDIA_BUCKET": self.images_bucket.bucket_name,
+                "ARTIST_TABLE": "Artists",
                 "MUSIC_CATALOG": "MusicCatalog",
                 "GENRE_RELATIONS_TABLE": "GenreRelations",
                 "NOTIFY_SUBSCRIBERS_FUNCTION": notify_subscribers_fn.function_name
@@ -108,6 +109,7 @@ class ContentStack(Stack):
                 "MEDIA_BUCKET": self.images_bucket.bucket_name,
                 "MUSIC_CATALOG": "MusicCatalog",
                 "GENRE_RELATIONS_TABLE": "GenreRelations",
+                "ARTIST_TABLE": "Artists",
                 "NOTIFY_SUBSCRIBERS_FUNCTION": notify_subscribers_fn.function_name
             }
         )
@@ -218,6 +220,7 @@ class ContentStack(Stack):
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*", 
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                        notify_subscribers_fn.function_arn ]
         ))
 
@@ -248,6 +251,7 @@ class ContentStack(Stack):
             ],
             resources=[f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
+                       f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                        notify_subscribers_fn.function_arn]
         ))
 
