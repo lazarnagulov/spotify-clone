@@ -14,6 +14,7 @@ import { DiscoverComponent } from './discover/discover/discover.component';
 import { SubscriptionsComponent } from './subscription/subscriptions/subscriptions.component';
 import { ArtistEditingComponent } from './artist/artist-editing/artist-editing.component';
 import { EditSongComponent } from './music-content/edit-song/edit-song.component';
+import { EditAlbumComponent } from './music-content/edit-album/edit-album.component';
 
 const routes: Routes = [
   { path: 'register', component: RegisterComponent },
@@ -57,6 +58,12 @@ const routes: Routes = [
     {
     path: 'edit-song/:id',
     component: EditSongComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['admin'] },
+  },
+  {
+    path: 'edit-album/:id',
+    component: EditAlbumComponent,
     canActivate: [AuthGuard],
     data: { roles: ['admin'] },
   },

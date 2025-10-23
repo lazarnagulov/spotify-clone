@@ -1,0 +1,105 @@
+<mat-card class="album-card">
+  <h2>Update album info</h2>
+
+  <form [formGroup]="albumForm" class="form-grid">
+
+    <mat-form-field appearance="outline" class="full-span">
+      <mat-label>Album Title</mat-label>
+      <input matInput formControlName="title" placeholder="Enter album title" />
+      <mat-error *ngIf="albumForm.get('title')?.hasError('required')">
+        Album title is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-span">
+      <mat-label>Year</mat-label>
+      <input matInput type="number" formControlName="year" />
+      <mat-error *ngIf="albumForm.get('year')?.hasError('required')">
+        Year is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-span">
+      <mat-label>Genres</mat-label>
+      <mat-select formControlName="genres" multiple>
+        <mat-option *ngFor="let genre of genres" [value]="genre">
+          {{ genre }}
+        </mat-option>
+      </mat-select>
+      <mat-hint>Select one or more genres</mat-hint>
+      <mat-error *ngIf="albumForm.get('genres')?.hasError('required')">
+        At least one genre is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-span">
+      <mat-label>Artists</mat-label>
+      <mat-select formControlName="artists" multiple>
+        <mat-option *ngFor="let artist of artists" [value]="artist.id">
+          {{ artist.name }}
+        </mat-option>
+      </mat-select>
+      <mat-hint>One or more artists</mat-hint>
+      <mat-error *ngIf="albumForm.get('artists')?.hasError('required')">
+        At least one artist is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-span">
+      <mat-label>Description (optional)</mat-label>
+      <textarea
+        matInput
+        formControlName="description"
+        rows="3"
+        placeholder="Add a description..."
+      ></textarea>
+    </mat-form-field>
+
+    <div class="upload-section full-span">
+      <div class="upload-block">
+        <mat-label class="upload-label required">Album Cover *</mat-label>
+        <input
+          id="albumCover"
+          type="file"
+          (change)="onCoverSelected($event)"
+          accept="image/*"
+          class="upload-input"
+        />
+        <mat-error *ngIf="!coverFile && loading">
+          Album cover is required
+        </mat-error>
+
+        <div class="preview-container" *ngIf="coverPreviewUrl">
+          <img
+            [src]="coverPreviewUrl"
+            alt="Album Cover Preview"
+            class="preview-image"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="serverError" class="error-message full-span">
+      {{ serverError }}
+    </div>
+
+    <div class="actions full-span">
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="onSubmit()"
+        [disabled]="loading || albumForm.invalid"
+      >
+        <mat-icon *ngIf="!loading">album</mat-icon>
+        <mat-progress-spinner
+          *ngIf="loading"
+          diameter="20"
+          mode="indeterminate"
+        ></mat-progress-spinner>
+        <span *ngIf="!loading">Update Album</span>
+        <span *ngIf="loading">Updating Album...</span>
+      </button>
+    </div>
+
+  </form>
+</mat-card>

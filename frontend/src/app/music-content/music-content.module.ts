@@ -5,6 +5,7 @@ import {MaterialModule} from '../infrastructure/material/material.module';
 import {ReactiveFormsModule} from '@angular/forms';
 import { CreateAlbumComponent } from './create-album/create-album.component';
 import { EditSongComponent } from './edit-song/edit-song.component';
+import { EditAlbumComponent } from './edit-album/edit-album.component';
 
 
 
@@ -12,7 +13,8 @@ import { EditSongComponent } from './edit-song/edit-song.component';
   declarations: [
     CreateSongComponent,
     CreateAlbumComponent,
-    EditSongComponent
+    EditSongComponent,
+    EditAlbumComponent
   ],
   imports: [
     CommonModule,

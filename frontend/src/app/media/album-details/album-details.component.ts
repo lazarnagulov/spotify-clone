@@ -6,6 +6,7 @@ import { MediaService } from '../media.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../auth/auth.service';
 import {Album} from '../../shared/model/media/album.model';
+import { Artist } from '../../artist/model/artist.model';
 
 @Component({
   selector: 'app-album-details',
@@ -20,6 +21,7 @@ export class AlbumDetailsComponent implements OnInit {
   error: string | null = null;
   userRoles: string[] = [];
   userRating: number = 0;
+  artists: Artist[] = [];
 
   constructor(
     private router: Router,
@@ -43,10 +45,15 @@ export class AlbumDetailsComponent implements OnInit {
   }
 
   private loadAlbum(albumId: string): void {
+    const cacheBuster = `?v=${Date.now()}`;
     this.http.get<Album>(`${environment.apiHost}/albums/${albumId}`).subscribe({
       next: (album) => {
         console.log(album);
         this.album = album;
+        this.album = {
+          ...album,
+          coverUrl: album.coverUrl ? album.coverUrl + cacheBuster : undefined,
+        }
         this.loading = false;
       },
       error: (err) => {
@@ -104,6 +111,11 @@ export class AlbumDetailsComponent implements OnInit {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = Math.floor(totalSeconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  onEdit(): void {
+    if (!this.id) return;
+    void this.router.navigate(['/edit-album', this.id]);
   }
 
   onDelete(): void {
