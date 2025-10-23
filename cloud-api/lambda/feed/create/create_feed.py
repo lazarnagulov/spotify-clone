@@ -72,7 +72,6 @@ def handler(event, _context):
         for genre in top_genres:
            
             songs_albums = genre_relations.query(KeyConditionExpression=Key("PK").eq(genre)).get("Items", [])
-
             for item in songs_albums:
                 
                 sk = item.get('SK', '')
@@ -89,7 +88,6 @@ def handler(event, _context):
 
         for artist in top_artists:
             artists_content = artists_table.query(KeyConditionExpression=Key("PK").eq(artist)).get("Items", [])
-            logger.info(f"artist content -> {artists_content}")
             for item in artists_content:
 
                 sk = item.get('SK', '')
@@ -99,8 +97,7 @@ def handler(event, _context):
                 if sk == 'METADATA':
                   feed_items.append({
                       "type": 'artist',
-                      "id": item.get('PK'),
-                      "score": current_artist_scores[artist]
+                      "id": item.get('PK')
                   })
 
                 elif entity_type in ('song', 'album') and id:

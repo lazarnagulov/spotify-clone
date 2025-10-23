@@ -42,8 +42,7 @@ def handler(event, _context):
             user_ids = [user_id]
             logger.info(f"Preparing SQS message for user {user_id}")
 
-        elif table_name in GLOBAL_TABLES:
-            # Global action: new content added by admin
+        elif table_name in GLOBAL_TABLES: # Global action -> new content added by admin
             # TODO: filter users who are subscribed to the genre/artist
             user_ids = ['33648832-d091-70c7-083c-72209ba63d91']  # placeholder
             logger.info("Preparing SQS messages for all users")
@@ -52,10 +51,10 @@ def handler(event, _context):
             continue
 
         logger.info("Sending messages to SQS...")
-        for uid in user_ids:
+        for user_id in user_ids:
             sqs.send_message(
                 QueueUrl=SQS_QUEUE_URL,
-                MessageBody=json.dumps({"userId": uid})
+                MessageBody=json.dumps({"userId": user_id})
             )
         logger.info("Messages successfully sent to SQS.")
 
