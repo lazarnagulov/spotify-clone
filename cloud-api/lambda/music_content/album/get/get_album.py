@@ -121,6 +121,7 @@ def handler(event, _context):
         "coverUrl": cover_url,
         "songs": songs,
         "created_at": album_data.get("created_at"),
+        "artist_ids": artist_ids
     }
 
     album_response_body = convert_decimals_to_float(album_response_body)
