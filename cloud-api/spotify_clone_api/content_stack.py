@@ -84,6 +84,21 @@ class ContentStack(Stack):
             }
         )
 
+        edit_song_lambda = aws_lambda.Function(
+            self, "EditSongFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="edit_song.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/song/edit"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(15),
+            environment={
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
+                "MUSIC_CATALOG": "MusicCatalog",
+                "GENRE_RELATIONS_TABLE": "GenreRelations",
+                "ARTIST_TABLE": "Artists",
+            }
+        )
+
         delete_song_lambda = aws_lambda.Function(
             self,
             "DeleteSongFunction",
@@ -209,6 +224,11 @@ class ContentStack(Stack):
         audio_bucket.grant_read(create_album_lambda)
         self.images_bucket.grant_read(create_album_lambda)
 
+        audio_bucket.grant_put(edit_song_lambda)
+        self.images_bucket.grant_put(edit_song_lambda)
+        
+        audio_bucket.grant_read(edit_song_lambda)
+        self.images_bucket.grant_read(edit_song_lambda)
 
 
         create_song_lambda.role.add_to_policy(iam.PolicyStatement(
@@ -222,6 +242,23 @@ class ContentStack(Stack):
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                        notify_subscribers_fn.function_arn ]
+        ))
+
+        edit_song_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:Query"
+            ],
+            resources=[
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/songs/*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/covers/*"
+            ]
         ))
 
         delete_song_lambda.add_to_role_policy(
@@ -318,17 +355,17 @@ class ContentStack(Stack):
             )
         )
 
-        retry_lambda.add_event_source(
-            lambda_events.SqsEventSource(
-                transcription_retry_queue,
-                batch_size=1
-            )
-        )
+        # retry_lambda.add_event_source(
+        #     lambda_events.SqsEventSource(
+        #         transcription_retry_queue,
+        #         batch_size=1
+        #     )
+        # )
 
-        self.images_bucket.add_event_notification(
-            s3.EventType.OBJECT_CREATED,
-            s3n.LambdaDestination(transcription_lambda)
-        )
+        # self.images_bucket.add_event_notification(
+        #     s3.EventType.OBJECT_CREATED,
+        #     s3n.LambdaDestination(transcription_lambda)
+        # )
 
         get_discover_page.role.add_to_policy(iam.PolicyStatement(
             actions=[
@@ -351,6 +388,7 @@ class ContentStack(Stack):
         song_id_resource = song_api.add_resource("{id}")
         song_id_resource.add_method("GET", apigw.LambdaIntegration(get_song_lambda), authorizer=authorizer)
         song_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_song_lambda), authorizer=authorizer)
+        song_id_resource.add_method("PUT", apigw.LambdaIntegration(edit_song_lambda), authorizer=authorizer)
 
         offline_url_resource = song_id_resource.add_resource("offline-url")
         offline_url_resource.add_method("GET", apigw.LambdaIntegration(get_offline_url_lambda), authorizer=authorizer)
