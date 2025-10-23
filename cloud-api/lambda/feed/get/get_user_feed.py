@@ -2,22 +2,23 @@ import os
 import boto3
 from boto3.dynamodb.types import TypeDeserializer
 from decimal import Decimal
+from datetime import datetime
 
 from util.logger import logger
 from util.exception_handler import handle_lambda_exceptions
 from util.http_response import http_response
 from util.auth import require_role
-from datetime import datetime, timezone
 
+AWS_REGION = "eu-central-1"
 
 dynamodb = boto3.client("dynamodb")
-dynamodb_resource = boto3.resource("dynamodb", region_name="eu-central-1")
+dynamodb_resource = boto3.resource("dynamodb", region_name=AWS_REGION)
 
 feed_table = dynamodb_resource.Table(os.environ['USER_FEED'])
 TABLE_NAME = os.environ["SONGS_TABLE"]
 ARTISTS_TABLE = os.environ.get("ARTISTS_TABLE", "Artists")
+MUSIC_CATALOG = os.environ.get("MUSIC_CATALOG", "MusicCatalog")
 MEDIA_BUCKET = os.environ["MEDIA_BUCKET"]
-AWS_REGION = "eu-central-1"
 
 @handle_lambda_exceptions
 @require_role('user', 'admin')
@@ -31,16 +32,17 @@ def handler(event, _context):
     logger.info(f"Feed record: {feed_record}")
 
     if not feed_record or "feedItems" not in feed_record:
-        return http_response(404, {"message": "No feed found for this user"})
+        logger.info("No personalized feed found - using default feed.")
+        feed_record = get_default_feed()
 
     feed_items = feed_record["feedItems"]
     song_ids, album_ids, artist_ids = extract_feed_ids(feed_items)
 
     songs_data = batch_get_items(TABLE_NAME, song_ids)
-    albums_data = batch_get_items(TABLE_NAME, album_ids)
+    albums_data = batch_get_items(MUSIC_CATALOG, album_ids)
     artists_data = batch_get_items(ARTISTS_TABLE, artist_ids)
 
-    artists = map_artists(artists_data)[0]
+    artists, _ = map_artists(artists_data)
     albums = map_albums(albums_data)
     songs = map_songs(songs_data)
 
@@ -87,6 +89,111 @@ def batch_get_items(table_name, ids):
     )
     return response["Responses"].get(table_name, [])
 
+def get_default_feed():
+    response = feed_table.get_item(
+        Key={"PK": "DEFAULT", "SK": "FEED#DEFAULT"}
+    )
+    item = response.get("Item")
+
+    if item and "feedItems" in item:
+        logger.info("Found cached default feed in DynamoDB")
+        return item
+
+    logger.info("Generating new default feed...")
+    default_feed_items = []
+
+    artists = get_artists(limit=5)
+    for artist in artists:
+        artist_id = artist.get("PK")
+        if artist_id:
+            default_feed_items.append({"type": "artist", "id": artist_id})
+
+    albums = get_albums(limit=5)
+    for album in albums:
+        album_id = album.get("PK").split('#')[1]
+        if album_id:
+            default_feed_items.append({"type": "album", "id": album_id})
+
+    songs = get_songs(limit=5)
+    for song in songs:
+        song_id = song.get("PK").split('#')[1]
+        if song_id:
+            default_feed_items.append({"type": "song", "id": song_id})
+
+    new_item = {
+        "PK": "DEFAULT",
+        "SK": "FEED#DEFAULT",
+        "feedItems": default_feed_items
+    }
+
+    feed_table.put_item(Item=new_item)
+    logger.info("Stored new default feed in DynamoDB")
+
+    return new_item
+
+
+def get_artists(limit=5):
+    return scan_metadata_items(
+        table_name=ARTISTS_TABLE,
+        filter_expr="SK = :metadata",
+        expr_values={":metadata": {"S": "METADATA"}},
+        limit=limit
+    )
+
+
+def get_albums(limit=5):
+    return scan_metadata_items(
+        table_name=MUSIC_CATALOG,
+        filter_expr="begins_with(PK, :album) AND SK = :metadata",
+        expr_values={
+            ":album": {"S": "ALBUM#"},
+            ":metadata": {"S": "METADATA"}
+        },
+        limit=limit
+    )
+
+
+def get_songs(limit=5):
+    return scan_metadata_items(
+        table_name=MUSIC_CATALOG,
+        filter_expr="begins_with(PK, :song) AND SK = :metadata",
+        expr_values={
+            ":song": {"S": "SONG#"},
+            ":metadata": {"S": "METADATA"}
+        },
+        limit=limit
+    )
+
+
+def scan_metadata_items(table_name, filter_expr, expr_values, limit=5):
+    items = []
+    last_evaluated_key = None
+
+    while len(items) < limit:
+        params = {
+            "TableName": table_name,
+            "FilterExpression": filter_expr,
+            "ExpressionAttributeValues": expr_values,
+            "Limit": 20
+        }
+
+        if last_evaluated_key:
+            params["ExclusiveStartKey"] = last_evaluated_key
+
+        resp = dynamodb.scan(**params)
+        fetched = resp.get("Items", [])
+
+        for item in fetched:
+            if len(items) < limit:
+                items.append(deserialize_item(item))
+
+        last_evaluated_key = resp.get("LastEvaluatedKey")
+        if not last_evaluated_key:
+            break
+
+    logger.info(f"Fetched {len(items)} items from {table_name}")
+    return items
+
 
 def get_user_feed(user_id: str):
     response = feed_table.get_item(
@@ -112,7 +219,7 @@ def map_artists(artists_data):
     for item in artists_data:
         artist = deserialize_item(item)
         artist_id = artist.get("PK")
-        artist_name = artist.get("name")
+        artist_name = artist.get("name", "")
 
         artists.append({
             "id": artist_id,
@@ -132,8 +239,8 @@ def map_albums(albums_data):
         album = deserialize_item(item)
         cover_url = get_public_s3_url(album.get("coverPath"))
 
-        artist_items = batch_get_items(ARTISTS_TABLE, album.get("artists"))
-        artist_names = [artist["name"]["S"] for artist in artist_items]
+        artist_items = batch_get_items(ARTISTS_TABLE, album.get("artists", []))
+        artist_names = [deserialize_item(a).get("name", "") for a in artist_items]
 
         albums.append({
             "id": album["PK"],
@@ -154,8 +261,8 @@ def map_songs(songs_data):
         song = deserialize_item(item)
         cover_url = get_public_s3_url(song.get("coverPath"))
 
-        artist_items = batch_get_items(ARTISTS_TABLE, song.get("artists"))
-        artist_names = [artist["name"]["S"] for artist in artist_items]
+        artist_items = batch_get_items(ARTISTS_TABLE, song.get("artists", []))
+        artist_names = [deserialize_item(artist).get("name", "") for artist in artist_items]
 
         songs.append({
             "id": song["PK"],

@@ -39,9 +39,12 @@ predefined_genres = [
 def handler(event, _context):
     for record in event.get('Records', []):
         body = json.loads(record['body'])
+        
         user_id = body.get('userId')
         if not user_id:
             continue
+        
+        logger.info(f"generating new feed for user with id{user_id}")
 
         genre_scores = get_genres_time_scores()
         logger.info(f"genre scores {genre_scores}")
@@ -64,52 +67,17 @@ def handler(event, _context):
 
         logger.info(f"current slot genre scores {current_slot_genre_scores}")
         logger.info(f"current artist scores {current_artist_scores}")
+        logger.info(f"top artist scores {top_artists}")
 
         songs = []
         albums = []
         feed_items = []
 
-        for genre in top_genres:
-           
-            songs_albums = genre_relations.query(KeyConditionExpression=Key("PK").eq(genre)).get("Items", [])
+        fetch_content_by_top_genres(top_genres, current_slot_genre_scores, songs, albums)
+        fetch_content_by_top_artists(top_artists, current_artist_scores, feed_items, songs, albums)
 
-            for item in songs_albums:
-                
-                sk = item.get('SK', '')
-                id = sk.split('#')[1] if '#' in sk else sk
-                entity_type = item.get('EntityType')
-
-                if entity_type in ('song', 'album') and id:  
-                    target_list = songs if entity_type == 'song' else albums
-                    target_list.append({
-                      "type": entity_type,
-                      "id": id,
-                      "score": current_slot_genre_scores[genre]
-                    })
-
-        for artist in top_artists:
-            artists_content = artists_table.query(KeyConditionExpression=Key("PK").eq(artist)).get("Items", [])
-            logger.info(f"artist content -> {artists_content}")
-            for item in artists_content:
-
-                sk = item.get('SK', '')
-                id = sk.split('#')[1] if '#' in sk else sk
-                entity_type = item.get('EntityType')
-
-                if sk == 'METADATA':
-                  feed_items.append({
-                      "type": 'artist',
-                      "id": item.get('PK'),
-                      "score": current_artist_scores[artist]
-                  })
-
-                elif entity_type in ('song', 'album') and id:
-                  target_list = songs if entity_type == 'song' else albums
-                  target_list.append({
-                      "type": entity_type,
-                      "id": id,
-                      "score": current_artist_scores[artist]
-                  })
+        logger.info(f"songs after scoring -> {songs}")
+        logger.info(f"albums after scoring -> {albums}")
 
         songs = remove_duplicates(songs)
         albums = remove_duplicates(albums)
@@ -168,7 +136,7 @@ def analyze_user_subscriptions(user_id, genre_scores, artist_scores):
 
 
 def analyze_user_ratings(user_id, genre_scores, artist_scores):
-    user_ratings = ratings_table.query(KeyConditionExpression=Key("PK").eq(user_id)).get("Items", [])
+    user_ratings = ratings_table.query(KeyConditionExpression=Key("PK").eq(f"USER#{user_id}")).get("Items", [])
 
     for rating in user_ratings:
         rating_type = rating['type']
@@ -176,21 +144,21 @@ def analyze_user_ratings(user_id, genre_scores, artist_scores):
         delta = WEIGHTS["neutral_rating"]
 
         if value >= 4:
-            if rating_type == "SONG":
+            if rating_type == 'song':
                 delta = WEIGHTS["positive_rating_song"]
-            elif rating_type == "ALBUM":
+            elif rating_type == "album":
                 delta = WEIGHTS["positive_rating_album"]
-            elif rating_type == "ARTIST":
+            elif rating_type == "artist":
                 delta = WEIGHTS["subscription_artist"]
         elif value <= 2:
             delta = WEIGHTS["negative_rating"]
 
-        if rating_type == "ARTIST":
+        if rating_type == 'artist':
             sk = rating.get("SK")
             if sk in artist_scores:
                 for slot in TIME_SLOTS:
                     artist_scores[sk][slot] += delta
-        else:  # SONG or ALBUM
+        else:
             for g in rating.get("genres", []):
                 if g in genre_scores:
                     for slot in TIME_SLOTS:
@@ -202,7 +170,7 @@ def analyze_user_ratings(user_id, genre_scores, artist_scores):
 
 
 def analyze_user_listening(user_id, genre_scores, artist_scores):
-    user_listenings = listening_table.query(KeyConditionExpression=Key("PK").eq(user_id)).get("Items", [])
+    user_listenings = listening_table.query(KeyConditionExpression=Key("PK").eq(f"USER#{user_id}")).get("Items", [])
 
     for listen in user_listenings:
         listen_slot = listen.get("timeOfDay")
@@ -218,6 +186,48 @@ def analyze_user_listening(user_id, genre_scores, artist_scores):
 
 def scores_for_current_slot(score_dict, current_slot): #returns score for current time slot
     return {entity: slots.get(current_slot, 0) for entity, slots in score_dict.items()}
+
+
+def fetch_content_by_top_genres(top_genres, current_slot_genre_scores, songs, albums):
+  for genre in top_genres:
+            
+      songs_albums = genre_relations.query(KeyConditionExpression=Key("PK").eq(genre)).get("Items", [])
+      for item in songs_albums:
+          
+          sk = item.get('SK', '')
+          id = sk.split('#')[1] if '#' in sk else sk
+          entity_type = item.get('EntityType')
+
+          if entity_type in ('song', 'album') and id:  
+              target_list = songs if entity_type == 'song' else albums
+              target_list.append({
+                "type": entity_type,
+                "id": id,
+                "score": current_slot_genre_scores[genre]
+              })
+
+def fetch_content_by_top_artists(top_artists, current_artist_scores, feed_items, songs, albums):
+    for artist in top_artists:
+            artists_content = artists_table.query(KeyConditionExpression=Key("PK").eq(artist)).get("Items", [])
+            for item in artists_content:
+
+                sk = item.get('SK', '')
+                id = sk.split('#')[1] if '#' in sk else sk
+                entity_type = item.get('EntityType')
+
+                if sk == 'METADATA':
+                  feed_items.append({
+                      "type": 'artist',
+                      "id": item.get('PK')
+                  })
+
+                elif entity_type in ('song', 'album') and id:
+                  target_list = songs if entity_type == 'song' else albums
+                  target_list.append({
+                      "type": entity_type,
+                      "id": id,
+                      "score": current_artist_scores[artist]
+                  })
 
 
 def get_time_of_day():

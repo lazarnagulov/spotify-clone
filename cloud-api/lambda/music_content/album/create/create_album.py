@@ -154,6 +154,7 @@ def handler(event, _context):
 
 def update_artist_relations_table(request, album_id, path_to_cover, songs):
     artists_table=dynamodb.Table(os.environ['ARTIST_TABLE'])
+
     with artists_table.batch_writer() as batch:
         for artist in request.artists:
             batch.put_item(
@@ -166,17 +167,16 @@ def update_artist_relations_table(request, album_id, path_to_cover, songs):
                 }
             )
 
-        for artist in request.artists:
-              for song in songs:
-                  batch.put_item(
-                      Item={
-                          "PK": artist,
-                          "SK": f"SONG#{song['PK']}",
-                          "EntityType": "song",
-                          "Title": song["title"],
-                          "CoverPath": song["coverPath"]
-                      }
-                  )
+            for song in songs:
+                batch.put_item(
+                    Item={
+                        "PK": artist,
+                        "SK": song['PK'],
+                        "EntityType": "song",
+                        "Title": song["title"],
+                        "CoverPath": song["coverPath"]
+                    }
+                )
 
 def update_genre_relations_table(request, album_id, path_to_cover, songs):
     genre_table = dynamodb.Table(os.environ["GENRE_RELATIONS_TABLE"])
@@ -196,7 +196,6 @@ def update_genre_relations_table(request, album_id, path_to_cover, songs):
                 }
             )
 
-        for genre in request.genres:
             for song in songs:
                 batch.put_item(
                     Item={
