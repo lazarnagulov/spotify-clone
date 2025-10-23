@@ -52,7 +52,7 @@ def handler(event, _context):
                 "id": "ALBUM#" + item.get("SK"),
                 "title": item.get("Title", ""),
                 "artists": item.get("ArtistNames", []),
-                "cover_url": get_public_s3_url(cover_path) if cover_path else None
+                "coverUrl": get_public_s3_url(cover_path) if cover_path else None
             })
 
         elif entity_type == "artist":

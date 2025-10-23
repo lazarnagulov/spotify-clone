@@ -129,6 +129,21 @@ class ContentStack(Stack):
             }
         )
 
+        edit_album_lambda = aws_lambda.Function(
+            self, "EditAlbumFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="edit_album.handler",
+            code=aws_lambda.Code.from_asset("lambda/music_content/album/edit"),
+            layers=[shared_layer],
+            timeout=Duration.seconds(60),
+            environment={
+                "MEDIA_BUCKET": self.images_bucket.bucket_name,
+                "MUSIC_CATALOG": "MusicCatalog",
+                "GENRE_RELATIONS_TABLE": "GenreRelations",
+                "ARTIST_TABLE": "Artists",
+            }
+        )
+
         delete_album_lambda = aws_lambda.Function(
             self, 
             "DeleteAlbumFunction",
@@ -218,18 +233,23 @@ class ContentStack(Stack):
         audio_bucket.grant_read(create_song_lambda)
         self.images_bucket.grant_read(create_song_lambda)
 
-        audio_bucket.grant_put(create_album_lambda)
-        self.images_bucket.grant_put(create_album_lambda)
-
-        audio_bucket.grant_read(create_album_lambda)
-        self.images_bucket.grant_read(create_album_lambda)
-
         audio_bucket.grant_put(edit_song_lambda)
         self.images_bucket.grant_put(edit_song_lambda)
         
         audio_bucket.grant_read(edit_song_lambda)
         self.images_bucket.grant_read(edit_song_lambda)
 
+        audio_bucket.grant_put(create_album_lambda)
+        self.images_bucket.grant_put(create_album_lambda)
+
+        audio_bucket.grant_read(create_album_lambda)
+        self.images_bucket.grant_read(create_album_lambda)
+
+        audio_bucket.grant_delete(delete_song_lambda)
+        self.images_bucket.grant_delete(delete_song_lambda)
+
+        audio_bucket.grant_put(edit_album_lambda)
+        self.images_bucket.grant_put(edit_album_lambda)
 
         create_song_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
@@ -291,6 +311,27 @@ class ContentStack(Stack):
                        f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
                        notify_subscribers_fn.function_arn]
         ))
+
+        edit_album_lambda.role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:Query",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:ListBucket"
+            ],
+            resources=[
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/MusicCatalog*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/GenreRelations*",
+                f"arn:aws:dynamodb:{self.region}:{self.account}:table/Artists*",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket",
+                "arn:aws:s3:::cc-spotify-clone-images-bucket/*"
+            ],
+        ))
+
 
         delete_album_lambda.role.add_to_policy(iam.PolicyStatement(
             actions=[
@@ -355,17 +396,17 @@ class ContentStack(Stack):
             )
         )
 
-        # retry_lambda.add_event_source(
-        #     lambda_events.SqsEventSource(
-        #         transcription_retry_queue,
-        #         batch_size=1
-        #     )
-        # )
+        retry_lambda.add_event_source(
+            lambda_events.SqsEventSource(
+                transcription_retry_queue,
+                batch_size=1
+            )
+        )
 
-        # self.images_bucket.add_event_notification(
-        #     s3.EventType.OBJECT_CREATED,
-        #     s3n.LambdaDestination(transcription_lambda)
-        # )
+        self.images_bucket.add_event_notification(
+            s3.EventType.OBJECT_CREATED,
+            s3n.LambdaDestination(transcription_lambda)
+        )
 
         get_discover_page.role.add_to_policy(iam.PolicyStatement(
             actions=[
@@ -399,6 +440,7 @@ class ContentStack(Stack):
         album_id_resource = album_api.add_resource("{id}")
         album_id_resource.add_method("GET", apigw.LambdaIntegration(get_album_lambda), authorizer=authorizer)
         album_id_resource.add_method("DELETE", apigw.LambdaIntegration(delete_album_lambda), authorizer=authorizer)
+        album_id_resource.add_method("PUT", apigw.LambdaIntegration(edit_album_lambda), authorizer=authorizer)
 
         transcription_api = api.root.add_resource("transcriptions")
         transcription_id_resource = transcription_api.add_resource("{id}")

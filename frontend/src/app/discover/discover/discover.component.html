@@ -29,7 +29,7 @@
           [cardType]="'album'"
           [id]="album.id"
           [title]="album.title"
-          [imageUrl]="album.coverUrl || 'no-image.svg'"
+          [imageUrl]="(album.coverUrl ? album.coverUrl + '?v=' + cacheBuster : 'no-image.svg')"
         ></app-media-card>
     </div>
   </section>
