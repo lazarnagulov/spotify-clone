@@ -1,5 +1,4 @@
-import json
-import os
+import json, os, boto3
 from boto3.dynamodb.conditions import Key
 from util.exception_handler import handle_lambda_exceptions
 from util.logger import logger
@@ -46,11 +45,12 @@ def handler(event, _context):
         elif table_name in GLOBAL_TABLES: # Global action -> new content added by admin
             user_ids = []
 
-            genres_values = new_image.get('genres', {}).get('S', '')
-            artist_values = new_image.get('artists', {}).get('S', '')
+            genres_values = new_image.get('genres', {}).get('S', '') # takes genre and artist from new added content
+            artist_values = new_image.get('artists', {}).get('S', '') # anyone subscribed to those two will get new feed
 
             user_ids += fetch_user_ids(genres_values)
             user_ids += fetch_user_ids(artist_values)
+            logger.info(f"feed will be generated for users with ids{user_ids}")
 
             logger.info("Preparing SQS messages for all users")
 
@@ -61,7 +61,7 @@ def handler(event, _context):
         for user_id in user_ids:
             sqs.send_message(
                 QueueUrl=SQS_QUEUE_URL,
-                MessageBody=json.dumps({"userId": user_id})
+                MessageBody=json.dumps({"userId": get_raw_user_id(user_id)})
             )
         logger.info("Messages successfully sent to SQS.")
 
@@ -77,3 +77,6 @@ def fetch_user_ids(values):
       for res in response.get('Items', []):
           ids.append(res.get('PK', {}).get('S'))
   return ids
+
+def get_raw_user_id(user_id):
+    return user_id.split('#')[1] if '#' in user_id else user_id

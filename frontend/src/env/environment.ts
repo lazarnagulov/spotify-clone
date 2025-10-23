@@ -1,3 +1,3 @@
 export const environment = {
-  apiHost: 'https://p35atgsupl.execute-api.eu-central-1.amazonaws.com/prod',
+  apiHost: 'https://5ik0dwkt4l.execute-api.eu-central-1.amazonaws.com/prod',
 };
