@@ -207,6 +207,11 @@ export class SongDetailsComponent implements OnInit, OnDestroy {
     return this.song?.artists.join(', ') ?? 'Unknown Artist';
   }
 
+  onEdit(): void {
+    if (!this.id) return;
+    void this.router.navigate(['/edit-song', this.id]);
+  }
+
   onDelete(): void {
     if (!this.id) return;
     this.service.deleteSong(this.id).subscribe({

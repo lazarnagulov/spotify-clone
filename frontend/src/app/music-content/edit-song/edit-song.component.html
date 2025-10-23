@@ -1,0 +1,90 @@
+<mat-card class="song-card">
+  <h2>Edit song {{song?.title}} </h2>
+
+  <form [formGroup]="songForm" class="form-grid">
+
+    <mat-form-field appearance="outline" class="full-span">
+      <mat-label>Song Title</mat-label>
+      <input matInput formControlName="title" placeholder="Enter song title" />
+      <mat-error *ngIf="songForm.get('title')?.hasError('required')">
+        Song title is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-span">
+      <mat-label>Genres</mat-label>
+      <mat-select formControlName="genres" multiple>
+        <mat-option *ngFor="let genre of genres" [value]="genre">{{ genre }}</mat-option>
+      </mat-select>
+      <mat-hint>Select one or more genres</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-span">
+      <mat-label>Artists</mat-label>
+      <mat-select formControlName="artists" multiple>
+        <mat-option *ngFor="let artist of artists" [value]="artist.id">
+          {{ artist.name }}
+        </mat-option>
+      </mat-select>
+      <mat-hint>One or more artists can be linked to the song</mat-hint>
+      <mat-error *ngIf="songForm.get('artists')?.hasError('required')">
+        At least one artist is required
+      </mat-error>
+    </mat-form-field>
+
+    <div class="upload-section full-span">
+
+      <div class="upload-block">
+        <mat-label class="upload-label">Cover Image (optional)</mat-label>
+        <input
+          id="coverImage"
+          type="file"
+          (change)="onImageSelected($event)"
+          accept="image/*"
+          class="upload-input"
+        />
+
+        <div class="preview-container" *ngIf="previewUrl">
+          <img [src]="previewUrl" alt="Preview" class="preview-image" />
+        </div>
+      </div>
+
+      <div class="upload-block">
+        <mat-label class="upload-label required">Audio File *</mat-label>
+        <input
+          id="audioFile"
+          type="file"
+          (change)="onFileSelected($event)"
+          accept="audio/*"
+          class="upload-input"
+        />
+        <mat-error *ngIf="songForm.get('file')?.hasError('required')">
+          Audio file is required
+        </mat-error>
+
+        <div class="preview-container" *ngIf="audioPreviewUrl">
+          <audio [src]="audioPreviewUrl" controls></audio>
+        </div>
+      </div>
+
+    </div>
+
+    <mat-form-field appearance="outline" class="full-span">
+      <mat-label>Description (optional)</mat-label>
+      <textarea matInput formControlName="description" rows="3" placeholder="Add a short description..."></textarea>
+    </mat-form-field>
+
+    <div *ngIf="serverError" class="error-message">
+      {{ serverError }}
+    </div>
+
+    <div class="actions">
+      <button mat-flat-button color="primary" (click)="onSubmit()" [disabled]="loading">
+        <mat-icon *ngIf="!loading">library_music</mat-icon>
+        <mat-progress-spinner *ngIf="loading" diameter="20" mode="indeterminate"></mat-progress-spinner>
+        <span *ngIf="!loading">Save Song</span>
+      </button>
+    </div>
+
+  </form>
+</mat-card>

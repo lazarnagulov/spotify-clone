@@ -30,12 +30,22 @@
               <button
                 mat-icon-button
                 color="warn"
+                aria-label="Edit"
+                (click)="onEdit()"
+                *ngIf="userRoles.includes('admin')"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
                 aria-label="Delete"
                 (click)="onDelete()"
                 *ngIf="userRoles.includes('admin')"
               >
                 <mat-icon>delete</mat-icon>
               </button>
+              
             </div>
 
             <p class="artists">{{ getArtistsString() }}</p>
