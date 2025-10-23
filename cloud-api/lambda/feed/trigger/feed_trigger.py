@@ -1,11 +1,12 @@
 import json
-import boto3
 import os
+from boto3.dynamodb.conditions import Key
 from util.exception_handler import handle_lambda_exceptions
 from util.logger import logger
 
 dynamodb = boto3.resource("dynamodb")
 sqs = boto3.client("sqs")
+subscriptions_table = dynamodb.Table("Subscriptions")
 
 SQS_QUEUE_URL = os.environ["FEED_SQS_URL"]
 USER_TABLES = ["Ratings", "ListeningHistory", "Subscriptions"]
@@ -43,8 +44,14 @@ def handler(event, _context):
             logger.info(f"Preparing SQS message for user {user_id}")
 
         elif table_name in GLOBAL_TABLES: # Global action -> new content added by admin
-            # TODO: filter users who are subscribed to the genre/artist
-            user_ids = ['33648832-d091-70c7-083c-72209ba63d91']  # placeholder
+            user_ids = []
+
+            genres_values = new_image.get('genres', {}).get('S', '')
+            artist_values = new_image.get('artists', {}).get('S', '')
+
+            user_ids += fetch_user_ids(genres_values)
+            user_ids += fetch_user_ids(artist_values)
+
             logger.info("Preparing SQS messages for all users")
 
         else:
@@ -59,3 +66,14 @@ def handler(event, _context):
         logger.info("Messages successfully sent to SQS.")
 
     return {"message": "Success"}
+
+def fetch_user_ids(values):
+  ids = []
+  for value in values:
+      response = subscriptions_table.query(
+          IndexName="GSI1",
+          KeyConditionExpression=Key("SK").eq(value)
+      )
+      for res in response.get('Items', []):
+          ids.append(res.get('PK', {}).get('S'))
+  return ids
