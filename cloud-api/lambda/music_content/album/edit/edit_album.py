@@ -28,15 +28,18 @@ def handler(event, _context):
   if not existing_album:
       return http_response(404, {"message": "Album not found"})
   
-  presigned_cover_url = s3.generate_presigned_url(
-      "put_object",
-      Params={
-          "Bucket": MEDIA_BUCKET,
-          "Key": path_to_cover,
-          "ContentType": body.get("coverType", existing_album.get("coverType", "image/jpeg")),
-      },
-      ExpiresIn=3600
-  )
+  if "coverType" in body:
+    presigned_cover_url = s3.generate_presigned_url(
+        "put_object",
+        Params={
+            "Bucket": MEDIA_BUCKET,
+            "Key": path_to_cover,
+            "ContentType": body.get("coverType", existing_album.get("coverType", "image/jpeg")),
+        },
+        ExpiresIn=3600
+    )
+  else:
+    presigned_cover_url = None
 
   sync_genre_relations(existing_album, body, set(existing_album.get("genres", [])), set(body.get("genres", [])))
   sync_artist_relations_table(existing_album, body)
@@ -112,17 +115,15 @@ def add_genres(genres, album, body):
             )
 
 def update_genres(genres, album, body):
-    with genre_relations_table.batch_writer() as batch:
-        for genre in genres:
-            batch.put_item(
-                Item={
-                    "PK": genre,
-                    "SK": album['PK'].split('#')[1],
-                    "Title": body["title"],
-                    "EntityType": "album",
-                    "CoverPath": body.get("coverPath", album.get("coverPath")),
-                }
-            )
+    for genre in genres:
+        genre_relations_table.update_item(
+            Key={"PK": genre, "SK": album['PK'].split('#')[1]},
+            UpdateExpression="SET #T = :title",
+            ExpressionAttributeNames={"#T": "Title"},
+            ExpressionAttributeValues={
+                ":title": body["title"],
+            },
+        )
 
 
 def sync_artist_relations_table(album, body):
