@@ -1,0 +1,90 @@
+<div class="album-detail">
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <mat-card *ngIf="error && !loading" class="error-card">
+    <mat-card-content>
+      <mat-icon color="warn">error</mat-icon>
+      <p>{{ error }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <div *ngIf="album && !loading">
+    <mat-card class="album-header">
+      <div class="header-content">
+        <img
+          mat-card-image
+          [src]="album.coverUrl || 'no-image.svg'"
+          [alt]="album.title"
+          class="cover-image"
+        />
+        <mat-card-content class="album-info">
+          <div class="album-title-row">
+            <h1 class="album-title">{{ album.title }}</h1>
+            <button mat-icon-button color="warn" aria-label="Edit" (click)="onEdit()" *ngIf="userRoles.includes('admin')">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" aria-label="Delete" (click)="onDelete()" *ngIf="userRoles.includes('admin')">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+
+          <p class="artists">{{ getArtistsString() }}</p>
+
+          <div class="rating-section">
+            <div class="rating-display">
+              <span class="rating-label">Your Rating:</span>
+              <div class="star-rating">
+                <button
+                  mat-icon-button
+                  *ngFor="let star of [1,2,3,4,5]"
+                  (click)="onRate(star)"
+                  [class.filled]="star <= userRating"
+                  class="star-button">
+                  <mat-icon>{{ star <= userRating ? 'star' : 'star_border' }}</mat-icon>
+                </button>
+              </div>
+              <span class="rating-value" *ngIf="userRating">{{ userRating }}/5</span>
+            </div>
+          </div>
+
+          <p class="album-meta">
+            <mat-icon>calendar_today</mat-icon>
+            <span *ngIf="album.year">{{ album.year }}</span>
+            <span *ngIf="!album.year">Unknown Year</span>
+            <span class="separator">•</span>
+            <mat-icon>music_note</mat-icon>
+            {{ album.songs.length || 0 }} songs
+            <span class="separator">•</span>
+            <mat-icon>schedule</mat-icon>
+            {{ getTotalDuration() }}
+          </p>
+          <p class="genres" *ngIf="album.genres && album.genres.length > 0">
+            <mat-chip-set>
+              <mat-chip *ngFor="let genre of album.genres">{{ genre }}</mat-chip>
+            </mat-chip-set>
+          </p>
+          <p class="description" *ngIf="album.description">
+            {{ album.description }}
+          </p>
+        </mat-card-content>
+      </div>
+    </mat-card>
+
+    <section class="songs-section" *ngIf="album.songs && album.songs.length > 0">
+      <h2>Tracks</h2>
+      <div class="media-grid">
+        <app-media-card
+          *ngFor="let song of album.songs"
+          [cardType]="'song'"
+          [id]="song.id"
+          [title]="song.title"
+          [subtitle]="song.track_number ? 'Track ' + song.track_number : 'Song'"
+          [imageUrl]="song.cover_url || 'no-image.svg'"
+          [audioUrl]="song.audio_url"
+        ></app-media-card>
+      </div>
+    </section>
+  </div>
+</div>

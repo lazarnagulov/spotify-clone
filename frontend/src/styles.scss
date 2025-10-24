@@ -1,0 +1,35 @@
+@use '@angular/material' as mat;
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+// Create palettes
+$cyan-palette: mat.m2-define-palette(mat.$m2-cyan-palette);
+$orange-palette: mat.m2-define-palette(mat.$m2-orange-palette, A200, A100, A400);
+
+// Light & dark themes
+$light-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $cyan-palette,
+    accent: $orange-palette,
+  ),
+));
+
+$dark-theme: mat.m2-define-dark-theme((
+  color: (
+    primary: $cyan-palette,
+    accent: $orange-palette,
+  ),
+));
+
+// Apply light theme globally
+@include mat.all-component-themes($light-theme);
+
+// Apply dark theme inside a class
+.dark-theme {
+  @include mat.all-component-colors($dark-theme);
+}

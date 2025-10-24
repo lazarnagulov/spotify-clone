@@ -1,0 +1,75 @@
+<div class="home-screen">
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <mat-card *ngIf="error && !loading" class="error-card">
+    <mat-card-content>
+      <mat-icon color="warn">error</mat-icon>
+      <p>{{ error }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <div *ngIf="!loading && !error" class="content">
+    <section class="media-section" *ngIf="albums.length > 0">
+      <div class="section-header">
+        <h2>Recent Albums</h2>
+      </div>
+      <div class="media-grid">
+        <app-media-card
+          *ngFor="let album of albums"
+          [cardType]="'album'"
+          [id]="album.id"
+          [title]="album.title"
+          [subtitle]="getArtistString(album.artists)"
+          [imageUrl]="album.cover_url || 'no-image.svg'"
+        ></app-media-card>
+      </div>
+    </section>
+
+    <section class="media-section" *ngIf="songs.length > 0">
+      <div class="section-header">
+        <h2>Recent Songs</h2>
+      </div>
+      <div class="media-grid">
+        <app-media-card
+          *ngFor="let song of songs"
+          [cardType]="'song'"
+          [id]="song.id"
+          [title]="song.title"
+          [subtitle]="getArtistString(song.artists)"
+          [imageUrl]="song.cover_url || 'no-image.svg'"
+        ></app-media-card>
+      </div>
+    </section>
+
+    <section class="media-section" *ngIf="artists.length > 0">
+      <div class="section-header">
+        <h2>Featured Artists</h2>
+      </div>
+      <div class="artists-grid">
+        <mat-card
+          *ngFor="let artist of artists"
+          class="artist-card"
+          (click)="navigateToArtist(artist.id)"
+        >
+          <mat-card-content>
+            <div class="artist-avatar">
+              <mat-icon>person</mat-icon>
+            </div>
+            <h3>{{ artist.name }}</h3>
+            <p class="artist-genres" *ngIf="artist.genres && artist.genres.length > 0">
+              {{ artist.genres.join(', ') }}
+            </p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <div *ngIf="albums.length === 0 && songs.length === 0 && artists.length === 0" class="empty-state">
+      <mat-icon>music_off</mat-icon>
+      <h2>No Content Available</h2>
+      <p>Start by adding some albums or songs to your library.</p>
+    </div>
+  </div>
+</div>

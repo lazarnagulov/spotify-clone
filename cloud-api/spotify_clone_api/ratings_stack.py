@@ -1,0 +1,57 @@
+from aws_cdk import (
+    Stack,
+    aws_dynamodb as dynamodb, RemovalPolicy, aws_lambda,
+    aws_apigateway as apigw
+)
+from constructs import Construct
+
+
+class RatingsStack(Stack):
+    def __init__(self, scope: Construct, construct_id: str, shared_layer, api, authorizer, **kwargs) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+
+        self.ratings_table = dynamodb.Table(
+            self, "RatingsTable",
+            table_name="Ratings",
+            partition_key=dynamodb.Attribute(
+                name="PK",
+                type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="SK",
+                type=dynamodb.AttributeType.STRING
+            ),
+            read_capacity=1,
+            write_capacity=1,
+            removal_policy=RemovalPolicy.DESTROY,
+            stream=dynamodb.StreamViewType.NEW_IMAGE
+        )
+
+        create_rating_lambda = aws_lambda.Function(
+            self, "CreateRatingFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="create_rating.handler",
+            code=aws_lambda.Code.from_asset("lambda/rating/create"),
+            layers=[shared_layer],
+            environment={
+                "RATINGS_TABLE": self.ratings_table.table_name,
+                "MUSIC_CATALOG": "MusicCatalog",
+            }
+        )
+
+        get_ratings_lambda = aws_lambda.Function(
+            self, "GetRatingsFunction",
+            runtime=aws_lambda.Runtime.PYTHON_3_11,
+            handler="get_ratings.handler",
+            code=aws_lambda.Code.from_asset("lambda/rating/get"),
+            layers=[shared_layer],
+            environment={ "RATINGS_TABLE": self.ratings_table.table_name }
+        )
+
+        self.ratings_table.grant_read_write_data(create_rating_lambda)
+        ratings_api = api.root.add_resource("ratings")
+        ratings_api.add_method("POST", apigw.LambdaIntegration(create_rating_lambda), authorizer=authorizer)
+
+        ratings_id_api = ratings_api.add_resource("id")
+        ratings_id_api.add_method("GET", apigw.LambdaIntegration(get_ratings_lambda), authorizer=authorizer)
+

@@ -1,0 +1,179 @@
+<div class="song-detail">
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <mat-card *ngIf="error && !loading" class="error-card">
+    <mat-card-content>
+      <mat-icon color="warn">error</mat-icon>
+      <p>{{ error }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <div *ngIf="song && !loading">
+    <mat-card
+      class="song-header two-column-layout"
+      [class.show-lyrics]="showLyrics"
+    >
+      <div class="left-column">
+        <div class="header-content">
+          <div class="cover-image-wrapper" [class.playing]="isPlaying">
+            <img
+              [src]="song.cover_url || 'no-image.svg'"
+              [alt]="song.title"
+            />
+          </div>
+
+          <mat-card-content class="song-info">
+            <div class="song-title-row">
+              <h1 class="song-title">{{ song.title }}</h1>
+              <button
+                mat-icon-button
+                color="warn"
+                aria-label="Edit"
+                (click)="onEdit()"
+                *ngIf="userRoles.includes('admin')"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
+                aria-label="Delete"
+                (click)="onDelete()"
+                *ngIf="userRoles.includes('admin')"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+              
+            </div>
+
+            <p class="artists">{{ getArtistsString() }}</p>
+
+            <div class="rating-section">
+              <div class="rating-display">
+                <span class="rating-label">Your Rating:</span>
+                <div class="star-rating">
+                  <button
+                    mat-icon-button
+                    *ngFor="let star of [1,2,3,4,5]"
+                    (click)="onRate(star)"
+                    [class.filled]="star <= userRating"
+                    class="star-button"
+                  >
+                    <mat-icon>{{ star <= userRating ? 'star' : 'star_border' }}</mat-icon>
+                  </button>
+                </div>
+                <span class="rating-value" *ngIf="userRating">{{ userRating }}/5</span>
+              </div>
+            </div>
+
+            <p class="genres" *ngIf="song.genres.length > 0">
+              <mat-chip-set>
+                <mat-chip *ngFor="let genre of song.genres">{{ genre }}</mat-chip>
+              </mat-chip-set>
+            </p>
+
+            <p class="description" *ngIf="song.description">{{ song.description }}</p>
+
+            <div class="offline-controls">
+              <button
+                mat-raised-button
+                [color]="isOfflineAvailable ? 'accent' : 'primary'"
+                (click)="downloadOffline()"
+                [disabled]="isDownloading || isOfflineAvailable"
+                class="offline-button"
+              >
+                <mat-icon>{{ isOfflineAvailable ? 'offline_pin' : 'cloud_download' }}</mat-icon>
+                <span *ngIf="!isDownloading">
+                  {{ isOfflineAvailable ? 'Available Offline' : 'Save for Offline' }}
+                </span>
+                <span *ngIf="isDownloading">
+                  Downloading... {{ downloadProgress }}%
+                </span>
+              </button>
+
+              <mat-progress-bar
+                *ngIf="isDownloading"
+                mode="determinate"
+                [value]="downloadProgress"
+                class="download-progress"
+              ></mat-progress-bar>
+
+              <button
+                mat-stroked-button
+                color="accent"
+                (click)="download()"
+                class="download-file-button"
+              >
+                <mat-icon>file_download</mat-icon>
+                Download File
+              </button>
+            </div>
+
+
+            <button mat-stroked-button color="primary" (click)="toggleLyrics()">
+              <mat-icon>{{ showLyrics ? 'expand_less' : 'expand_more' }}</mat-icon>
+              {{ showLyrics ? 'Hide Lyrics' : 'Show Lyrics' }}
+            </button>
+          </mat-card-content>
+        </div>
+
+        <mat-card-actions class="player-controls">
+          <div class="playback-area">
+            <div class="play-button-container">
+              <button
+                mat-fab
+                color="primary"
+                (click)="togglePlay()"
+                [disabled]="!song.audio_url"
+              >
+                <mat-icon>{{ isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
+              </button>
+            </div>
+
+            <div class="player-info">
+              <div class="progress-container">
+                <span class="time-label">{{ formatTime(currentTime) }}</span>
+                <mat-slider
+                  class="progress-slider"
+                  [min]="0"
+                  [max]="duration"
+                  (input)="seek($event)"
+                  [disabled]="!audio"
+                >
+                  <input matSliderThumb [value]="currentTime">
+                </mat-slider>
+                <span class="time-label">{{ formatTime(duration) }}</span>
+              </div>
+
+              <div class="volume-control">
+                <mat-icon>volume_up</mat-icon>
+                <mat-slider
+                  class="volume-slider"
+                  [min]="0"
+                  [max]="1"
+                  [step]="0.01"
+                  (input)="changeVolume($event)"
+                >
+                  <input matSliderThumb [value]="volume">
+                </mat-slider>
+              </div>
+            </div>
+          </div>
+        </mat-card-actions>
+      </div>
+
+      <div class="right-column" *ngIf="showLyrics">
+        <div class="transcript-section" *ngIf="song.transcript; else loadingTranscript">
+          <h3>Lyrics / Transcript:</h3>
+          <pre>{{ song.transcript }}</pre>
+        </div>
+
+        <ng-template #loadingTranscript>
+          <p>Transcript is being processed...</p>
+        </ng-template>
+      </div>
+    </mat-card>
+  </div>
+</div>
