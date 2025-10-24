@@ -143,7 +143,7 @@ export class EditSongComponent implements OnInit {
       artists: formValue.artists,
       description: formValue.description || '',
       album_id: formValue.albumId || undefined,
-      size: this.metadata.size || undefined,
+      size: this.metadata?.size || undefined,
     };
 
     if (hasNewAudio || hasNewCover) {
