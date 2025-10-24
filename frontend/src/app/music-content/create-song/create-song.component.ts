@@ -99,7 +99,8 @@ export class CreateSongComponent implements OnInit {
       album_id: formValue.albumId || undefined,
       description: formValue.description || '',
       cover_type: this.coverFile?.type ?? 'image/jpeg',
-      audio_type: audioContentType
+      audio_type: audioContentType,
+      size: this.metadata.size,
     };
 
     console.log('Audio file details:', {

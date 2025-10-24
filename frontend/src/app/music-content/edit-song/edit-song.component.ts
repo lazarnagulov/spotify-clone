@@ -31,7 +31,7 @@ export class EditSongComponent implements OnInit {
   metadata?: any;
   serverError?: string;
   loading = false;
-  
+
   constructor(
     private route: ActivatedRoute,
     private service: MusicContentService,
@@ -51,7 +51,7 @@ export class EditSongComponent implements OnInit {
       file: [null, Validators.required]
     });
   }
-  
+
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') ?? undefined;
     if (this.id) {
@@ -78,7 +78,7 @@ export class EditSongComponent implements OnInit {
 
         if (song.cover_url) this.previewUrl = `${song.cover_url}${cacheBuster}`;
         if (song.audio_url) this.audioPreviewUrl = `${song.audio_url}${cacheBuster}`;
-        
+
       },
       error: (err) => console.error('Error loading song: ', err)
     });
@@ -143,6 +143,7 @@ export class EditSongComponent implements OnInit {
       artists: formValue.artists,
       description: formValue.description || '',
       album_id: formValue.albumId || undefined,
+      size: this.metadata.size || undefined,
     };
 
     if (hasNewAudio || hasNewCover) {
