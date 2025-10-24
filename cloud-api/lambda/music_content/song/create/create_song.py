@@ -42,6 +42,7 @@ def handler(event, _context):
         "description": request.description,
         "createdAt": datetime.utcnow().isoformat() + "Z",
         "updatedAt": datetime.utcnow().isoformat() + "Z",
+        "size": request.size,
         "type": "song",
     }
 

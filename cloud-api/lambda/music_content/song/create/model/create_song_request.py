@@ -9,3 +9,4 @@ class CreateSongRequest(BaseModel):
     description: Optional[str] = None
     cover_type: str
     audio_type: str
+    size: str

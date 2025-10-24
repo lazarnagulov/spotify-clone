@@ -78,6 +78,7 @@ def update_song_metadata(song_id: str, body: dict, existing_song) -> None:
         "title": body["title"],
         "genres": list(body.get("genres", [])),
         "artists": list(body.get("artists", [])),
+        "size": body.get("size", existing_song.get("size", "0B")),
         "description": body["description"],
         "updatedAt": datetime.utcnow().isoformat() + "Z",
         "type": "song",
